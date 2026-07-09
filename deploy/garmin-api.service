@@ -1,0 +1,14 @@
+[Unit]
+Description=Garmin Dashboard API
+After=network.target
+
+[Service]
+User=pi
+WorkingDirectory=/home/pi/garmin-dashboard/backend
+EnvironmentFile=/home/pi/garmin-dashboard/backend/.env
+ExecStart=/home/pi/garmin-dashboard/backend/venv/bin/python app.py
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

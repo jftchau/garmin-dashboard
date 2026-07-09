@@ -1,0 +1,15 @@
+.env
+backend/venv/
+backend/*.db
+backend/*.db.bak
+backend/*.db-journal
+backend/*.db-wal
+backend/logs/*.log
+# Cached Garmin session tokens (per user) — sensitive, never commit
+.garmin_tokens*
+backend/.garmin_tokens*
+frontend/node_modules/
+frontend/dist/
+__pycache__/
+*.pyc
+.DS_Store
