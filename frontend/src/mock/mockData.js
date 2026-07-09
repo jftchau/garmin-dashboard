@@ -68,24 +68,51 @@ export const mockActivities = [
   run(1, 14, 21.3, 315, 160),
 ];
 
-export const mockThisWeek = {
-  week_start: "2026-06-15",
-  week_end: "2026-06-21",
-  daily_distance_km: [
-    { date: "2026-06-15", distance_km: 8.2 },
-    { date: "2026-06-16", distance_km: 0 },
-    { date: "2026-06-17", distance_km: 5.0 },
-    { date: "2026-06-18", distance_km: 0 },
-    { date: "2026-06-19", distance_km: 0 },
-    { date: "2026-06-20", distance_km: 12.1 },
-    { date: "2026-06-21", distance_km: 0 },
-  ],
-  total_distance_km: 25.3,
-  total_duration_sec: 7820,
-  avg_pace_sec_per_km: 309,
-  heart_rate_zone_seconds: ZONE_SAMPLE,
-  activities: mockActivities.slice(0, 3),
-};
+// Derived from the same relative-dated runs the rest of the mock uses, so the
+// week window (header + bar chart) and the activity list always agree. The old
+// static June dates were frozen while mockActivities float relative to today,
+// which made the header and the runs table disagree. Monday-first / Sunday-end,
+// mirroring the real /api/this-week (which the backend computes server-side).
+export const mockThisWeek = (() => {
+  const isoLocal = (d) =>
+    `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const monday = new Date(today);
+  monday.setDate(monday.getDate() - ((today.getDay() + 6) % 7)); // 0 = Monday
+  const sunday = new Date(monday);
+  sunday.setDate(sunday.getDate() + 6);
+
+  const weekStart = isoLocal(monday);
+  const weekEnd = isoLocal(sunday);
+  const runDate = (a) => isoLocal(new Date(a.start_time));
+  const inWeek = mockActivities.filter((a) => runDate(a) >= weekStart && runDate(a) <= weekEnd);
+
+  const daily_distance_km = Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(monday);
+    d.setDate(d.getDate() + i);
+    const iso = isoLocal(d);
+    const km = inWeek
+      .filter((a) => runDate(a) === iso)
+      .reduce((s, a) => s + a.distance / 1000, 0);
+    return { date: iso, distance_km: Math.round(km * 10) / 10 };
+  });
+
+  const totalMeters = inWeek.reduce((s, a) => s + a.distance, 0);
+  const totalDuration = inWeek.reduce((s, a) => s + a.duration, 0);
+
+  return {
+    week_start: weekStart,
+    week_end: weekEnd,
+    daily_distance_km,
+    total_distance_km: Math.round((totalMeters / 1000) * 10) / 10,
+    total_duration_sec: Math.round(totalDuration),
+    avg_pace_sec_per_km: totalMeters > 0 ? Math.round(totalDuration / (totalMeters / 1000)) : 0,
+    heart_rate_zone_seconds: ZONE_SAMPLE,
+    activities: inWeek,
+  };
+})();
 
 export const mockWeeklyMileage = Array.from({ length: 16 }, (_, i) => {
   const date = new Date();

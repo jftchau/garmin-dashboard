@@ -4,6 +4,7 @@ import HRZoneDoughnut from "./HRZoneDoughnut.jsx";
 import WeeklyMileageChart from "./WeeklyMileageChart.jsx";
 import ActivityTable from "./ActivityTable.jsx";
 import { formatDuration, formatPace } from "../utils.js";
+import { useCompact } from "../useCompact.js";
 
 // Short weekday label ("Mon") from a YYYY-MM-DD string, parsed in local time.
 const dayTick = (iso) =>
@@ -11,6 +12,8 @@ const dayTick = (iso) =>
 
 export default function WeekView({ onSelectActivity }) {
   const [week, setWeek] = useState(null);
+  const compact = useCompact();
+  const chartH = compact ? 165 : 220;
 
   useEffect(() => {
     fetchThisWeek().then(setWeek);
@@ -29,11 +32,11 @@ export default function WeekView({ onSelectActivity }) {
   }));
 
   return (
-    <div className="p-4 sm:p-6 space-y-6">
+    <div className="p-4 sm:p-6 short:p-3 space-y-6 short:space-y-3">
       {/* GPS-watch-style readout: the week's headline number, large and mono */}
-      <div className="flex flex-wrap items-end gap-x-10 gap-y-2">
+      <div className="flex flex-wrap items-end gap-x-10 short:gap-x-6 gap-y-2">
         <div>
-          <div className="stat-mono text-5xl sm:text-6xl text-volt">
+          <div className="stat-mono text-5xl sm:text-6xl short:text-4xl text-volt">
             {week.total_distance_km}
             <span className="text-xl text-muted ml-2">km</span>
           </div>
@@ -48,12 +51,12 @@ export default function WeekView({ onSelectActivity }) {
 
       <div className="lane-rule" />
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 short:gap-3">
         <Panel title="Daily mileage">
-          <WeeklyMileageChart data={dailyData} dataKeyX="date" dataKeyY="distance_km" bar tickFormatter={dayTick} />
+          <WeeklyMileageChart data={dailyData} dataKeyX="date" dataKeyY="distance_km" bar tickFormatter={dayTick} height={chartH} />
         </Panel>
         <Panel title="Heart rate zones">
-          <HRZoneDoughnut zoneSeconds={week.heart_rate_zone_seconds} />
+          <HRZoneDoughnut zoneSeconds={week.heart_rate_zone_seconds} height={chartH} />
         </Panel>
       </div>
 
@@ -75,8 +78,8 @@ function Stat({ label, value }) {
 
 function Panel({ title, children }) {
   return (
-    <div className="bg-surface border border-line rounded-lg p-4">
-      <h3 className="heading-display text-sm uppercase tracking-wide text-muted mb-3">{title}</h3>
+    <div className="bg-surface border border-line rounded-lg p-4 short:p-3">
+      <h3 className="heading-display text-sm uppercase tracking-wide text-muted mb-3 short:mb-2">{title}</h3>
       {children}
     </div>
   );

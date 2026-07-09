@@ -16,7 +16,7 @@ export default function TabNav({ active, onChange }) {
             <button
               key={tab.id}
               onClick={() => onChange(tab.id)}
-              className={`relative px-3 sm:px-4 py-3 text-sm sm:text-base font-display font-medium tracking-wide transition-colors ${
+              className={`relative px-3 sm:px-4 py-3 short:py-2 text-sm sm:text-base font-display font-medium tracking-wide transition-colors ${
                 isActive ? "text-volt" : "text-muted hover:text-chalk"
               }`}
             >

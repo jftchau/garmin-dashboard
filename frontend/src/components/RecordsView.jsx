@@ -20,13 +20,13 @@ export default function RecordsView({ onSelectActivity }) {
   }, []);
 
   return (
-    <div className="p-4 sm:p-6 space-y-6">
-      <h2 className="heading-display text-xl text-volt">Personal records</h2>
+    <div className="p-4 sm:p-6 short:p-3 space-y-6 short:space-y-3">
+      <h2 className="heading-display text-xl short:text-lg text-volt">Personal records</h2>
 
       {!records ? (
         <p className="text-muted font-mono">Loading…</p>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 short:gap-3">
           {records.map((r) => {
             const predKey = PREDICTION_KEY[r.distance_name];
             const predicted = predictions && predKey ? predictions[predKey] : null;
@@ -36,7 +36,7 @@ export default function RecordsView({ onSelectActivity }) {
               <div
                 key={r.distance_name}
                 onClick={() => r.activity_id && onSelectActivity && onSelectActivity({ id: r.activity_id })}
-                className={`bg-surface border border-line rounded-lg p-4 text-center ${
+                className={`bg-surface border border-line rounded-lg p-4 short:p-3 text-center ${
                   r.activity_id ? "cursor-pointer hover:border-volt" : "opacity-50"
                 }`}
               >

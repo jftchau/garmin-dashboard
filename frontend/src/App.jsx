@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import TabNav from "./components/TabNav.jsx";
 import RefreshButton from "./components/RefreshButton.jsx";
+import DataSourceBadge from "./components/DataSourceBadge.jsx";
 import UserSwitcher from "./components/UserSwitcher.jsx";
 import WeekView from "./components/WeekView.jsx";
 import CalendarView from "./components/CalendarView.jsx";
@@ -44,12 +45,13 @@ export default function App() {
 
   return (
     <div className="min-h-screen flex flex-col">
-      <header className="flex items-center justify-between px-4 sm:px-6 py-4 gap-3 flex-wrap">
+      <header className="flex items-center justify-between px-4 sm:px-6 py-4 short:py-2 gap-3 flex-wrap">
         <div className="flex items-center gap-3">
           <div className="w-2.5 h-2.5 rounded-full bg-volt" />
           <h1 className="heading-display text-lg sm:text-xl font-bold tracking-tight">
             Run<span className="text-volt">.</span>Dashboard
           </h1>
+          <DataSourceBadge />
         </div>
         <div className="flex items-center gap-3">
           <UserSwitcher

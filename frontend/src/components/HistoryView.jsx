@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { fetchActivities, fetchWeeklyMileage } from "../api.js";
 import WeeklyMileageChart from "./WeeklyMileageChart.jsx";
 import ActivityTable from "./ActivityTable.jsx";
+import { useCompact } from "../useCompact.js";
 
 const RANGE_OPTIONS = [
   { id: "12w", label: "12 weeks" },
@@ -20,6 +21,7 @@ export default function HistoryView({ onSelectActivity }) {
   const [weekly, setWeekly] = useState(null);
   const [activities, setActivities] = useState(null);
   const [range, setRange] = useState("26w");
+  const compact = useCompact();
 
   useEffect(() => {
     fetchWeeklyMileage().then(setWeekly);
@@ -29,9 +31,9 @@ export default function HistoryView({ onSelectActivity }) {
   const filteredWeekly = useMemo(() => (weekly ? filterByRange(weekly, range) : []), [weekly, range]);
 
   return (
-    <div className="p-4 sm:p-6 space-y-6">
+    <div className="p-4 sm:p-6 short:p-3 space-y-6 short:space-y-3">
       <div className="flex items-center justify-between flex-wrap gap-3">
-        <h2 className="heading-display text-xl text-volt">History</h2>
+        <h2 className="heading-display text-xl short:text-lg text-volt">History</h2>
         <div className="flex gap-1 bg-surface border border-line rounded-lg p-1">
           {RANGE_OPTIONS.map((opt) => (
             <button
@@ -47,17 +49,17 @@ export default function HistoryView({ onSelectActivity }) {
         </div>
       </div>
 
-      <div className="bg-surface border border-line rounded-lg p-4">
-        <h3 className="heading-display text-sm uppercase tracking-wide text-muted mb-3">Weekly mileage</h3>
+      <div className="bg-surface border border-line rounded-lg p-4 short:p-3">
+        <h3 className="heading-display text-sm uppercase tracking-wide text-muted mb-3 short:mb-2">Weekly mileage</h3>
         {weekly ? (
-          <WeeklyMileageChart data={filteredWeekly} height={260} />
+          <WeeklyMileageChart data={filteredWeekly} height={compact ? 190 : 260} />
         ) : (
           <p className="text-muted font-mono">Loading…</p>
         )}
       </div>
 
-      <div className="bg-surface border border-line rounded-lg p-4">
-        <h3 className="heading-display text-sm uppercase tracking-wide text-muted mb-3">Activity log</h3>
+      <div className="bg-surface border border-line rounded-lg p-4 short:p-3">
+        <h3 className="heading-display text-sm uppercase tracking-wide text-muted mb-3 short:mb-2">Activity log</h3>
         {activities ? (
           <ActivityTable activities={activities} onSelect={onSelectActivity} />
         ) : (

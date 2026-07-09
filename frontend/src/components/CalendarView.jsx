@@ -12,13 +12,13 @@ export default function CalendarView() {
   const totalRunDays = data ? data.filter((d) => d.distance_km > 0).length : 0;
 
   return (
-    <div className="p-4 sm:p-6 space-y-6">
+    <div className="p-4 sm:p-6 short:p-3 space-y-6 short:space-y-3">
       <div className="flex items-baseline gap-3">
-        <h2 className="heading-display text-xl text-volt">Run frequency</h2>
+        <h2 className="heading-display text-xl short:text-lg text-volt">Run frequency</h2>
         <span className="text-muted text-sm font-mono">last 12 months</span>
       </div>
 
-      <div className="bg-surface border border-line rounded-lg p-4">
+      <div className="bg-surface border border-line rounded-lg p-4 short:p-3">
         {data ? <CalendarHeatmap data={data} /> : <p className="text-muted font-mono">Loading…</p>}
       </div>
 
