@@ -21,15 +21,41 @@ export function setCurrentUser(id) {
   currentUserId = id;
 }
 
+// --- Data-source tracking ---------------------------------------------------
+// Every read goes through getJSON(), which silently falls back to mock data
+// when the backend is unreachable. That silence is confusing (mock values can
+// look like real, wrong data), so we record the latest read's outcome and let
+// the UI surface it. "unknown" until the first read resolves.
+let dataSource = "unknown"; // "real" | "mock" | "unknown"
+const dataSourceListeners = new Set();
+
+export function getDataSource() {
+  return dataSource;
+}
+
+export function subscribeDataSource(fn) {
+  dataSourceListeners.add(fn);
+  return () => dataSourceListeners.delete(fn);
+}
+
+function setDataSource(next) {
+  if (next === dataSource) return;
+  dataSource = next;
+  dataSourceListeners.forEach((fn) => fn(next));
+}
+
 async function getJSON(path, fallback) {
   const sep = path.includes("?") ? "&" : "?";
   const url = currentUserId != null ? `${BASE}${path}${sep}user=${currentUserId}` : `${BASE}${path}`;
   try {
     const res = await fetch(url);
     if (!res.ok) throw new Error(`${res.status}`);
-    return await res.json();
+    const json = await res.json();
+    setDataSource("real");
+    return json;
   } catch (err) {
     console.warn(`[api] falling back to mock data for ${path}:`, err.message);
+    setDataSource("mock");
     return fallback;
   }
 }

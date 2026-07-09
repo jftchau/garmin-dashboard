@@ -1,5 +1,11 @@
 @import "tailwindcss";
 
+/* Compact layout for short screens (e.g. the 1024×600 Raspberry Pi display).
+   `short:` utilities only apply when the viewport is ≤700px tall, so the
+   desktop dev view is untouched while the Pi gets a denser, no-scroll layout.
+   Keep the max-height threshold in sync with useCompact() in utils.js. */
+@custom-variant short (@media (max-height: 700px));
+
 @theme {
   --color-ink: #14151a;
   --color-surface: #1c1e24;

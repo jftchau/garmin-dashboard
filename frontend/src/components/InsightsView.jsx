@@ -19,6 +19,7 @@ import {
   fetchCurrentStatus,
 } from "../api.js";
 import { formatSleep, prettyStatus } from "../utils.js";
+import { useCompact } from "../useCompact.js";
 
 const WHO_GOAL = 150;
 
@@ -36,6 +37,9 @@ export default function InsightsView() {
   const [weekly, setWeekly] = useState(null);
   const [wellness, setWellness] = useState(null);
   const [status, setStatus] = useState(null);
+  const compact = useCompact();
+  // Shrink fixed-height charts on the short Pi display so more fits per screen.
+  const h = (base) => (compact ? Math.round(base * 0.77) : base);
 
   useEffect(() => {
     fetchVo2maxTrend().then(setVo2);
@@ -51,9 +55,9 @@ export default function InsightsView() {
     : [];
 
   return (
-    <div className="p-4 sm:p-6 space-y-6">
+    <div className="p-4 sm:p-6 short:p-3 space-y-6 short:space-y-3">
       <div className="flex items-baseline gap-3">
-        <h2 className="heading-display text-xl text-volt">Insights</h2>
+        <h2 className="heading-display text-xl short:text-lg text-volt">Insights</h2>
         <span className="text-muted text-sm font-mono">trends from your run &amp; wellness history</span>
       </div>
 
@@ -71,20 +75,20 @@ export default function InsightsView() {
           )
         }
       >
-        {vo2 ? <Vo2Chart data={vo2.trend} /> : <Loading />}
+        {vo2 ? <Vo2Chart data={vo2.trend} height={h(220)} /> : <Loading />}
       </Panel>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 short:gap-3">
         <Panel title="Resting heart rate" subtitle="bpm · lower is fitter">
-          {wellness ? <RestingHrChart data={wellness} /> : <Loading />}
+          {wellness ? <RestingHrChart data={wellness} height={h(200)} /> : <Loading />}
         </Panel>
         <Panel title="HRV (weekly avg)" subtitle="ms · higher & stable is better">
-          {wellness ? <HrvChart data={wellness} /> : <Loading />}
+          {wellness ? <HrvChart data={wellness} height={h(200)} /> : <Loading />}
         </Panel>
       </div>
 
       <Panel title="Sleep" subtitle="hours per night">
-        {wellness ? <SleepChart data={sleepData} /> : <Loading />}
+        {wellness ? <SleepChart data={sleepData} height={h(200)} /> : <Loading />}
       </Panel>
 
       <Panel
@@ -92,11 +96,11 @@ export default function InsightsView() {
         subtitle={`WHO goal ${WHO_GOAL}/wk (moderate + 2× vigorous)`}
         right={weekly && <span className="text-muted text-xs font-mono">{weeksOnTarget}/{weekly.length} weeks on target</span>}
       >
-        {weekly ? <IntensityChart data={weekly} /> : <Loading />}
+        {weekly ? <IntensityChart data={weekly} height={h(240)} /> : <Loading />}
       </Panel>
 
       <Panel title="Weekly training load" subtitle="mechanical work from running power (kJ)">
-        {weekly ? <LoadChart data={weekly} /> : <Loading />}
+        {weekly ? <LoadChart data={weekly} height={h(220)} /> : <Loading />}
       </Panel>
     </div>
   );
@@ -127,9 +131,9 @@ function StatusRow({ s }) {
   );
 }
 
-function Vo2Chart({ data }) {
+function Vo2Chart({ data, height = 220 }) {
   return (
-    <ResponsiveContainer width="100%" height={220}>
+    <ResponsiveContainer width="100%" height={height}>
       <LineChart data={data} margin={{ top: 8, right: 12, left: -12, bottom: 0 }}>
         <CartesianGrid strokeDasharray="3 3" stroke="var(--color-line)" vertical={false} />
         <XAxis dataKey="date" tick={axisTick} axisLine={{ stroke: "var(--color-line)" }} tickLine={false} minTickGap={40} />
@@ -141,9 +145,9 @@ function Vo2Chart({ data }) {
   );
 }
 
-function RestingHrChart({ data }) {
+function RestingHrChart({ data, height = 200 }) {
   return (
-    <ResponsiveContainer width="100%" height={200}>
+    <ResponsiveContainer width="100%" height={height}>
       <LineChart data={data} margin={{ top: 8, right: 12, left: -12, bottom: 0 }}>
         <CartesianGrid strokeDasharray="3 3" stroke="var(--color-line)" vertical={false} />
         <XAxis dataKey="date" tick={axisTick} axisLine={{ stroke: "var(--color-line)" }} tickLine={false} minTickGap={40} />
@@ -155,9 +159,9 @@ function RestingHrChart({ data }) {
   );
 }
 
-function HrvChart({ data }) {
+function HrvChart({ data, height = 200 }) {
   return (
-    <ResponsiveContainer width="100%" height={200}>
+    <ResponsiveContainer width="100%" height={height}>
       <LineChart data={data} margin={{ top: 8, right: 12, left: -12, bottom: 0 }}>
         <CartesianGrid strokeDasharray="3 3" stroke="var(--color-line)" vertical={false} />
         <XAxis dataKey="date" tick={axisTick} axisLine={{ stroke: "var(--color-line)" }} tickLine={false} minTickGap={40} />
@@ -169,9 +173,9 @@ function HrvChart({ data }) {
   );
 }
 
-function SleepChart({ data }) {
+function SleepChart({ data, height = 200 }) {
   return (
-    <ResponsiveContainer width="100%" height={200}>
+    <ResponsiveContainer width="100%" height={height}>
       <BarChart data={data} margin={{ top: 8, right: 12, left: -12, bottom: 0 }}>
         <CartesianGrid strokeDasharray="3 3" stroke="var(--color-line)" vertical={false} />
         <XAxis dataKey="date" tick={axisTick} axisLine={{ stroke: "var(--color-line)" }} tickLine={false} minTickGap={40} />
@@ -196,9 +200,9 @@ function IntensityTooltip({ active, payload, label }) {
   );
 }
 
-function IntensityChart({ data }) {
+function IntensityChart({ data, height = 240 }) {
   return (
-    <ResponsiveContainer width="100%" height={240}>
+    <ResponsiveContainer width="100%" height={height}>
       <BarChart data={data} margin={{ top: 8, right: 12, left: -12, bottom: 0 }}>
         <CartesianGrid strokeDasharray="3 3" stroke="var(--color-line)" vertical={false} />
         <XAxis dataKey="week_start" tick={axisTick} axisLine={{ stroke: "var(--color-line)" }} tickLine={false} minTickGap={40} />
@@ -215,9 +219,9 @@ function IntensityChart({ data }) {
   );
 }
 
-function LoadChart({ data }) {
+function LoadChart({ data, height = 220 }) {
   return (
-    <ResponsiveContainer width="100%" height={220}>
+    <ResponsiveContainer width="100%" height={height}>
       <BarChart data={data} margin={{ top: 8, right: 12, left: -12, bottom: 0 }}>
         <CartesianGrid strokeDasharray="3 3" stroke="var(--color-line)" vertical={false} />
         <XAxis dataKey="week_start" tick={axisTick} axisLine={{ stroke: "var(--color-line)" }} tickLine={false} minTickGap={40} />
@@ -231,8 +235,8 @@ function LoadChart({ data }) {
 
 function Panel({ title, subtitle, right, children }) {
   return (
-    <div className="bg-surface border border-line rounded-lg p-4">
-      <div className="flex items-start justify-between mb-3">
+    <div className="bg-surface border border-line rounded-lg p-4 short:p-3">
+      <div className="flex items-start justify-between mb-3 short:mb-2">
         <div>
           <h3 className="heading-display text-sm uppercase tracking-wide text-muted">{title}</h3>
           {subtitle && <p className="text-muted text-[11px] font-mono mt-0.5">{subtitle}</p>}
