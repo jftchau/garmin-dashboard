@@ -91,7 +91,14 @@ def ensure_users(conn, users):
                 (u["slot"], u["name"], u["email"]),
             )
         else:
-            conn.execute("UPDATE users SET garmin_email = ? WHERE slot = ?", (u["email"], u["slot"]))
+            # Refresh the email, and fill in a blank name from config — but never
+            # overwrite a name the user has already set (in .env or the UI).
+            conn.execute(
+                "UPDATE users SET garmin_email = ?, "
+                "name = CASE WHEN name IS NULL OR TRIM(name) = '' THEN ? ELSE name END "
+                "WHERE slot = ?",
+                (u["email"], u["name"], u["slot"]),
+            )
     conn.commit()
     return {r["slot"]: r["id"] for r in conn.execute("SELECT slot, id FROM users").fetchall()}
 

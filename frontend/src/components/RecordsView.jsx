@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
 import { fetchPersonalRecords, fetchRacePredictions } from "../api.js";
-import { formatDuration, formatDateShort } from "../utils.js";
+import { useTwoUsers } from "../useTwoUsers.js";
+import { formatDuration, formatDateShort, RUNNER_COLORS, runnerName } from "../utils.js";
 
 // Map our PR distance keys to the race-prediction fields.
 const PREDICTION_KEY = {
@@ -10,74 +10,60 @@ const PREDICTION_KEY = {
   MARATHON: "time_marathon",
 };
 
-export default function RecordsView({ onSelectActivity }) {
-  const [records, setRecords] = useState(null);
-  const [predictions, setPredictions] = useState(null);
+export default function RecordsView({ users }) {
+  const [recA, recB] = useTwoUsers(fetchPersonalRecords, users);
+  const [predA, predB] = useTwoUsers(fetchRacePredictions, users);
 
-  useEffect(() => {
-    fetchPersonalRecords().then(setRecords);
-    fetchRacePredictions().then(setPredictions);
-  }, []);
+  if (!recA && !recB) {
+    return <p className="text-muted font-mono p-6">Loading…</p>;
+  }
+
+  // Use whichever runner loaded as the canonical distance list; look up the other.
+  const template = recA || recB;
+  const bByDist = Object.fromEntries((recB || []).map((r) => [r.distance_name, r]));
+  const aByDist = Object.fromEntries((recA || []).map((r) => [r.distance_name, r]));
+  const preds = [predA, predB];
 
   return (
-    <div className="p-4 sm:p-6 short:p-3 space-y-6 short:space-y-3">
+    <div className="p-4 sm:p-6 short:p-3 space-y-4 short:space-y-3">
       <h2 className="heading-display text-xl short:text-lg text-volt">Personal records</h2>
 
-      {!records ? (
-        <p className="text-muted font-mono">Loading…</p>
-      ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 short:gap-3">
-          {records.map((r) => {
-            const predKey = PREDICTION_KEY[r.distance_name];
-            const predicted = predictions && predKey ? predictions[predKey] : null;
-            const delta =
-              predicted != null && r.best_time_sec != null ? predicted - r.best_time_sec : null;
-            return (
-              <div
-                key={r.distance_name}
-                onClick={() => r.activity_id && onSelectActivity && onSelectActivity({ id: r.activity_id })}
-                className={`bg-surface border border-line rounded-lg p-4 short:p-3 text-center ${
-                  r.activity_id ? "cursor-pointer hover:border-volt" : "opacity-50"
-                }`}
-              >
-                <div className="text-muted text-xs uppercase tracking-wide font-mono mb-2">{r.label}</div>
-                <div className="stat-mono text-2xl text-volt">
-                  {r.best_time_sec ? formatDuration(r.best_time_sec) : "—"}
-                </div>
-                <div className="text-muted text-[11px] font-mono mt-1">
-                  {r.achieved_at ? formatDateShort(r.achieved_at) : "Not yet set"}
-                </div>
-
-                {predicted != null && (
-                  <div className="mt-3 pt-3 border-t border-line">
-                    <div className="text-muted text-[10px] uppercase tracking-wide font-mono">Predicted</div>
-                    <div className="stat-mono text-sm text-chalk">{formatDuration(predicted)}</div>
-                    {delta != null && (
-                      <div
-                        className="text-[10px] font-mono mt-0.5"
-                        style={{ color: delta < 0 ? "var(--color-zone2)" : "var(--color-muted)" }}
-                      >
-                        {delta < 0
-                          ? `${formatDuration(-delta)} faster`
-                          : delta > 0
-                          ? `${formatDuration(delta)} slower`
-                          : "on PR"}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+        {template.map((t) => {
+          const dist = t.distance_name;
+          const recs = [aByDist[dist], bByDist[dist]];
+          const predKey = PREDICTION_KEY[dist];
+          return (
+            <div key={dist} className="bg-surface border border-line rounded-lg p-4 text-center">
+              <div className="text-muted text-sm uppercase tracking-wide font-mono mb-4">{t.label}</div>
+              <div className="space-y-4">
+                {recs.map((r, i) => {
+                  const predicted = predKey && preds[i] ? preds[i][predKey] : null;
+                  return (
+                    <div key={i} className={i === 1 ? "pt-4 border-t border-line/60" : ""}>
+                      <div className="font-mono text-[11px] uppercase tracking-wide mb-1" style={{ color: RUNNER_COLORS[i] }}>
+                        {runnerName(users, i)}
                       </div>
-                    )}
-                  </div>
-                )}
+                      <div className="stat-mono text-2xl" style={{ color: RUNNER_COLORS[i] }}>
+                        {r && r.best_time_sec ? formatDuration(r.best_time_sec) : "—"}
+                      </div>
+                      <div className="text-muted text-[11px] font-mono mt-1">
+                        {r && r.achieved_at ? formatDateShort(r.achieved_at) : "—"}
+                        {predicted != null && (
+                          <div className="mt-0.5">pred {formatDuration(predicted)}</div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
-            );
-          })}
-        </div>
-      )}
+            </div>
+          );
+        })}
+      </div>
 
-      <div className="lane-rule" />
-
-      <p className="text-muted text-sm font-mono">
-        PRs are recalculated from your full run history (closest match within ±3% of the target).
-        Predicted times are Garmin's current race estimates — a green gap means Garmin thinks you can
-        beat your logged PR.
+      <p className="text-muted text-xs font-mono">
+        Best times from each runner's full history (±3% of the target). "pred" is Garmin's current race estimate.
       </p>
     </div>
   );

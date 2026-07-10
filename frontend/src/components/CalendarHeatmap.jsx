@@ -2,15 +2,18 @@ import { useMemo, useState } from "react";
 
 const MS_DAY = 86400000;
 
-function intensityColor(km) {
+// Ramp a run's distance to an opacity of the runner's base color. `rgb` is the
+// runner's color as an "r,g,b" string so each heatmap tints in its own hue.
+function intensityColor(km, rgb) {
   if (!km || km <= 0) return "var(--color-surface-2)";
-  if (km < 4) return "rgba(245,197,24,0.35)";
-  if (km < 8) return "rgba(245,197,24,0.6)";
-  if (km < 14) return "rgba(245,197,24,0.85)";
-  return "var(--color-volt)";
+  if (km < 4) return `rgba(${rgb},0.35)`;
+  if (km < 8) return `rgba(${rgb},0.6)`;
+  if (km < 14) return `rgba(${rgb},0.85)`;
+  return `rgb(${rgb})`;
 }
 
-export default function CalendarHeatmap({ data }) {
+export default function CalendarHeatmap({ data, rgb = "245,197,24", cell = 10, gap = 3, showHover = true }) {
+  const step = cell + gap;
   const [hovered, setHovered] = useState(null);
 
   const byDate = useMemo(() => {
@@ -52,28 +55,30 @@ export default function CalendarHeatmap({ data }) {
   return (
     <div className="overflow-x-auto">
       <div className="inline-block min-w-full">
-        <div className="flex gap-[3px] pl-1 mb-1 relative h-4">
+        <div className="relative h-4 mb-1 pl-1">
           {monthLabels.map((m) => (
             <span
               key={m.week}
               className="absolute text-[10px] font-mono text-muted"
-              style={{ left: `${m.week * 13}px` }}
+              style={{ left: `${m.week * step}px` }}
             >
               {m.label}
             </span>
           ))}
         </div>
-        <div className="flex gap-[3px]">
+        <div className="flex" style={{ gap }}>
           {weeks.map((col, wi) => (
-            <div key={wi} className="flex flex-col gap-[3px]">
+            <div key={wi} className="flex flex-col" style={{ gap }}>
               {col.map((day) => (
                 <div
                   key={day.iso}
-                  onMouseEnter={() => setHovered(day)}
-                  onMouseLeave={() => setHovered(null)}
-                  className="w-[10px] h-[10px] rounded-sm cursor-default"
+                  onMouseEnter={showHover ? () => setHovered(day) : undefined}
+                  onMouseLeave={showHover ? () => setHovered(null) : undefined}
+                  className="rounded-sm cursor-default"
                   style={{
-                    background: day.inFuture ? "transparent" : intensityColor(byDate[day.iso]),
+                    width: cell,
+                    height: cell,
+                    background: day.inFuture ? "transparent" : intensityColor(byDate[day.iso], rgb),
                     border: day.inFuture ? "1px solid var(--color-line)" : "none",
                   }}
                 />
@@ -81,12 +86,14 @@ export default function CalendarHeatmap({ data }) {
             </div>
           ))}
         </div>
-        <div className="mt-3 h-5 text-xs font-mono text-muted">
-          {hovered &&
-            (hovered.inFuture
-              ? null
-              : `${hovered.iso} — ${(byDate[hovered.iso] || 0).toFixed(1)} km`)}
-        </div>
+        {showHover && (
+          <div className="mt-3 h-5 text-xs font-mono text-muted">
+            {hovered &&
+              (hovered.inFuture
+                ? null
+                : `${hovered.iso} — ${(byDate[hovered.iso] || 0).toFixed(1)} km`)}
+          </div>
+        )}
       </div>
     </div>
   );

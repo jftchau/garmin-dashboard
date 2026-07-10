@@ -34,6 +34,18 @@ export function formatDayLabel(isoString) {
   return d.toLocaleDateString(undefined, { weekday: "short" });
 }
 
+// Head-to-head runner colors, indexed by position in the users array (Runner A
+// = volt, Runner B = blue). Mirrors --color-runner-a/-b in index.css. RGB
+// strings feed the calendar heatmap's rgba() ramp.
+export const RUNNER_COLORS = ["var(--color-runner-a)", "var(--color-runner-b)"];
+export const RUNNER_RGB = ["245,197,24", "79,168,224"];
+
+// Short display name for a runner slot, falling back to "Runner N" when unnamed.
+export function runnerName(users, i) {
+  const u = users?.[i];
+  return (u && u.name && u.name.trim()) || `Runner ${i + 1}`;
+}
+
 export const ZONE_COLORS = {
   "1": "var(--color-zone1)",
   "2": "var(--color-zone2)",
