@@ -72,7 +72,7 @@ export default function WeeklyMileageChart({
           {tooltip}
           {legend}
           {specs.map((s) => (
-            <Bar key={s.dataKey} dataKey={s.dataKey} name={s.name} fill={s.color} radius={[2, 2, 0, 0]} />
+            <Bar key={s.dataKey} dataKey={s.dataKey} name={s.name} fill={s.color} radius={[2, 2, 0, 0]} isAnimationActive={false} />
           ))}
         </BarChart>
       </ResponsiveContainer>
@@ -98,6 +98,7 @@ export default function WeeklyMileageChart({
             dot={multi ? false : { r: 3, fill: s.color, strokeWidth: 0 }}
             activeDot={{ r: 5 }}
             connectNulls
+            isAnimationActive={false}
           />
         ))}
       </LineChart>

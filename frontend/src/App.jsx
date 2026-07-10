@@ -3,6 +3,7 @@ import TabNav, { TABS } from "./components/TabNav.jsx";
 import RefreshButton from "./components/RefreshButton.jsx";
 import DataSourceBadge from "./components/DataSourceBadge.jsx";
 import RunnerLegend from "./components/RunnerLegend.jsx";
+import LastSyncBadge from "./components/LastSyncBadge.jsx";
 import WeekView from "./components/WeekView.jsx";
 import CalendarView from "./components/CalendarView.jsx";
 import HistoryView from "./components/HistoryView.jsx";
@@ -21,6 +22,17 @@ export default function App() {
 
   useEffect(() => {
     fetchUsers().then(setUsers);
+  }, []);
+
+  // Self-heal a wall display that runs for days: reload once nightly (~4am) to
+  // recover from any leaked/frozen tab and pick up new frontend deploys. Data
+  // itself already refreshes as each rotation remounts and refetches a view.
+  useEffect(() => {
+    const next = new Date();
+    next.setHours(4, 0, 0, 0);
+    if (next <= new Date()) next.setDate(next.getDate() + 1);
+    const t = setTimeout(() => window.location.reload(), next - new Date());
+    return () => clearTimeout(t);
   }, []);
 
   // Auto-advance through the tabs unless paused (e.g. a desktop user is looking).
@@ -51,6 +63,7 @@ export default function App() {
           <RunnerLegend users={users} />
         </div>
         <div className="flex items-center gap-3">
+          <LastSyncBadge />
           <DataSourceBadge />
           <button
             onClick={() => setPaused((p) => !p)}

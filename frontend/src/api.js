@@ -129,6 +129,13 @@ export function fetchCurrentStatus(userId) {
   return getJSON("/current-status", mockCurrentStatus, userId);
 }
 
+export function fetchLastSync() {
+  // No user param — freshness is global across runners. Mock stays null so the
+  // indicator simply hides when the backend is down (the DataSourceBadge already
+  // signals "Demo data" in that case).
+  return getJSON("/last-sync", { last_sync: null });
+}
+
 export async function triggerSync() {
   try {
     const res = await fetch(`${BASE}/sync-now`, { method: "POST" });

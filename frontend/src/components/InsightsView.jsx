@@ -107,8 +107,8 @@ function MiniChart({ data, height, pad, fmt }) {
         <XAxis dataKey="date" tick={axisTick} axisLine={{ stroke: "var(--color-line)" }} tickLine={false} minTickGap={44} />
         <YAxis tick={axisTick} axisLine={false} tickLine={false} width={30} domain={[`dataMin - ${pad}`, `dataMax + ${pad}`]} />
         <Tooltip contentStyle={tooltipStyle} labelStyle={{ color: "var(--color-muted)" }} formatter={(v, n) => [fmt(v), n]} />
-        <Line type="monotone" dataKey="a" name="A" stroke={RUNNER_COLORS[0]} strokeWidth={2} dot={false} connectNulls activeDot={{ r: 4 }} />
-        <Line type="monotone" dataKey="b" name="B" stroke={RUNNER_COLORS[1]} strokeWidth={2} dot={false} connectNulls activeDot={{ r: 4 }} />
+        <Line type="monotone" dataKey="a" name="A" stroke={RUNNER_COLORS[0]} strokeWidth={2} dot={false} connectNulls activeDot={{ r: 4 }} isAnimationActive={false} />
+        <Line type="monotone" dataKey="b" name="B" stroke={RUNNER_COLORS[1]} strokeWidth={2} dot={false} connectNulls activeDot={{ r: 4 }} isAnimationActive={false} />
       </LineChart>
     </ResponsiveContainer>
   );

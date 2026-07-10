@@ -58,10 +58,11 @@ display-only** (no touch, keyboard, or mouse). That shapes the whole UI:
 - **Records** — personal bests per distance for both runners vs **Garmin race
   predictions**.
 
-The richer per-run detail (running power & dynamics, splits, Leaflet GPS map) and
-the sortable activity log still live in the codebase (`ActivityModal`,
-`ActivityTable`, `RunMap`) but are not wired into the kiosk UI, which has no input
-to open them.
+The kiosk shows only the comparison views above. The richer per-run detail
+(power/dynamics, splits, GPS map) and the sortable activity log were removed from
+the frontend — a display-only kiosk has no way to open them — along with the
+`leaflet`/`react-leaflet` deps. The data still exists in the DB and is served by
+`/api/activity/<id>` and `/api/activities` if a future interactive build wants it.
 
 ---
 
@@ -80,11 +81,10 @@ frontend/
     api.js            # fetch wrappers; setCurrentUser(); mock-data fallback
     utils.js          # formatters + training-effect colors
     mock/mockData.js  # mock API responses for UI-only dev
-    components/       # TabNav, UserSwitcher, WeekView, CalendarView,
-                      # HistoryView, InsightsView, RecordsView, ActivityModal,
-                      # RunMap, WeeklyMileageChart, HRZoneDoughnut,
-                      # CalendarHeatmap, ActivityTable, TrainingEffectBadge,
-                      # RefreshButton
+    components/       # TabNav, WeekView, CalendarView, HistoryView,
+                      # InsightsView, RecordsView, CompareTable, RunnerLegend,
+                      # WeeklyMileageChart, HRZoneDoughnut, CalendarHeatmap,
+                      # CalendarStats, DataSourceBadge, RefreshButton
     App.jsx           # tab routing + 20s auto-rotation; passes both users to views
     index.css         # Tailwind v4 @theme tokens (Garmin black/volt-yellow)
   vite.config.js      # dev server + /api proxy — pinned to IPv4 127.0.0.1
@@ -230,12 +230,65 @@ The UI falls back to mock data (`src/mock/mockData.js`) if the backend is down.
 
 ---
 
-## Deploying to the Raspberry Pi
+## Deploying to the Raspberry Pi (1024×600 kiosk)
 
-`deploy/` holds `nginx.conf` (serves the built frontend on :8080, proxies
-`/api` → Flask on :5000), `garmin-api.service` (systemd unit), and
-`cron_setup.sh` (hourly `fetch_garmin.py`, which now syncs all users). See the
-"Phase 5" section of `docs/plan.md`. Pi-hole on port 80 is untouched.
+`deploy/` holds everything Pi-specific:
+
+| File | Purpose |
+|---|---|
+| `nginx.conf` | serves the built frontend on **:8080**, proxies `/api/` → Flask :5000 (leaves Pi-hole's :80 alone) |
+| `garmin-api.service` | systemd unit for the Flask API (`Restart=always`) |
+| `cron_setup.sh` | installs the hourly `fetch_garmin.py` sync (all users) |
+| `kiosk.sh` | launches Chromium full-screen at the dashboard + keeps the screen awake |
+| `kiosk_setup.sh` | autostarts `kiosk.sh` on desktop login |
+
+### 1. Code, API service, web server, sync
+```bash
+git clone https://github.com/jftchau/garmin-dashboard ~/garmin-dashboard
+cd ~/garmin-dashboard/backend
+python3 -m venv venv && ./venv/bin/pip install -r requirements.txt
+cp .env.example .env                                # fill in Garmin creds (both users)
+./venv/bin/python fetch_garmin.py --wellness 90     # initial full pull incl. wellness
+cd ../frontend && npm ci && npm run build           # build → dist/
+
+sudo cp ../deploy/garmin-api.service /etc/systemd/system/
+sudo systemctl enable --now garmin-api
+sudo cp ../deploy/nginx.conf /etc/nginx/sites-available/garmin
+sudo ln -sf /etc/nginx/sites-available/garmin /etc/nginx/sites-enabled/
+sudo systemctl reload nginx
+bash ../deploy/cron_setup.sh
+```
+The service/nginx files assume the repo is at `/home/pi/garmin-dashboard` — adjust
+paths if you cloned elsewhere.
+
+### 2. Kiosk display (the wall-mounted part)
+```bash
+sudo apt install -y chromium-browser unclutter
+sudo raspi-config     # System Options → Boot / Auto Login → "Desktop Autologin"
+bash ~/garmin-dashboard/deploy/kiosk_setup.sh   # autostart full-screen Chromium
+sudo reboot
+```
+`kiosk.sh` opens `http://localhost:8080` in `--kiosk` mode and disables screen
+blanking via X11 `xset`. On a **Wayland** Pi OS (the Bookworm default) `xset` is a
+no-op — either switch to the X11 session (`raspi-config` → Advanced → Wayland → X11)
+or disable blanking through the compositor (e.g. `swayidle timeout 0 true`, or a
+labwc `~/.config/labwc/autostart` entry).
+
+### 3. Hardware config for the 1024×600 panel
+- **Timezone matters** — the "this week" window and streak math use local time.
+  `sudo raspi-config` → Localisation → Timezone (or `sudo timedatectl set-timezone
+  <Area/City>`). Otherwise weeks/streaks can be a day off.
+- **Force the resolution / kill overscan** only if the panel is letterboxed or
+  mis-sized, in `/boot/firmware/config.txt` (older images: `/boot/config.txt`):
+  ```ini
+  disable_overscan=1
+  hdmi_group=2
+  hdmi_mode=87
+  hdmi_cvt=1024 600 60 6 0 0 0
+  ```
+
+Every tab is built to fit **1024×600 with no scroll** — see the display-target
+section up top and `CLAUDE.md`. See "Phase 5" of `docs/plan.md` for background.
 
 ---
 
