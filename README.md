@@ -9,11 +9,35 @@ state**, which has grown well beyond that plan.
 
 ---
 
+## Display target — a 1024×600 Raspberry Pi kiosk (design constraint)
+
+The dashboard is built to run on a **1024×600, 7" Raspberry Pi monitor that is
+display-only** (no touch, keyboard, or mouse). That shapes the whole UI:
+
+- **Head-to-head, both runners at once.** Every tab compares the two runners on
+  shared charts/tables, color-coded (Runner A = volt yellow, Runner B = blue) —
+  there is no user switcher, because nothing on the Pi can click it.
+- **Auto-rotating.** The app cycles through the 5 tabs every 20s hands-free
+  (`ROTATE_MS` in `src/App.jsx`); a header ⏸/▶ button or a tab click pauses it
+  for desktop inspection.
+- **No scrolling — every tab fits 1024×600.** A height-gated compact mode
+  (`@custom-variant short (@media (max-height:700px))` in `index.css` + the
+  `useCompact()` hook at the same threshold) shrinks padding/spacing/charts on
+  short screens only; the desktop dev view (≥701px tall) is left roomy.
+
+> **Contributors / AI agents:** keeping every tab within the 600px budget is a
+> hard requirement. After any UI change, verify at 1024×600 that the page does
+> not scroll (`document.body.scrollHeight <= 600`) on **every** tab for **both**
+> runners. See the "Raspberry Pi display fit" section in `CLAUDE.md`.
+
+---
+
 ## Current state (2026-07-08)
 
-- **Multi-user.** Supports multiple users (built for 2). Each user has their own
-  Garmin account, data rows (`user_id` everywhere), and an editable display name.
-  A user switcher lives in the dashboard header.
+- **Multi-user, shown head-to-head.** Supports multiple users (built for 2). Each
+  user has their own Garmin account, data rows (`user_id` everywhere), and a
+  display name (seeded from `.env`, editable in the DB). Both runners are compared
+  side-by-side on every tab — there is no switcher (see the kiosk section above).
 - **User 1** (currently named "Jeffrey") is fully populated: 141 runs
   (Feb 2025–Jul 2026), 60 days of daily wellness, and race predictions.
 - **User 2** is wired up but **not yet connected** — add `GARMIN_EMAIL_2` /
@@ -21,19 +45,23 @@ state**, which has grown well beyond that plan.
 - Developed & tested locally on **Windows**; **not yet deployed to the Pi**.
 - A pre–multi-user DB backup exists at `backend/garmin.db.bak`.
 
-### Dashboard tabs
-- **This Week** — headline distance/time/pace, daily-mileage **bar chart** (only
-  days that have occurred are drawn), HR-zone doughnut, this week's runs.
-- **Calendar** — GitHub-style run-frequency heatmap (CSS grid, no API key).
-- **History** — range-filtered weekly-mileage line chart + full activity log
-  (run names + colored training-effect badges, sortable).
-- **Insights** — current-status cards (resting HR, HRV, sleep, Body Battery,
-  stress, training status) + trend charts: VO₂max, resting HR, HRV, sleep,
-  weekly intensity minutes vs the 150-min WHO goal, weekly training load (kJ).
-- **Records** — personal bests vs **Garmin race predictions** (green gap = Garmin
-  thinks you can beat your logged PR).
-- **Activity modal** — full stats incl. running power & dynamics, calories,
-  temperature, hydration, splits, and a lazy-loaded Leaflet GPS map.
+### Dashboard tabs (each compares both runners head-to-head, fits 1024×600)
+- **This Week** — a two-runner comparison table (distance/time/pace/runs),
+  grouped daily-mileage bars, and an HR-zone doughnut per runner.
+- **Calendar** — a run-frequency heatmap per runner (CSS grid, no API key) with a
+  color legend + cross-training markers, plus frequency stats (runs/week, current
+  & longest streak, longest layoff, busiest weekday) and a weekday sparkline.
+- **History** — both runners' weekly mileage overlaid on one line chart, plus a
+  total / avg-per-week / best-week comparison table.
+- **Insights** — a resting-HR / HRV / sleep / VO₂max status row for both runners,
+  plus a 2×2 grid of overlaid trend charts (VO₂max, resting HR, HRV, sleep).
+- **Records** — personal bests per distance for both runners vs **Garmin race
+  predictions**.
+
+The richer per-run detail (running power & dynamics, splits, Leaflet GPS map) and
+the sortable activity log still live in the codebase (`ActivityModal`,
+`ActivityTable`, `RunMap`) but are not wired into the kiosk UI, which has no input
+to open them.
 
 ---
 
@@ -57,7 +85,7 @@ frontend/
                       # RunMap, WeeklyMileageChart, HRZoneDoughnut,
                       # CalendarHeatmap, ActivityTable, TrainingEffectBadge,
                       # RefreshButton
-    App.jsx           # tab routing, user switching (remounts views on switch)
+    App.jsx           # tab routing + 20s auto-rotation; passes both users to views
     index.css         # Tailwind v4 @theme tokens (Garmin black/volt-yellow)
   vite.config.js      # dev server + /api proxy — pinned to IPv4 127.0.0.1
 deploy/               # nginx.conf, garmin-api.service, cron_setup.sh (Pi)
@@ -222,6 +250,24 @@ The UI falls back to mock data (`src/mock/mockData.js`) if the backend is down.
   gear was logged); the shoe-mileage idea is parked.
 - Garmin `startTimeLocal` is space-separated (`"2026-07-06 08:30:00"`); the
   "This Week" query compares on the date prefix to avoid dropping Monday runs.
+
+---
+
+## Contributing / pushing changes
+
+Work on a branch and open a PR — never commit straight to `main` (it's protected
+from force-pushes).
+
+```bash
+git checkout -b my-change      # 1. new branch
+git commit -am "…"             # 2. commit (.env / *.db / tokens are gitignored)
+git push -u origin my-change   # 3. push — prints a "Create a pull request" URL
+```
+
+Then **open a PR against `main` on GitHub** (the printed URL or the repo's *Pull
+requests* tab) and review/merge it there. `CLAUDE.md` has the full workflow,
+including the REST-API fallback for automation (the `gh` CLI isn't installed on
+the dev box).
 
 ---
 

@@ -12,6 +12,14 @@ function intensityColor(km, rgb) {
   return `rgb(${rgb})`;
 }
 
+// Distance buckets the ramp above encodes, shown in the legend so the color
+// scale is self-explanatory. Values are the low edge of each intensity step.
+const LEGEND_STEPS = [0, 2, 6, 10, 16];
+
+// A day with only cross-training (no run) gets a neutral slate fill — visibly
+// "something happened" without competing with the runner's distance hue.
+const CROSS_TRAIN_FILL = "rgba(148,163,184,0.30)";
+
 export default function CalendarHeatmap({ data, rgb = "245,197,24", cell = 10, gap = 3, showHover = true }) {
   const step = cell + gap;
   const [hovered, setHovered] = useState(null);
@@ -21,6 +29,23 @@ export default function CalendarHeatmap({ data, rgb = "245,197,24", cell = 10, g
     (data || []).forEach((d) => (map[d.date] = d.distance_km));
     return map;
   }, [data]);
+
+  // Days with cross-training only (a non-run activity, no run that day).
+  const crossDates = useMemo(() => {
+    const s = new Set();
+    (data || []).forEach((d) => d.cross_train && s.add(d.date));
+    return s;
+  }, [data]);
+
+  const hasCrossTrain = crossDates.size > 0;
+
+  // Fill for one day: run intensity wins; else a cross-training marker; else empty.
+  const dayFill = (iso) => {
+    const km = byDate[iso];
+    if (km > 0) return intensityColor(km, rgb);
+    if (crossDates.has(iso)) return CROSS_TRAIN_FILL;
+    return intensityColor(0, rgb);
+  };
 
   // Build a 53-week x 7-day grid ending today, Sunday-first columns like GitHub.
   const { weeks, monthLabels } = useMemo(() => {
@@ -52,9 +77,13 @@ export default function CalendarHeatmap({ data, rgb = "245,197,24", cell = 10, g
     return { weeks: weeksArr, monthLabels: labels };
   }, []);
 
+  const gridWidth = weeks.length * step;
+
   return (
     <div className="overflow-x-auto">
-      <div className="inline-block min-w-full">
+      {/* w-fit + mx-auto centers the fixed-width grid on wide cards, while the
+          overflow-x-auto parent still lets it scroll on a narrow screen. */}
+      <div className="mx-auto w-fit">
         <div className="relative h-4 mb-1 pl-1">
           {monthLabels.map((m) => (
             <span
@@ -78,7 +107,7 @@ export default function CalendarHeatmap({ data, rgb = "245,197,24", cell = 10, g
                   style={{
                     width: cell,
                     height: cell,
-                    background: day.inFuture ? "transparent" : intensityColor(byDate[day.iso], rgb),
+                    background: day.inFuture ? "transparent" : dayFill(day.iso),
                     border: day.inFuture ? "1px solid var(--color-line)" : "none",
                   }}
                 />
@@ -86,6 +115,32 @@ export default function CalendarHeatmap({ data, rgb = "245,197,24", cell = 10, g
             </div>
           ))}
         </div>
+
+        {/* Legend: the distance→intensity ramp, right-aligned under the grid. */}
+        <div
+          className="flex items-center justify-end gap-1.5 mt-2 text-[10px] font-mono text-muted"
+          style={{ width: gridWidth }}
+        >
+          {hasCrossTrain && (
+            <div className="flex items-center gap-1.5 mr-auto">
+              <div
+                className="rounded-sm"
+                style={{ width: cell, height: cell, background: CROSS_TRAIN_FILL }}
+              />
+              <span>Cross-training</span>
+            </div>
+          )}
+          <span>Less</span>
+          {LEGEND_STEPS.map((km) => (
+            <div
+              key={km}
+              className="rounded-sm"
+              style={{ width: cell, height: cell, background: intensityColor(km, rgb) }}
+            />
+          ))}
+          <span>More</span>
+        </div>
+
         {showHover && (
           <div className="mt-3 h-5 text-xs font-mono text-muted">
             {hovered &&

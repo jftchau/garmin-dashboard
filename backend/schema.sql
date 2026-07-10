@@ -13,6 +13,7 @@ CREATE TABLE IF NOT EXISTS activities (
     user_id INTEGER NOT NULL DEFAULT 1,
     garmin_id TEXT UNIQUE NOT NULL,    -- Garmin activity ids are globally unique
     start_time TEXT NOT NULL,          -- ISO 8601
+    activity_type TEXT,                -- Garmin typeKey: 'running','cycling','strength_training',...
     distance REAL,                     -- meters
     duration REAL,                     -- seconds
     pace REAL,                         -- seconds per km

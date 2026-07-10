@@ -39,6 +39,11 @@ PR_LABELS = {
     "MARATHON": "Marathon",
 }
 
+# SQL predicate that keeps a query to running activities only. Non-runs are now
+# stored (as cross-training context), so every distance/pace/mileage stat must
+# exclude them. Legacy rows have a NULL type and are all runs, hence COALESCE.
+RUN_ONLY = "COALESCE(activity_type, 'running') LIKE '%running%'"
+
 
 def parse_json_field(value):
     if not value:
@@ -151,7 +156,8 @@ def this_week():
         # against an isoformat() boundary ("...T00:00:00") would sort a Monday
         # run *before* the Monday boundary (space < 'T') and drop it.
         rows = conn.execute(
-            "SELECT * FROM activities WHERE user_id = ? AND start_time >= ? AND start_time < ? ORDER BY start_time",
+            f"SELECT * FROM activities WHERE user_id = ? AND {RUN_ONLY} "
+            "AND start_time >= ? AND start_time < ? ORDER BY start_time",
             (uid, monday.strftime("%Y-%m-%d"), next_monday.strftime("%Y-%m-%d")),
         ).fetchall()
 
@@ -196,7 +202,8 @@ def weekly_mileage():
     with get_conn() as conn:
         uid = resolve_user_id(conn)
         rows = conn.execute(
-            "SELECT start_time, distance FROM activities WHERE user_id = ? AND distance IS NOT NULL ORDER BY start_time",
+            f"SELECT start_time, distance FROM activities WHERE user_id = ? AND distance IS NOT NULL "
+            f"AND {RUN_ONLY} ORDER BY start_time",
             (uid,),
         ).fetchall()
 
@@ -226,7 +233,8 @@ def vo2max_trend():
     with get_conn() as conn:
         uid = resolve_user_id(conn)
         rows = conn.execute(
-            "SELECT start_time, vo2max FROM activities WHERE user_id = ? AND vo2max IS NOT NULL ORDER BY start_time",
+            f"SELECT start_time, vo2max FROM activities WHERE user_id = ? AND vo2max IS NOT NULL "
+            f"AND {RUN_ONLY} ORDER BY start_time",
             (uid,),
         ).fetchall()
         cur = conn.execute(
@@ -252,10 +260,10 @@ def weekly_insights():
     with get_conn() as conn:
         uid = resolve_user_id(conn)
         rows = conn.execute(
-            """
+            f"""
             SELECT start_time, duration, avg_power,
                    moderate_intensity_minutes, vigorous_intensity_minutes
-            FROM activities WHERE user_id = ?
+            FROM activities WHERE user_id = ? AND {RUN_ONLY}
             """,
             (uid,),
         ).fetchall()
@@ -290,22 +298,39 @@ def weekly_insights():
 
 @app.route("/api/calendar")
 def calendar():
-    """Daily distance totals for the run-frequency heatmap."""
+    """Daily totals for the run-frequency heatmap. `distance_km` is running
+    distance only (drives the intensity ramp); `cross_train` flags days that had
+    a non-run activity (cycling, strength, ...) and no run — surfaced as a
+    distinct marker so cross-training shows up without inflating run stats."""
     days_param = int(request.args.get("days", 365))
     cutoff = (datetime.now() - timedelta(days=days_param)).strftime("%Y-%m-%d")
     with get_conn() as conn:
         uid = resolve_user_id(conn)
         rows = conn.execute(
-            "SELECT start_time, distance FROM activities WHERE user_id = ? AND start_time >= ?",
+            "SELECT start_time, distance, activity_type FROM activities "
+            "WHERE user_id = ? AND start_time >= ?",
             (uid, cutoff),
         ).fetchall()
 
     daily = {}
     for r in rows:
         day = r["start_time"][:10]
-        daily[day] = daily.get(day, 0) + (r["distance"] or 0)
+        e = daily.setdefault(day, {"run_m": 0.0, "cross": False})
+        if "running" in (r["activity_type"] or "running"):
+            e["run_m"] += r["distance"] or 0
+        else:
+            e["cross"] = True
 
-    result = [{"date": d, "distance_km": round(v / 1000, 2)} for d, v in sorted(daily.items())]
+    result = [
+        {
+            "date": d,
+            "distance_km": round(e["run_m"] / 1000, 2),
+            # Only a "cross-training only" day is worth flagging; a day that also
+            # has a run is already shown by the intensity ramp.
+            "cross_train": e["cross"] and e["run_m"] == 0,
+        }
+        for d, e in sorted(daily.items())
+    ]
     return jsonify(result)
 
 
