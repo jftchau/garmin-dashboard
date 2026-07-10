@@ -6,7 +6,9 @@ const TABS = [
   { id: "records", label: "Records" },
 ];
 
-export default function TabNav({ active, onChange }) {
+export { TABS };
+
+export default function TabNav({ active, onChange, rotating, rotateMs, cycle }) {
   return (
     <div className="border-b border-line">
       <nav className="flex gap-1 px-4 sm:px-6">
@@ -21,9 +23,21 @@ export default function TabNav({ active, onChange }) {
               }`}
             >
               {tab.label}
-              {isActive && (
-                <span className="lane-rule absolute left-0 right-0 -bottom-px" />
-              )}
+              {isActive &&
+                (rotating ? (
+                  // Progress bar that fills over the dwell time, so the auto-
+                  // rotation is legible on the input-less Pi. Re-keyed each cycle
+                  // to restart the animation.
+                  <span className="absolute left-0 right-0 -bottom-px h-[3px] overflow-hidden">
+                    <span
+                      key={`${tab.id}-${cycle}`}
+                      className="block h-full bg-volt origin-left"
+                      style={{ animation: `tab-progress ${rotateMs}ms linear forwards` }}
+                    />
+                  </span>
+                ) : (
+                  <span className="lane-rule absolute left-0 right-0 -bottom-px" />
+                ))}
             </button>
           );
         })}

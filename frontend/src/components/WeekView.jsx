@@ -1,80 +1,78 @@
-import { useEffect, useState } from "react";
-import { fetchThisWeek } from "../api.js";
 import HRZoneDoughnut from "./HRZoneDoughnut.jsx";
 import WeeklyMileageChart from "./WeeklyMileageChart.jsx";
-import ActivityTable from "./ActivityTable.jsx";
-import { formatDuration, formatPace } from "../utils.js";
+import CompareTable from "./CompareTable.jsx";
+import { fetchThisWeek } from "../api.js";
+import { useTwoUsers } from "../useTwoUsers.js";
 import { useCompact } from "../useCompact.js";
+import { formatDuration, formatPace, RUNNER_COLORS, runnerName } from "../utils.js";
 
 // Short weekday label ("Mon") from a YYYY-MM-DD string, parsed in local time.
 const dayTick = (iso) =>
   new Date(`${iso}T00:00:00`).toLocaleDateString(undefined, { weekday: "short" });
 
-export default function WeekView({ onSelectActivity }) {
-  const [week, setWeek] = useState(null);
+const km = (v) => (v != null ? `${v} km` : "—");
+
+export default function WeekView({ users }) {
+  const [weekA, weekB] = useTwoUsers(fetchThisWeek, users);
   const compact = useCompact();
-  const chartH = compact ? 165 : 220;
+  const chartH = compact ? 150 : 210;
 
-  useEffect(() => {
-    fetchThisWeek().then(setWeek);
-  }, []);
-
-  if (!week) {
+  if (!weekA && !weekB) {
     return <p className="text-muted font-mono p-6">Loading this week…</p>;
   }
 
-  // Only show bars for days that have actually happened — leave upcoming days
-  // (after today) empty so the chart doesn't imply future dates already passed.
+  const range = weekA || weekB;
+  const rows = [
+    { label: "Distance", values: [km(weekA?.total_distance_km), km(weekB?.total_distance_km)] },
+    { label: "Time", values: [fmtDur(weekA), fmtDur(weekB)] },
+    { label: "Avg pace", values: [fmtPace(weekA), fmtPace(weekB)] },
+    { label: "Runs", values: [weekA?.activities?.length ?? "—", weekB?.activities?.length ?? "—"] },
+  ];
+
+  // Merge both runners' daily distance into one row per day; leave upcoming days
+  // empty so the grouped bars don't imply future dates already happened.
   const todayStr = new Date().toLocaleDateString("en-CA");
-  const dailyData = (week.daily_distance_km || []).map((d) => ({
-    ...d,
-    distance_km: d.date > todayStr ? null : d.distance_km,
+  const bByDate = Object.fromEntries((weekB?.daily_distance_km || []).map((d) => [d.date, d.distance_km]));
+  const daily = (range?.daily_distance_km || []).map((d) => ({
+    date: d.date,
+    a: d.date > todayStr ? null : (weekA ? d.distance_km : null),
+    b: d.date > todayStr ? null : (weekB ? bByDate[d.date] ?? 0 : null),
   }));
 
+  const series = [
+    { dataKey: "a", color: RUNNER_COLORS[0], name: runnerName(users, 0) },
+    { dataKey: "b", color: RUNNER_COLORS[1], name: runnerName(users, 1) },
+  ];
+
   return (
-    <div className="p-4 sm:p-6 short:p-3 space-y-6 short:space-y-3">
-      {/* GPS-watch-style readout: the week's headline number, large and mono */}
-      <div className="flex flex-wrap items-end gap-x-10 short:gap-x-6 gap-y-2">
-        <div>
-          <div className="stat-mono text-5xl sm:text-6xl short:text-4xl text-volt">
-            {week.total_distance_km}
-            <span className="text-xl text-muted ml-2">km</span>
-          </div>
-          <div className="text-muted text-xs uppercase tracking-wide mt-1 font-mono">
-            {week.week_start} → {week.week_end}
-          </div>
-        </div>
-        <Stat label="Time" value={formatDuration(week.total_duration_sec)} />
-        <Stat label="Avg pace" value={formatPace(week.avg_pace_sec_per_km)} />
-        <Stat label="Runs" value={week.activities.length} />
-      </div>
-
-      <div className="lane-rule" />
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 short:gap-3">
+    <div className="p-4 sm:p-6 short:p-3 space-y-4 short:space-y-3">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 short:gap-3">
+        <Panel title={`This week · ${range?.week_start} → ${range?.week_end}`}>
+          <CompareTable users={users} rows={rows} big />
+        </Panel>
         <Panel title="Daily mileage">
-          <WeeklyMileageChart data={dailyData} dataKeyX="date" dataKeyY="distance_km" bar tickFormatter={dayTick} height={chartH} />
-        </Panel>
-        <Panel title="Heart rate zones">
-          <HRZoneDoughnut zoneSeconds={week.heart_rate_zone_seconds} height={chartH} />
+          <WeeklyMileageChart data={daily} dataKeyX="date" bar tickFormatter={dayTick} series={series} height={chartH} />
         </Panel>
       </div>
 
-      <Panel title="This week's runs">
-        <ActivityTable activities={week.activities} onSelect={onSelectActivity} />
+      <Panel title="Heart rate zones">
+        <div className="grid grid-cols-2 gap-4 short:gap-3">
+          {[weekA, weekB].map((w, i) => (
+            <div key={i}>
+              <div className="text-center font-mono text-xs mb-1" style={{ color: RUNNER_COLORS[i] }}>
+                {runnerName(users, i)}
+              </div>
+              <HRZoneDoughnut zoneSeconds={w?.heart_rate_zone_seconds} height={compact ? 135 : 175} />
+            </div>
+          ))}
+        </div>
       </Panel>
     </div>
   );
 }
 
-function Stat({ label, value }) {
-  return (
-    <div>
-      <div className="stat-mono text-2xl text-chalk">{value}</div>
-      <div className="text-muted text-[11px] uppercase tracking-wide font-mono">{label}</div>
-    </div>
-  );
-}
+const fmtDur = (w) => (w ? formatDuration(w.total_duration_sec) : "—");
+const fmtPace = (w) => (w ? formatPace(w.avg_pace_sec_per_km) : "—");
 
 function Panel({ title, children }) {
   return (

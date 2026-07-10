@@ -8,6 +8,7 @@ import {
   Tooltip,
   ResponsiveContainer,
   CartesianGrid,
+  Legend,
 } from "recharts";
 
 const axisTick = { fill: "var(--color-muted)", fontSize: 11, fontFamily: "var(--font-mono)" };
@@ -18,6 +19,7 @@ const tooltipStyle = {
   fontFamily: "var(--font-mono)",
   fontSize: 12,
 };
+const legendStyle = { fontSize: 11, fontFamily: "var(--font-mono)" };
 
 export default function WeeklyMileageChart({
   data,
@@ -29,7 +31,16 @@ export default function WeeklyMileageChart({
   // Show every category label by default when rendering bars (e.g. the 7 days
   // of a week); let recharts thin them out otherwise.
   interval,
+  // Head-to-head: array of { dataKey, color, name } to render one bar/line per
+  // runner (grouped bars / overlaid lines + legend). Falls back to the single
+  // volt series keyed by dataKeyY when omitted.
+  series,
 }) {
+  const multi = Array.isArray(series) && series.length > 0;
+  const specs = multi
+    ? series
+    : [{ dataKey: dataKeyY, color: "var(--color-volt)", name: "Distance" }];
+
   const xAxis = (
     <XAxis
       dataKey={dataKeyX}
@@ -46,9 +57,10 @@ export default function WeeklyMileageChart({
       contentStyle={tooltipStyle}
       labelStyle={{ color: "var(--color-muted)" }}
       labelFormatter={tickFormatter}
-      formatter={(value) => [`${value} km`, "Distance"]}
+      formatter={(value, name) => [value != null ? `${value} km` : "—", name]}
     />
   );
+  const legend = multi ? <Legend wrapperStyle={legendStyle} iconSize={10} /> : null;
 
   if (bar) {
     return (
@@ -58,7 +70,10 @@ export default function WeeklyMileageChart({
           {xAxis}
           {yAxis}
           {tooltip}
-          <Bar dataKey={dataKeyY} fill="var(--color-volt)" radius={[2, 2, 0, 0]} />
+          {legend}
+          {specs.map((s) => (
+            <Bar key={s.dataKey} dataKey={s.dataKey} name={s.name} fill={s.color} radius={[2, 2, 0, 0]} />
+          ))}
         </BarChart>
       </ResponsiveContainer>
     );
@@ -71,14 +86,20 @@ export default function WeeklyMileageChart({
         {xAxis}
         {yAxis}
         {tooltip}
-        <Line
-          type="monotone"
-          dataKey={dataKeyY}
-          stroke="var(--color-volt)"
-          strokeWidth={2.5}
-          dot={{ r: 3, fill: "var(--color-volt)", strokeWidth: 0 }}
-          activeDot={{ r: 5 }}
-        />
+        {legend}
+        {specs.map((s) => (
+          <Line
+            key={s.dataKey}
+            type="monotone"
+            dataKey={s.dataKey}
+            name={s.name}
+            stroke={s.color}
+            strokeWidth={2.5}
+            dot={multi ? false : { r: 3, fill: s.color, strokeWidth: 0 }}
+            activeDot={{ r: 5 }}
+            connectNulls
+          />
+        ))}
       </LineChart>
     </ResponsiveContainer>
   );
