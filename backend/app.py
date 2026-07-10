@@ -436,6 +436,22 @@ def sync_now():
         return jsonify({"ok": False, "error": "fetch timed out"}), 500
 
 
+@app.route("/api/last-sync")
+def last_sync():
+    """Most recent successful fetcher run across all users — powers the
+    'updated X ago' freshness indicator on the wall display."""
+    with get_conn() as conn:
+        r = conn.execute(
+            "SELECT MAX(last_sync) AS ts FROM sync_log WHERE status = 'ok'"
+        ).fetchone()
+    ts = r["ts"] if r else None
+    # sync_log stores naive UTC (datetime.utcnow().isoformat()); mark it UTC so
+    # the browser computes elapsed time correctly regardless of its timezone.
+    if ts and not ts.endswith("Z") and "+" not in ts:
+        ts += "Z"
+    return jsonify({"last_sync": ts})
+
+
 @app.route("/api/health")
 def health():
     return jsonify({"status": "ok"})

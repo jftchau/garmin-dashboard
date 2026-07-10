@@ -123,6 +123,10 @@ merges on the GitHub website.
 
 ## Current state / next steps
 
-User 1 ("Jeffrey") is fully populated. User 2 is configured but **not connected**
-— add `GARMIN_EMAIL_2`/`GARMIN_PASSWORD_2` to `backend/.env` and sync. Not yet
-deployed to the Pi (`deploy/` scripts are Linux/systemd/cron/nginx).
+Both runners are populated and connected — **Jeffrey** (user 1) and **Eugenia**
+(user 2). The UI is the two-runner auto-rotating kiosk (see the display-fit
+section above). `deploy/` now includes the kiosk scripts (`kiosk.sh`,
+`kiosk_setup.sh`) alongside nginx/systemd/cron; see the "Deploying to the
+Raspberry Pi" section of `README.md`. **Not yet physically deployed to the Pi.**
+Note: Eugenia's daily-wellness history may be thin until
+`fetch_garmin.py --wellness 90` is run for user 2.

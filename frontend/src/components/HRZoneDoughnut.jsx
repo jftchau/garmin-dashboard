@@ -37,6 +37,7 @@ export default function HRZoneDoughnut({ zoneSeconds, height = 220 }) {
           paddingAngle={2}
           stroke="var(--color-ink)"
           strokeWidth={2}
+          isAnimationActive={false}
         >
           {data.map((entry) => (
             <Cell key={entry.zone} fill={ZONE_COLORS[entry.zone]} />
