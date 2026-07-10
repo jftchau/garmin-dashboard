@@ -1,9 +1,11 @@
 """
 fetch_garmin.py
 
-Logs into Garmin Connect, pulls running activities (paginated), extracts the
-metrics the dashboard needs, upserts them into SQLite, and recalculates
-personal records (1K, 5K, 10K, half marathon, marathon).
+Logs into Garmin Connect, pulls activities (paginated), extracts the metrics the
+dashboard needs, upserts them into SQLite, and recalculates personal records
+(1K, 5K, 10K, half marathon, marathon). Runs are stored in full; non-runs are
+stored as lightweight cross-training context (type/date/distance, no detail
+calls) and are excluded from every run-only stat and from PRs.
 
 Run manually:           python fetch_garmin.py           # incremental
 Full re-process:        python fetch_garmin.py --full    # re-fetch every run
@@ -122,8 +124,14 @@ def get_client(user):
     return client
 
 
+def activity_typekey(a):
+    """Garmin's typeKey for an activity, e.g. 'running', 'trail_running',
+    'cycling', 'strength_training'. '' when absent."""
+    return (a.get("activityType", {}) or {}).get("typeKey", "") or ""
+
+
 def is_running_activity(a):
-    return "running" in (a.get("activityType", {}) or {}).get("typeKey", "")
+    return "running" in activity_typekey(a)
 
 
 def load_known_garmin_ids(conn, user_id):
@@ -132,14 +140,17 @@ def load_known_garmin_ids(conn, user_id):
     return {r["garmin_id"] for r in rows}
 
 
-def fetch_running_activities(client, known_ids, full=False):
-    """Page through Garmin Connect activities (newest-first), return runs to process.
+def fetch_new_activities(client, known_ids, full=False):
+    """Page through Garmin Connect activities (newest-first), return the ones to
+    process. Runs *and* non-runs are returned — non-runs are surfaced as
+    cross-training context; only their type/date/distance are kept (see
+    normalize_activity, which skips detail calls for them).
 
-    Incremental (default): runs whose garmin_id is in `known_ids` are skipped,
-    and paging stops as soon as a page contains an already-known run — since the
-    feed is newest-first, everything older is already synced.
+    Incremental (default): activities whose garmin_id is in `known_ids` are
+    skipped, and paging stops as soon as a page contains an already-known
+    activity — since the feed is newest-first, everything older is already synced.
 
-    full=True returns every run regardless (for a complete re-process).
+    full=True returns every activity regardless (for a complete re-process).
     """
     activities = []
     start = 0
@@ -147,14 +158,14 @@ def fetch_running_activities(client, known_ids, full=False):
         batch = client.get_activities(start, PAGE_SIZE)
         if not batch:
             break
-        runs = [a for a in batch if is_running_activity(a)]
-        new_runs = runs if full else [a for a in runs if str(a.get("activityId")) not in known_ids]
-        activities.extend(new_runs)
-        log.info("Offset %d: %d runs on page, %d new (%d to process so far)",
-                 start, len(runs), len(new_runs), len(activities))
+        new_acts = batch if full else [a for a in batch if str(a.get("activityId")) not in known_ids]
+        activities.extend(new_acts)
+        runs = sum(1 for a in new_acts if is_running_activity(a))
+        log.info("Offset %d: %d on page, %d new (%d runs), %d to process so far",
+                 start, len(batch), len(new_acts), runs, len(activities))
 
-        # A page with a known run marks the boundary with already-synced history.
-        if not full and len(new_runs) < len(runs):
+        # A page with a known activity marks the boundary with synced history.
+        if not full and len(new_acts) < len(batch):
             break
         if len(batch) < PAGE_SIZE:
             break
@@ -237,13 +248,17 @@ def normalize_activity(client, raw):
     duration_s = raw.get("duration") or 0
     pace = (duration_s / (distance_m / 1000)) if distance_m else None
 
-    # Two detail calls now (splits, polyline) — HR zones come from the summary.
-    splits = extract_splits(client, activity_id)
-    polyline = extract_polyline(client, activity_id)
+    # Splits/polyline back the run detail views, so we only spend those two extra
+    # detail calls on runs. Non-runs are context-only (calendar cross-training
+    # markers) and need just type/date/distance from the summary.
+    is_run = is_running_activity(raw)
+    splits = extract_splits(client, activity_id) if is_run else []
+    polyline = extract_polyline(client, activity_id) if is_run else []
 
     row = {
         "garmin_id": str(activity_id),
         "start_time": raw.get("startTimeLocal") or raw.get("startTimeGMT"),
+        "activity_type": activity_typekey(raw) or None,
         "distance": distance_m,
         "duration": duration_s,
         "pace": pace,
@@ -466,8 +481,10 @@ def recalculate_personal_records(conn, user_id):
     approximate using whole-activity pace for runs that match the target
     distance closely, which is accurate enough for typical race-distance runs.
     """
+    # Running only — a 5 km bike ride or swim must never become a 5K run PR.
     rows = conn.execute(
-        "SELECT id, distance, duration, pace, start_time FROM activities WHERE user_id = ? AND distance IS NOT NULL",
+        "SELECT id, distance, duration, pace, start_time FROM activities "
+        "WHERE user_id = ? AND distance IS NOT NULL AND COALESCE(activity_type, 'running') LIKE '%running%'",
         (user_id,),
     ).fetchall()
 
@@ -536,8 +553,8 @@ def sync_user(user, uid, full=False):
 
     with get_conn() as conn:
         known_ids = set() if full else load_known_garmin_ids(conn, uid)
-        raw_activities = fetch_running_activities(client, known_ids, full=full)
-        log.info("[%s] %d running activities to process", user["name"], len(raw_activities))
+        raw_activities = fetch_new_activities(client, known_ids, full=full)
+        log.info("[%s] %d activities to process", user["name"], len(raw_activities))
 
         inserted, updated = 0, 0
         for raw in raw_activities:

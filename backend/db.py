@@ -18,6 +18,7 @@ SCHEMA_PATH = os.path.join(os.path.dirname(__file__), "schema.sql")
 # applied to already-created databases via ALTER TABLE (SQLite has no
 # "ADD COLUMN IF NOT EXISTS", so we diff against PRAGMA table_info).
 MIGRATION_COLUMNS = {
+    "activity_type": "TEXT",
     "activity_name": "TEXT",
     "location_name": "TEXT",
     "calories": "REAL",
@@ -131,6 +132,12 @@ def _migrate(conn):
 
     _add_missing_columns(conn, "activities", MIGRATION_COLUMNS)
     _add_missing_columns(conn, "user_metrics", USER_METRICS_COLUMNS)
+
+    # Every activity that predates the multi-sport change is a run (the fetcher
+    # only stored running activities until now). Tag them so run-only queries,
+    # which filter on activity_type, keep matching them. New non-run rows always
+    # carry a real typeKey, so this only ever touches legacy NULLs.
+    conn.execute("UPDATE activities SET activity_type = 'running' WHERE activity_type IS NULL")
 
     # Add user_id to the tables that only need a column (no PK change).
     for table in ("activities", "sync_log"):
