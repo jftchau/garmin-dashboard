@@ -44,9 +44,11 @@ function setDataSource(next) {
   dataSourceListeners.forEach((fn) => fn(next));
 }
 
-async function getJSON(path, fallback) {
+async function getJSON(path, fallback, userId) {
   const sep = path.includes("?") ? "&" : "?";
-  const url = currentUserId != null ? `${BASE}${path}${sep}user=${currentUserId}` : `${BASE}${path}`;
+  // Explicit userId (head-to-head views fetch each runner) overrides the global.
+  const uid = userId != null ? userId : currentUserId;
+  const url = uid != null ? `${BASE}${path}${sep}user=${uid}` : `${BASE}${path}`;
   try {
     const res = await fetch(url);
     if (!res.ok) throw new Error(`${res.status}`);
@@ -73,54 +75,58 @@ export async function updateUserName(id, name) {
   return res.json();
 }
 
-export function fetchActivities(limit = 20, offset = 0) {
-  return getJSON(`/activities?limit=${limit}&offset=${offset}`, {
-    activities: mockActivities,
-    total: mockActivities.length,
-    limit,
-    offset,
-  });
+export function fetchActivities(limit = 20, offset = 0, userId) {
+  return getJSON(
+    `/activities?limit=${limit}&offset=${offset}`,
+    {
+      activities: mockActivities,
+      total: mockActivities.length,
+      limit,
+      offset,
+    },
+    userId
+  );
 }
 
-export function fetchActivity(id) {
+export function fetchActivity(id, userId) {
   const fallback = mockActivities.find((a) => a.id === id) || mockActivities[0];
-  return getJSON(`/activity/${id}`, fallback);
+  return getJSON(`/activity/${id}`, fallback, userId);
 }
 
-export function fetchThisWeek() {
-  return getJSON("/this-week", mockThisWeek);
+export function fetchThisWeek(userId) {
+  return getJSON("/this-week", mockThisWeek, userId);
 }
 
-export function fetchWeeklyMileage() {
-  return getJSON("/weekly-mileage", mockWeeklyMileage);
+export function fetchWeeklyMileage(userId) {
+  return getJSON("/weekly-mileage", mockWeeklyMileage, userId);
 }
 
-export function fetchCalendar(days = 365) {
-  return getJSON(`/calendar?days=${days}`, mockCalendar);
+export function fetchCalendar(days = 365, userId) {
+  return getJSON(`/calendar?days=${days}`, mockCalendar, userId);
 }
 
-export function fetchPersonalRecords() {
-  return getJSON("/personal-records", mockPersonalRecords);
+export function fetchPersonalRecords(userId) {
+  return getJSON("/personal-records", mockPersonalRecords, userId);
 }
 
-export function fetchVo2maxTrend() {
-  return getJSON("/vo2max-trend", mockVo2maxTrend);
+export function fetchVo2maxTrend(userId) {
+  return getJSON("/vo2max-trend", mockVo2maxTrend, userId);
 }
 
-export function fetchWeeklyInsights() {
-  return getJSON("/weekly-insights", mockWeeklyInsights);
+export function fetchWeeklyInsights(userId) {
+  return getJSON("/weekly-insights", mockWeeklyInsights, userId);
 }
 
-export function fetchRacePredictions() {
-  return getJSON("/race-predictions", mockRacePredictions);
+export function fetchRacePredictions(userId) {
+  return getJSON("/race-predictions", mockRacePredictions, userId);
 }
 
-export function fetchWellnessTrend(days = 90) {
-  return getJSON(`/wellness-trend?days=${days}`, mockWellnessTrend);
+export function fetchWellnessTrend(days = 90, userId) {
+  return getJSON(`/wellness-trend?days=${days}`, mockWellnessTrend, userId);
 }
 
-export function fetchCurrentStatus() {
-  return getJSON("/current-status", mockCurrentStatus);
+export function fetchCurrentStatus(userId) {
+  return getJSON("/current-status", mockCurrentStatus, userId);
 }
 
 export async function triggerSync() {

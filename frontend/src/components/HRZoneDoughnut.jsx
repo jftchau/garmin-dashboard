@@ -16,8 +16,11 @@ export default function HRZoneDoughnut({ zoneSeconds, height = 220 }) {
 
   if (data.length === 0) {
     return (
-      <div className="flex items-center justify-center h-[220px] text-muted text-sm font-mono">
-        No heart rate data this week
+      <div
+        className="flex items-center justify-center text-muted text-xs font-mono text-center px-2"
+        style={{ height }}
+      >
+        No heart rate data
       </div>
     );
   }

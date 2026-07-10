@@ -15,6 +15,11 @@
   --color-muted: #8a8f99;
   --color-volt: #f5c518;
   --color-volt-dim: #b8951a;
+
+  /* Head-to-head runner colors — used consistently across every chart, legend,
+     and comparison stat. Runner A = the brand volt; Runner B = blue. */
+  --color-runner-a: #f5c518;
+  --color-runner-b: #4fa8e0;
   --color-zone1: #4fa8e0;
   --color-zone2: #4fc0a0;
   --color-zone3: #f5c518;
@@ -50,6 +55,12 @@ body {
     transparent 22px
   );
   opacity: 0.55;
+}
+
+/* Fills the active tab's underline over the auto-rotation dwell time. */
+@keyframes tab-progress {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
 }
 
 .stat-mono {

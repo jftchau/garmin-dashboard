@@ -1,46 +1,43 @@
 import { useEffect, useState } from "react";
-import TabNav from "./components/TabNav.jsx";
+import TabNav, { TABS } from "./components/TabNav.jsx";
 import RefreshButton from "./components/RefreshButton.jsx";
 import DataSourceBadge from "./components/DataSourceBadge.jsx";
-import UserSwitcher from "./components/UserSwitcher.jsx";
+import RunnerLegend from "./components/RunnerLegend.jsx";
 import WeekView from "./components/WeekView.jsx";
 import CalendarView from "./components/CalendarView.jsx";
 import HistoryView from "./components/HistoryView.jsx";
 import InsightsView from "./components/InsightsView.jsx";
 import RecordsView from "./components/RecordsView.jsx";
-import ActivityModal from "./components/ActivityModal.jsx";
-import { fetchActivity, fetchUsers, updateUserName, setCurrentUser } from "./api.js";
+import { fetchUsers } from "./api.js";
+
+// Dwell time per tab for the hands-free carousel on the input-less Pi.
+const ROTATE_MS = 20000;
 
 export default function App() {
-  const [tab, setTab] = useState("week");
-  const [selected, setSelected] = useState(null);
+  const [tabIdx, setTabIdx] = useState(0);
+  const [cycle, setCycle] = useState(0); // bumped each rotation; re-keys the progress bar
+  const [paused, setPaused] = useState(false);
   const [users, setUsers] = useState([]);
-  const [userId, setUserId] = useState(null);
 
   useEffect(() => {
-    fetchUsers().then((us) => {
-      setUsers(us);
-      if (us.length) {
-        setCurrentUser(us[0].id);
-        setUserId(us[0].id);
-      }
-    });
+    fetchUsers().then(setUsers);
   }, []);
 
-  function handleSelectUser(id) {
-    setCurrentUser(id); // set before remount so views fetch the right user
-    setUserId(id);
-  }
+  // Auto-advance through the tabs unless paused (e.g. a desktop user is looking).
+  useEffect(() => {
+    if (paused) return;
+    const t = setInterval(() => {
+      setTabIdx((i) => (i + 1) % TABS.length);
+      setCycle((c) => c + 1);
+    }, ROTATE_MS);
+    return () => clearInterval(t);
+  }, [paused]);
 
-  async function handleRenameUser(id, name) {
-    await updateUserName(id, name);
-    setUsers((prev) => prev.map((u) => (u.id === id ? { ...u, name } : u)));
-  }
+  const tab = TABS[tabIdx].id;
 
-  async function handleSelectActivity(activity) {
-    // Records/history pass partial objects; fetch the full detail (incl. polyline/splits).
-    const full = await fetchActivity(activity.id);
-    setSelected(full);
+  function handleTab(id) {
+    setTabIdx(TABS.findIndex((t) => t.id === id));
+    setPaused(true); // manual navigation stops the carousel
   }
 
   return (
@@ -51,30 +48,36 @@ export default function App() {
           <h1 className="heading-display text-lg sm:text-xl font-bold tracking-tight">
             Run<span className="text-volt">.</span>Dashboard
           </h1>
-          <DataSourceBadge />
+          <RunnerLegend users={users} />
         </div>
         <div className="flex items-center gap-3">
-          <UserSwitcher
-            users={users}
-            selectedId={userId}
-            onSelect={handleSelectUser}
-            onRename={handleRenameUser}
-          />
+          <DataSourceBadge />
+          <button
+            onClick={() => setPaused((p) => !p)}
+            title={paused ? "Resume auto-rotation" : "Pause auto-rotation"}
+            className="font-mono text-xs sm:text-sm px-3 py-2 rounded border border-line bg-surface hover:border-volt hover:text-volt transition-colors"
+          >
+            {paused ? "▶ Play" : "⏸ Pause"}
+          </button>
           <RefreshButton onDone={() => window.location.reload()} />
         </div>
       </header>
 
-      <TabNav active={tab} onChange={setTab} />
+      <TabNav
+        active={tab}
+        onChange={handleTab}
+        rotating={!paused}
+        rotateMs={ROTATE_MS}
+        cycle={cycle}
+      />
 
-      <main className="flex-1" key={userId}>
-        {tab === "week" && <WeekView onSelectActivity={handleSelectActivity} />}
-        {tab === "calendar" && <CalendarView />}
-        {tab === "history" && <HistoryView onSelectActivity={handleSelectActivity} />}
-        {tab === "insights" && <InsightsView />}
-        {tab === "records" && <RecordsView onSelectActivity={handleSelectActivity} />}
+      <main className="flex-1">
+        {tab === "week" && <WeekView users={users} />}
+        {tab === "calendar" && <CalendarView users={users} />}
+        {tab === "history" && <HistoryView users={users} />}
+        {tab === "insights" && <InsightsView users={users} />}
+        {tab === "records" && <RecordsView users={users} />}
       </main>
-
-      <ActivityModal activity={selected} onClose={() => setSelected(null)} />
     </div>
   );
 }
