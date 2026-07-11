@@ -81,9 +81,10 @@ export default function CalendarHeatmap({ data, rgb = "245,197,24", cell = 10, g
 
   return (
     <div className="overflow-x-auto">
-      {/* w-fit + mx-auto centers the fixed-width grid on wide cards, while the
-          overflow-x-auto parent still lets it scroll on a narrow screen. */}
-      <div className="mx-auto w-fit">
+      {/* Left-aligned fixed-width grid so it lines up with the card header and
+          the stats strip; the overflow-x-auto parent still lets it scroll on a
+          narrow screen. */}
+      <div className="w-fit">
         <div className="relative h-4 mb-1 pl-1">
           {monthLabels.map((m) => (
             <span

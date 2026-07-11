@@ -160,8 +160,25 @@ def this_week():
             "AND start_time >= ? AND start_time < ? ORDER BY start_time",
             (uid, monday.strftime("%Y-%m-%d"), next_monday.strftime("%Y-%m-%d")),
         ).fetchall()
+        # Non-run activities in the same week — shown as lightweight cross-training
+        # context (not part of the run totals).
+        cross_rows = conn.execute(
+            f"SELECT activity_type, start_time, duration, distance FROM activities "
+            f"WHERE user_id = ? AND NOT ({RUN_ONLY}) "
+            "AND start_time >= ? AND start_time < ? ORDER BY start_time",
+            (uid, monday.strftime("%Y-%m-%d"), next_monday.strftime("%Y-%m-%d")),
+        ).fetchall()
 
     activities = [serialize_activity(r) for r in rows]
+    cross_training = [
+        {
+            "activity_type": r["activity_type"],
+            "date": r["start_time"][:10],
+            "duration_sec": r["duration"],
+            "distance_km": round((r["distance"] or 0) / 1000, 2),
+        }
+        for r in cross_rows
+    ]
 
     daily = {}
     for i in range(7):
@@ -193,6 +210,7 @@ def this_week():
         "avg_pace_sec_per_km": avg_pace,
         "heart_rate_zone_seconds": zone_totals,
         "activities": activities,
+        "cross_training": cross_training,
     })
 
 

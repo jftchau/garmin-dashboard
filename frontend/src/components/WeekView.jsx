@@ -12,6 +12,21 @@ const dayTick = (iso) =>
 
 const km = (v) => (v != null ? `${v} km` : "—");
 
+// Prettify a Garmin non-run typeKey for display: "strength_training" ->
+// "Strength", "indoor_cycling" -> "Cycling", "walking" -> "Walking".
+const prettyType = (t) =>
+  ((t || "activity")
+    .replace(/_/g, " ")
+    .replace(/\b(training|indoor|outdoor)\b/gi, "")
+    .trim()
+    .replace(/\b\w/g, (c) => c.toUpperCase()) || "Other");
+
+function crossSummary(week) {
+  const list = week?.cross_training || [];
+  if (!list.length) return null;
+  return { count: list.length, types: [...new Set(list.map((c) => prettyType(c.activity_type)))] };
+}
+
 export default function WeekView({ users }) {
   const [weekA, weekB] = useTwoUsers(fetchThisWeek, users);
   const compact = useCompact();
@@ -22,6 +37,8 @@ export default function WeekView({ users }) {
   }
 
   const range = weekA || weekB;
+  const csA = crossSummary(weekA);
+  const csB = crossSummary(weekB);
   const rows = [
     { label: "Distance", values: [km(weekA?.total_distance_km), km(weekB?.total_distance_km)] },
     { label: "Time", values: [fmtDur(weekA), fmtDur(weekB)] },
@@ -49,6 +66,21 @@ export default function WeekView({ users }) {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 short:gap-3">
         <Panel title={`This week · ${range?.week_start} → ${range?.week_end}`}>
           <CompareTable users={users} rows={rows} big />
+          {(csA || csB) && (
+            <div className="mt-3 short:mt-2 pt-2 border-t border-line/50 flex flex-wrap items-baseline gap-x-4 gap-y-1 font-mono text-[11px]">
+              <span className="uppercase tracking-wide text-muted">Cross-training</span>
+              {[csA, csB].map((cs, i) =>
+                cs ? (
+                  <span key={i} className="text-muted">
+                    <span style={{ color: RUNNER_COLORS[i] }}>
+                      {runnerName(users, i)} {cs.count}
+                    </span>{" "}
+                    · {cs.types.join(", ")}
+                  </span>
+                ) : null
+              )}
+            </div>
+          )}
         </Panel>
         <Panel title="Daily mileage">
           <WeeklyMileageChart data={daily} dataKeyX="date" bar tickFormatter={dayTick} series={series} height={chartH} />
@@ -62,7 +94,7 @@ export default function WeekView({ users }) {
               <div className="text-center font-mono text-xs mb-1" style={{ color: RUNNER_COLORS[i] }}>
                 {runnerName(users, i)}
               </div>
-              <HRZoneDoughnut zoneSeconds={w?.heart_rate_zone_seconds} height={compact ? 135 : 175} />
+              <HRZoneDoughnut zoneSeconds={w?.heart_rate_zone_seconds} height={compact ? 126 : 175} />
             </div>
           ))}
         </div>
