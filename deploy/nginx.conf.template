@@ -1,8 +1,10 @@
+# Rendered by deploy/install.sh — @REPO_DIR@ is substituted with the real repo
+# path. Don't install this file directly; run `bash deploy/install.sh`.
 server {
     listen 8080;
     server_name _;
 
-    root /home/pi/garmin-dashboard/frontend/dist;
+    root @REPO_DIR@/frontend/dist;
     index index.html;
 
     location /api/ {

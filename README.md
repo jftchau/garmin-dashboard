@@ -236,8 +236,9 @@ The UI falls back to mock data (`src/mock/mockData.js`) if the backend is down.
 
 | File | Purpose |
 |---|---|
-| `nginx.conf` | serves the built frontend on **:8080**, proxies `/api/` → Flask :5000 (leaves Pi-hole's :80 alone) |
-| `garmin-api.service` | systemd unit for the Flask API (`Restart=always`) |
+| `install.sh` | renders + installs the nginx site and systemd unit for **this** host (path/user detected, no hand-editing) |
+| `nginx.conf.template` | serves the built frontend on **:8080**, proxies `/api/` → Flask :5000 (leaves Pi-hole's :80 alone) |
+| `garmin-api.service.template` | systemd unit for the Flask API (`Restart=always`) |
 | `cron_setup.sh` | installs the hourly `fetch_garmin.py` sync (all users) |
 | `kiosk.sh` | launches Chromium full-screen at the dashboard + keeps the screen awake |
 | `kiosk_setup.sh` | autostarts `kiosk.sh` on desktop login |
@@ -251,15 +252,14 @@ cp .env.example .env                                # fill in Garmin creds (both
 ./venv/bin/python fetch_garmin.py --wellness 90     # initial full pull incl. wellness
 cd ../frontend && npm ci && npm run build           # build → dist/
 
-sudo cp ../deploy/garmin-api.service /etc/systemd/system/
-sudo systemctl enable --now garmin-api
-sudo cp ../deploy/nginx.conf /etc/nginx/sites-available/garmin
-sudo ln -sf /etc/nginx/sites-available/garmin /etc/nginx/sites-enabled/
-sudo systemctl reload nginx
-bash ../deploy/cron_setup.sh
+bash ../deploy/install.sh          # nginx site + systemd unit, rendered for this host
+bash ../deploy/cron_setup.sh       # hourly sync
 ```
-The service/nginx files assume the repo is at `/home/pi/garmin-dashboard` — adjust
-paths if you cloned elsewhere.
+`install.sh` substitutes the real repo path and OS user into the two `.template`
+files, so **nothing is tied to a particular home directory** — clone anywhere, run
+it as your normal user (it sudo's on its own), and re-run it any time. Use
+`bash deploy/install.sh --dry-run` first to see exactly what it would change
+against the live config.
 
 ### 2. Kiosk display (the wall-mounted part)
 ```bash
