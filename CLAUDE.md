@@ -61,6 +61,13 @@ npm run build          # prod build -> dist/
 
 ## Architecture facts that matter
 
+- **Garmin login needs 2FA — a human.** Email/password alone won't authenticate.
+  `fetch_garmin.py --login` does the interactive login (prompts for the code) and
+  caches a session token per user (`.garmin_tokens*`); every later sync reuses it.
+  Unattended runs (cron) never prompt — `get_client()` raises `GarminAuthRequired`
+  with a "run --login" message when stdin isn't a tty, so cron fails loudly instead
+  of hanging. A dead fetcher surfaces on the kiosk as an amber "⚠ stale" header
+  badge after 24h (`LastSyncBadge.jsx`).
 - **Multi-user**: `users` table + `user_id` on every data table. API endpoints
   take `?user=<id>` (default = first user). Credentials per slot in `.env`
   (`GARMIN_EMAIL[_2]` / `GARMIN_PASSWORD[_2]`). Names are editable in the UI and

@@ -1,4 +1,9 @@
 garminconnect==0.2.24
+# Garmin's auth lib, pinned to the version garminconnect 0.2.24 was tested
+# against so the Pi and dev boxes resolve the same SSO/2FA code path. (It is NOT
+# pinned because newer versions break login — the login failures we hit were the
+# account's 2FA challenge; see "Garmin login & 2FA" in README.md.)
+garth==0.4.47
 python-dotenv==1.0.1
 flask==3.0.3
 flask-cors==4.0.1

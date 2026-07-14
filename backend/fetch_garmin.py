@@ -9,7 +9,14 @@ calls) and are excluded from every run-only stat and from PRs.
 
 Run manually:           python fetch_garmin.py           # incremental
 Full re-process:        python fetch_garmin.py --full    # re-fetch every run
+Log in / renew 2FA:     python fetch_garmin.py --login   # needs a terminal
 Run via cron (hourly):  0 * * * * cd .../backend && ./venv/bin/python fetch_garmin.py >> logs/fetch.log 2>&1
+
+The Garmin accounts have 2FA, so a fresh login needs a human to type a code.
+`--login` does that once and caches the session token (.garmin_tokens*); every
+later sync — including cron's — reuses it. When the token eventually expires the
+unattended sync stops with a "run --login" error rather than hanging on a prompt
+cron can't answer, and the dashboard header goes amber to say the data is stale.
 
 Incremental by default: runs already in the DB are skipped (no per-activity
 detail calls), and because Garmin returns activities newest-first, paging stops
@@ -105,23 +112,78 @@ def ensure_users(conn, users):
     return {r["slot"]: r["id"] for r in conn.execute("SELECT slot, id FROM users").fetchall()}
 
 
-def get_client(user):
-    """Log in to Garmin Connect for one user, reusing a cached token if present."""
+class GarminAuthRequired(RuntimeError):
+    """No usable cached token, and nobody is around to answer Garmin's 2FA
+    challenge. Raised instead of prompting when stdin isn't a terminal."""
+
+
+def _fresh_login(user):
+    """Full Garmin SSO login for one user, answering the 2FA challenge on stdin,
+    and persist the session token. Requires a human — see login_all()."""
     from garminconnect import Garmin
+
+    def prompt_mfa():
+        return input(f"[{user['name']}] Garmin 2FA code: ").strip()
+
+    client = Garmin(user["email"], user["password"], prompt_mfa=prompt_mfa)
+    client.login()
+    ts = user["token_store"]
+    try:
+        client.garth.dump(ts)
+        log.info("[%s] session token saved to %s", user["name"], ts)
+    except Exception as e:
+        log.warning("[%s] could not persist session token: %s", user["name"], e)
+    return client
+
+
+def get_client(user, interactive=None):
+    """Log in to Garmin Connect for one user, reusing the cached token.
+
+    The account has 2FA on, so a *fresh* login can only be completed by a human
+    typing a code. Cron has no stdin, so rather than dying inside garth's
+    `input("MFA code: ")` with a bare EOFError, we refuse up front and say what
+    to run. Pass interactive=True (or run from a terminal) to allow the prompt.
+    """
+    from garminconnect import Garmin
+
+    if interactive is None:
+        interactive = sys.stdin.isatty()
 
     client = Garmin(user["email"], user["password"])
     ts = user["token_store"]
     try:
         client.login(ts)
         log.info("[%s] logged in via cached token (%s)", user["name"], ts)
-    except Exception:
-        log.info("[%s] no usable cached token — logging in fresh", user["name"])
-        client.login()
+        return client
+    except Exception as e:
+        log.info("[%s] no usable cached token (%s)", user["name"], e)
+
+    if not interactive:
+        raise GarminAuthRequired(
+            f"{user['name']}: Garmin session expired and 2FA needs a human. "
+            f"Run: ./venv/bin/python fetch_garmin.py --login"
+        )
+
+    log.info("[%s] logging in fresh — Garmin will ask for a 2FA code", user["name"])
+    return _fresh_login(user)
+
+
+def login_all():
+    """`--login`: establish a fresh Garmin session per user, answering the 2FA
+    challenge, and cache the tokens so cron can sync unattended until they
+    expire."""
+    if not sys.stdin.isatty():
+        log.error("--login needs a terminal to read the 2FA code from.")
+        return 1
+    for user in configured_users():
+        log.info("=== Logging in: %s ===", user["name"])
         try:
-            client.garth.dump(ts)
+            _fresh_login(user)
         except Exception as e:
-            log.warning("[%s] could not persist session token: %s", user["name"], e)
-    return client
+            log.error("[%s] login failed: %s", user["name"], e)
+            return 1
+    log.info("All users logged in. Tokens cached — cron can now sync unattended.")
+    return 0
 
 
 def activity_typekey(a):
@@ -591,19 +653,31 @@ def sync_user(user, uid, full=False):
 
 
 def run(full=False):
+    """Sync every configured user. Returns the number that failed, so cron gets a
+    non-zero exit (and a mail) instead of a silently half-finished sync."""
     init_db()
     users = configured_users()
     with get_conn() as conn:
         slot_to_id = ensure_users(conn, users)
 
+    failures = 0
     for user in users:
         try:
             sync_user(user, slot_to_id[user["slot"]], full=full)
+        except GarminAuthRequired as e:
+            # Not a bug — the token aged out. Say what to do, don't dump a stack.
+            log.error("%s", e)
+            failures += 1
         except Exception as e:
             log.exception("[%s] sync failed: %s", user["name"], e)
+            failures += 1
+    return failures
 
 
 if __name__ == "__main__":
+    if "--login" in sys.argv:
+        sys.exit(login_all())
+
     if "--backfill" in sys.argv:
         backfill_summary_metrics()
         sys.exit(0)
@@ -628,7 +702,9 @@ if __name__ == "__main__":
 
     full = "--full" in sys.argv
     try:
-        run(full=full)
+        sys.exit(1 if run(full=full) else 0)
+    except SystemExit:
+        raise
     except Exception as e:
         log.exception("Fetch failed: %s", e)
         try:
