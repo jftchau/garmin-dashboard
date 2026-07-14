@@ -1,0 +1,16 @@
+# Daily self-update at 04:30 — nobody is watching the wall display then, so a
+# rebuild + restart + kiosk reload costs nothing. (The app's own nightly reload is
+# at 04:00, i.e. *before* this; useVersionCheck.js is what actually gets the new
+# bundle onto the screen, within ~5 min.)
+#
+# Persistent=true so a Pi that was off at 04:30 updates shortly after it boots.
+[Unit]
+Description=Daily Garmin Dashboard self-update
+
+[Timer]
+OnCalendar=*-*-* 04:30:00
+RandomizedDelaySec=300
+Persistent=true
+
+[Install]
+WantedBy=timers.target
