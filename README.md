@@ -154,6 +154,8 @@ python fetch_garmin.py --backfill # repopulate Tier-1 summary columns from
                                   #   stored raw_json (no Garmin API calls)
 python fetch_garmin.py --wellness [days]   # backfill daily wellness + race
                                            #   predictions (default 90 days)
+python fetch_garmin.py --login    # (re)authenticate with Garmin — needs a
+                                  #   terminal + the 2FA code. See below.
 ```
 
 - **Incremental**: skips runs already in the DB and stops paging as soon as a
@@ -165,6 +167,30 @@ python fetch_garmin.py --wellness [days]   # backfill daily wellness + race
   daily wellness + current race predictions per user. Full history is a one-time
   `--wellness` run.
 - Session tokens cached per user (`.garmin_tokens`, `.garmin_tokens_2`).
+
+### Garmin login & 2FA
+
+**The accounts have 2FA on, so a fresh login can only be completed by a human.**
+This is the thing that blocks a first sync on a new machine — not a library bug.
+Email/password alone are not enough; Garmin issues a challenge and the code has to
+be typed in.
+
+```bash
+cd backend
+./venv/bin/python fetch_garmin.py --login   # per user: prompts for the 2FA code
+```
+
+That performs the full SSO login for every user in `.env` and writes the session
+token to `.garmin_tokens*`. **Every later sync — including cron's — reuses the
+cached token and needs no human.** Re-run `--login` only when the token expires.
+
+Because cron has no stdin, an unattended sync **never** prompts: if no cached
+token works, it fails immediately with `run: fetch_garmin.py --login` and a
+non-zero exit, instead of dying inside a 2FA prompt nobody can answer. You'll also
+see it on the kiosk — the header's "updated …" indicator turns **amber and reads
+"⚠ stale"** once the last successful sync is over 24h old, which is the only thing
+that would otherwise reveal a dead fetcher (the dashboard keeps happily showing
+the last-synced numbers).
 
 ---
 
