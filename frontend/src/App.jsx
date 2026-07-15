@@ -10,6 +10,7 @@ import HistoryView from "./components/HistoryView.jsx";
 import InsightsView from "./components/InsightsView.jsx";
 import RecordsView from "./components/RecordsView.jsx";
 import { fetchUsers } from "./api.js";
+import { useVersionCheck } from "./useVersionCheck.js";
 
 // Dwell time per tab for the hands-free carousel on the input-less Pi.
 const ROTATE_MS = 20000;
@@ -20,13 +21,18 @@ export default function App() {
   const [paused, setPaused] = useState(false);
   const [users, setUsers] = useState([]);
 
+  // Reload into a freshly deployed bundle within minutes of deploy/update.sh
+  // swapping it in — the nightly reload below runs at 4am, *before* the 4:30
+  // update timer, so on its own it would leave the kiosk a day behind.
+  useVersionCheck();
+
   useEffect(() => {
     fetchUsers().then(setUsers);
   }, []);
 
   // Self-heal a wall display that runs for days: reload once nightly (~4am) to
-  // recover from any leaked/frozen tab and pick up new frontend deploys. Data
-  // itself already refreshes as each rotation remounts and refetches a view.
+  // recover from any leaked/frozen tab. Data itself already refreshes as each
+  // rotation remounts and refetches a view.
   useEffect(() => {
     const next = new Date();
     next.setHours(4, 0, 0, 0);

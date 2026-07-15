@@ -17,6 +17,14 @@ server {
         proxy_set_header X-Real-IP $remote_addr;
     }
 
+    # The kiosk polls this to notice a new deploy and reload itself
+    # (useVersionCheck.js). It must never be cached, and must 404 rather than
+    # fall through to index.html — the poll parses it as JSON.
+    location = /version.json {
+        add_header Cache-Control "no-store" always;
+        try_files $uri =404;
+    }
+
     location / {
         try_files $uri /index.html;
     }
