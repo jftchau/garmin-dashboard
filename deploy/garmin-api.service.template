@@ -1,0 +1,17 @@
+# Rendered by deploy/install.sh — @USER@ / @REPO_DIR@ are substituted with the
+# real user and repo path. Don't install this file directly; run
+# `bash deploy/install.sh`.
+[Unit]
+Description=Garmin Dashboard API
+After=network.target
+
+[Service]
+User=@USER@
+WorkingDirectory=@REPO_DIR@/backend
+EnvironmentFile=@REPO_DIR@/backend/.env
+ExecStart=@REPO_DIR@/backend/venv/bin/python app.py
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
