@@ -177,6 +177,8 @@ python fetch_garmin.py --backfill # repopulate Tier-1 summary columns from
                                   #   stored raw_json (no Garmin API calls)
 python fetch_garmin.py --wellness [days]   # backfill daily wellness + race
                                            #   predictions (default 90 days)
+python fetch_garmin.py --login    # (re)authenticate with Garmin — needs a
+                                  #   terminal + the 2FA code. See below.
 ```
 
 - **Incremental**: skips runs already in the DB and stops paging as soon as a
@@ -188,6 +190,30 @@ python fetch_garmin.py --wellness [days]   # backfill daily wellness + race
   daily wellness + current race predictions per user. Full history is a one-time
   `--wellness` run.
 - Session tokens cached per user (`.garmin_tokens`, `.garmin_tokens_2`).
+
+### Garmin login & 2FA
+
+**The accounts have 2FA on, so a fresh login can only be completed by a human.**
+This is the thing that blocks a first sync on a new machine — not a library bug.
+Email/password alone are not enough; Garmin issues a challenge and the code has to
+be typed in.
+
+```bash
+cd backend
+./venv/bin/python fetch_garmin.py --login   # per user: prompts for the 2FA code
+```
+
+That performs the full SSO login for every user in `.env` and writes the session
+token to `.garmin_tokens*`. **Every later sync — including cron's — reuses the
+cached token and needs no human.** Re-run `--login` only when the token expires.
+
+Because cron has no stdin, an unattended sync **never** prompts: if no cached
+token works, it fails immediately with `run: fetch_garmin.py --login` and a
+non-zero exit, instead of dying inside a 2FA prompt nobody can answer. You'll also
+see it on the kiosk — the header's "updated …" indicator turns **amber and reads
+"⚠ stale"** once the last successful sync is over 24h old, which is the only thing
+that would otherwise reveal a dead fetcher (the dashboard keeps happily showing
+the last-synced numbers).
 
 ---
 
@@ -259,9 +285,12 @@ The UI falls back to mock data (`src/mock/mockData.js`) if the backend is down.
 
 | File | Purpose |
 |---|---|
-| `nginx.conf` | serves the built frontend on **:8080**, proxies `/api/` → Flask :5000 (leaves Pi-hole's :80 alone) |
-| `garmin-api.service` | systemd unit for the Flask API (`Restart=always`) |
+| `install.sh` | renders + installs the nginx site and systemd unit for **this** host (path/user detected, no hand-editing) |
+| `nginx.conf.template` | serves the built frontend on **:8080**, proxies `/api/` → Flask :5000 (leaves Pi-hole's :80 alone) |
+| `garmin-api.service.template` | systemd unit for the Flask API (`Restart=always`) |
 | `cron_setup.sh` | installs the hourly `fetch_garmin.py` sync (all users) |
+| `update.sh` | **upgrade this host**: pull `main`, rebuild, restart, health-check, roll back on failure |
+| `update_setup.sh` | installs the daily 04:30 self-update timer |
 | `kiosk.sh` | launches Chromium full-screen at the dashboard + keeps the screen awake |
 | `kiosk_setup.sh` | autostarts `kiosk.sh` on desktop login |
 
@@ -274,15 +303,47 @@ cp .env.example .env                                # fill in Garmin creds (both
 ./venv/bin/python fetch_garmin.py --wellness 90     # initial full pull incl. wellness
 cd ../frontend && npm ci && npm run build           # build → dist/
 
-sudo cp ../deploy/garmin-api.service /etc/systemd/system/
-sudo systemctl enable --now garmin-api
-sudo cp ../deploy/nginx.conf /etc/nginx/sites-available/garmin
-sudo ln -sf /etc/nginx/sites-available/garmin /etc/nginx/sites-enabled/
-sudo systemctl reload nginx
-bash ../deploy/cron_setup.sh
+bash ../deploy/install.sh          # nginx site + systemd unit, rendered for this host
+bash ../deploy/cron_setup.sh       # hourly sync
+bash ../deploy/update_setup.sh     # daily 04:30 self-update (see below)
 ```
-The service/nginx files assume the repo is at `/home/pi/garmin-dashboard` — adjust
-paths if you cloned elsewhere.
+`install.sh` substitutes the real repo path and OS user into the two `.template`
+files, so **nothing is tied to a particular home directory** — clone anywhere, run
+it as your normal user (it sudo's on its own), and re-run it any time. Use
+`bash deploy/install.sh --dry-run` first to see exactly what it would change
+against the live config.
+
+The Garmin accounts have 2FA, so the first sync needs one interactive login:
+`./venv/bin/python fetch_garmin.py --login` (see "Garmin login & 2FA" above).
+
+### 1b. Upgrading (CI/CD)
+
+Merge a PR into `main` → CI proves it builds → the Pi picks it up **at 04:30**,
+health-checks itself, and rolls back if the new code doesn't come up.
+
+```bash
+bash deploy/update.sh           # upgrade right now (no-op if main hasn't moved)
+bash deploy/update.sh --force   # rebuild + restart even if it hasn't
+journalctl -u garmin-update -n 50   # what the timer did
+systemctl list-timers garmin-update.timer
+```
+
+What `update.sh` does, in order: take a lock the hourly sync also respects →
+**back up `garmin.db`** (keeps 7; `db.py` migrations run on boot and can rebuild
+tables, so a bad deploy can touch data) → pull → reinstall pip deps *only* if
+`requirements.txt` changed → build the frontend **to a temp dir and swap it in**
+(never into the live `dist/`, which nginx is serving) → restart `garmin-api` →
+poll `/api/health`. **Any failure rolls back** to the previous commit and `dist/`.
+
+The kiosk then reloads itself: `update.sh` stamps the deployed SHA into
+`dist/version.json`, and `useVersionCheck.js` polls it and calls `location.reload()`
+when it changes. That indirection exists because the kiosk is autostarted
+Chromium, not a service — a deploy *cannot* restart it (killing Chromium leaves a
+blank desktop), and a display-only screen has nothing to press F5 with.
+
+`update_setup.sh` also installs one narrow passwordless-sudo rule
+(`/etc/sudoers.d/garmin-update`) allowing only `systemctl restart garmin-api` —
+the unattended timer runs as you and can't type a password.
 
 ### 2. Kiosk display (the wall-mounted part)
 ```bash

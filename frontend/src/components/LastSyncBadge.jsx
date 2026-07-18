@@ -15,6 +15,13 @@ function ago(iso, now) {
   return `${Math.floor(h / 24)}d ago`;
 }
 
+// The fetcher syncs hourly, so anything older than a day means it has stopped —
+// most likely the Garmin session token expired and its 2FA re-login is waiting
+// for a human (`fetch_garmin.py --login`). Nothing else on the kiosk would show
+// that: the dashboard keeps rendering the last-synced numbers as if they were
+// current.
+const STALE_MS = 24 * 60 * 60 * 1000;
+
 // Header indicator of when the Garmin fetcher last synced, so a wall display's
 // numbers can be trusted (and a dead cron fetcher is visible). Re-fetches every
 // 5 min and re-renders the relative label every 30s; hides until a time loads.
@@ -41,12 +48,22 @@ export default function LastSyncBadge() {
   const label = ago(iso, now);
   if (!label) return null;
 
+  const stale = now - new Date(iso).getTime() > STALE_MS;
+
   return (
     <span
-      className="font-mono text-[11px] text-muted whitespace-nowrap"
-      title={`Garmin data last synced: ${iso}`}
+      className={`font-mono text-[11px] whitespace-nowrap ${
+        stale ? "text-zone4 font-semibold" : "text-muted"
+      }`}
+      title={
+        stale
+          ? `Garmin data last synced ${iso} — the hourly sync has stopped. ` +
+            `The session token has probably expired: run ` +
+            `fetch_garmin.py --login on the Pi to re-authenticate (needs the 2FA code).`
+          : `Garmin data last synced: ${iso}`
+      }
     >
-      updated {label}
+      {stale ? "⚠ stale — " : ""}updated {label}
     </span>
   );
 }

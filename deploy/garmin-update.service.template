@@ -1,0 +1,13 @@
+# Rendered by deploy/update_setup.sh. Oneshot: pull origin/main, rebuild,
+# restart, health-check, roll back on failure. Driven by garmin-update.timer.
+[Unit]
+Description=Garmin Dashboard self-update (pull, rebuild, health-check)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=@USER@
+WorkingDirectory=@REPO_DIR@
+ExecStart=/bin/bash @REPO_DIR@/deploy/update.sh
+# update.sh already logs with timestamps; journalctl -u garmin-update has the lot.

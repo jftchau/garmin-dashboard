@@ -5,7 +5,11 @@
 # so a CRLF checkout on Windows can never break them on the Pi.
 *.sh        text eol=lf
 *.service   text eol=lf
+*.timer     text eol=lf
 *.conf      text eol=lf
+# deploy/*.template are rendered into /etc by install.sh — a CRLF checkout would
+# be copied straight into a systemd unit, which refuses to parse it.
+*.template  text eol=lf
 
 # Common source types (LF in repo).
 *.py    text

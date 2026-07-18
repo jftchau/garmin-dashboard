@@ -1,8 +1,10 @@
+# Rendered by deploy/install.sh — @REPO_DIR@ is substituted with the real repo
+# path. Don't install this file directly; run `bash deploy/install.sh`.
 server {
     listen 8080;
     server_name _;
 
-    root /home/pi/garmin-dashboard/frontend/dist;
+    root @REPO_DIR@/frontend/dist;
     index index.html;
 
     location /api/ {
@@ -13,6 +15,14 @@ server {
         proxy_pass http://127.0.0.1:5000;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
+    }
+
+    # The kiosk polls this to notice a new deploy and reload itself
+    # (useVersionCheck.js). It must never be cached, and must 404 rather than
+    # fall through to index.html — the poll parses it as JSON.
+    location = /version.json {
+        add_header Cache-Control "no-store" always;
+        try_files $uri =404;
     }
 
     location / {
