@@ -14,49 +14,65 @@ state**, which has grown well beyond that plan.
 The dashboard is built to run on a **1024×600, 7" Raspberry Pi monitor that is
 display-only** (no touch, keyboard, or mouse). That shapes the whole UI:
 
-- **Head-to-head, both runners at once.** Every tab compares the two runners on
-  shared charts/tables, color-coded (Runner A = volt yellow, Runner B = blue) —
-  there is no user switcher, because nothing on the Pi can click it.
-- **Auto-rotating.** The app cycles through the 5 tabs every 20s hands-free
-  (`ROTATE_MS` in `src/App.jsx`); a header ⏸/▶ button or a tab click pauses it
-  for desktop inspection.
-- **No scrolling — every tab fits 1024×600.** A height-gated compact mode
+- **Head-to-head, both runners at once.** Most slides compare the two runners on
+  shared charts, color-coded (Runner A = volt yellow, Runner B = blue) — there is
+  no user switcher, because nothing on the Pi can click it. A few slides show one
+  runner at a time, where a head-to-head would halve the graphic.
+- **Read from across the room.** One idea per slide at the largest size the
+  screen allows, rather than several panels per screen. Slides fill the viewport
+  via flexbox (`h-screen` → `flex-1 min-h-0` → charts at `height="100%"`), so
+  graphics scale with the display instead of sitting in fixed-height boxes.
+- **Auto-rotating.** The app cycles through the slides in `src/slides.jsx` every
+  14s hands-free (`ROTATE_MS` in `src/App.jsx`); a header ⏸/▶ button or clicking
+  the position bar pauses it for desktop inspection.
+- **No scrolling — every slide fits 1024×600.** A height-gated compact mode
   (`@custom-variant short (@media (max-height:700px))` in `index.css` + the
-  `useCompact()` hook at the same threshold) shrinks padding/spacing/charts on
-  short screens only; the desktop dev view (≥701px tall) is left roomy.
+  `useCompact()` hook at the same threshold) shrinks padding/spacing on short
+  screens only; the desktop dev view (≥701px tall) is left roomy.
 
-> **Contributors / AI agents:** keeping every tab within the 600px budget is a
+> **Contributors / AI agents:** keeping every slide within the 600px budget is a
 > hard requirement. After any UI change, verify at 1024×600 that the page does
-> not scroll (`document.body.scrollHeight <= 600`) on **every** tab for **both**
-> runners. See the "Raspberry Pi display fit" section in `CLAUDE.md`.
+> not scroll (`document.body.scrollHeight <= 600`) on **every** slide for
+> **both** runners. Prefer adding a slide over crowding an existing one. See the
+> "Raspberry Pi display fit" section in `CLAUDE.md`.
 
 ---
 
-## Current state (2026-07-08)
+## Current state (2026-07-18)
 
 - **Multi-user, shown head-to-head.** Supports multiple users (built for 2). Each
   user has their own Garmin account, data rows (`user_id` everywhere), and a
   display name (seeded from `.env`, editable in the DB). Both runners are compared
-  side-by-side on every tab — there is no switcher (see the kiosk section above).
-- **User 1** (currently named "Jeffrey") is fully populated: 141 runs
-  (Feb 2025–Jul 2026), 60 days of daily wellness, and race predictions.
-- **User 2** is wired up but **not yet connected** — add `GARMIN_EMAIL_2` /
-  `GARMIN_PASSWORD_2` to `backend/.env` and sync to populate it.
+  side-by-side on most slides — there is no switcher (see the kiosk section above).
+- **Both users are connected and populated** — "Jeffrey" (user 1) and "Eugenia"
+  (user 2), each with runs, non-run cross-training, daily wellness and race
+  predictions. Credentials live in `backend/.env` (`GARMIN_EMAIL[_2]` /
+  `GARMIN_PASSWORD[_2]`).
 - Developed & tested locally on **Windows**; **not yet deployed to the Pi**.
 - A pre–multi-user DB backup exists at `backend/garmin.db.bak`.
 
-### Dashboard tabs (each compares both runners head-to-head, fits 1024×600)
-- **This Week** — a two-runner comparison table (distance/time/pace/runs),
-  grouped daily-mileage bars, and an HR-zone doughnut per runner.
-- **Calendar** — a run-frequency heatmap per runner (CSS grid, no API key) with a
-  color legend + cross-training markers, plus frequency stats (runs/week, current
-  & longest streak, longest layoff, busiest weekday) and a weekday sparkline.
-- **History** — both runners' weekly mileage overlaid on one line chart, plus a
-  total / avg-per-week / best-week comparison table.
-- **Insights** — a resting-HR / HRV / sleep / VO₂max status row for both runners,
-  plus a 2×2 grid of overlaid trend charts (VO₂max, resting HR, HRV, sleep).
-- **Records** — personal bests per distance for both runners vs **Garmin race
-  predictions**.
+### Slides (in rotation order; each fits 1024×600)
+- **This week** — distance / time / pace / runs per runner at headline size, with
+  the week-over-week change in volume.
+- **&lt;Runner&gt; · training week** (one slide each) — daily run distance in km with
+  **last week's volume ghosted behind it** for comparison, plus that day's
+  **strength and other-training hours** stacked on a right-hand axis. Two axes
+  because km and hours are different units; running is no longer the only thing
+  on the chart.
+- **Training mix** — weekly training *hours* split running / strength / other
+  over the last 10 weeks, per runner. Time is the one unit every activity type
+  shares, so this is the view that shows a hot-weather swap from running to gym.
+- **Heart rate zones** — this week's zone split per runner.
+- **Weekly mileage** / **Mileage summary** — 26 weeks overlaid on one line chart,
+  then total / avg-per-week / best-week per runner.
+- **&lt;Runner&gt; · run frequency** (one slide each) — 12-month heatmap with
+  cross-training markers, plus frequency stats (runs/week, current & longest
+  streak, longest layoff, busiest weekday).
+- **Personal records · short / long** — bests for 1K–10K and half/marathon vs
+  **Garmin race predictions**.
+- **Today's readiness** — resting HR / HRV / sleep score / VO₂max per runner.
+- **Heart · 90 days** / **Fitness & sleep · 90 days** — resting-HR + HRV, then
+  VO₂max + sleep trends, overlaid for both runners.
 
 The kiosk shows only the comparison views above. The richer per-run detail
 (power/dynamics, splits, GPS map) and the sortable activity log were removed from
@@ -81,11 +97,16 @@ frontend/
     api.js            # fetch wrappers; setCurrentUser(); mock-data fallback
     utils.js          # formatters + training-effect colors
     mock/mockData.js  # mock API responses for UI-only dev
-    components/       # TabNav, WeekView, CalendarView, HistoryView,
-                      # InsightsView, RecordsView, CompareTable, RunnerLegend,
-                      # WeeklyMileageChart, HRZoneDoughnut, CalendarHeatmap,
-                      # CalendarStats, DataSourceBadge, RefreshButton
-    App.jsx           # tab routing + 20s auto-rotation; passes both users to views
+    slides.jsx        # the carousel's running order (SLIDES) + per-slide titles
+    components/
+      slides/         # one file per slide: WeekTotals, WeekVolume, TrainingMix,
+                      # HRZones, Mileage (trend + summary), Frequency, Records,
+                      # Body (heart / fitness trends + readiness)
+                      # shared: Slide (frame, Panel, BigStat), SlideNav,
+                      # WeekVolumeChart, WeeklyMileageChart, HRZoneDoughnut,
+                      # CalendarHeatmap, CalendarStats, RunnerLegend,
+                      # DataSourceBadge, LastSyncBadge, RefreshButton
+    App.jsx           # slide carousel + 14s auto-rotation; passes both users down
     index.css         # Tailwind v4 @theme tokens (Garmin black/volt-yellow)
   vite.config.js      # dev server + /api proxy — pinned to IPv4 127.0.0.1
 deploy/               # nginx.conf, garmin-api.service, cron_setup.sh (Pi)
@@ -113,9 +134,10 @@ assigns existing rows to the first user). Safe to run every start.
 
 ### Two VO₂max numbers (don't confuse them)
 - `activities.vo2max` — each **run's** estimate (integer, only on harder runs).
-  This is the **trend** line in Insights.
+  This is the **trend** line on the fitness-trends slide.
 - `user_metrics.vo2max` — the **watch's** daily VO₂max from Garmin's Max Metrics
-  endpoint. This is the **"current"** headline (matches the device).
+  endpoint. This is the **"current"** headline on the readiness slide (matches
+  the device).
 
 ---
 
@@ -129,8 +151,9 @@ Every data endpoint accepts `?user=<id>` (defaults to the first user).
 | PATCH | `/api/users/<id>` | rename a user (`{"name": ...}`) |
 | GET | `/api/activities?limit=&offset=` | paginated run list |
 | GET | `/api/activity/<id>` | full detail incl. polyline + splits |
-| GET | `/api/this-week` | daily distances, totals, HR zones, runs |
+| GET | `/api/this-week` | daily distances, totals, HR zones, runs, **last week's daily volume**, **per-day cross-training minutes** |
 | GET | `/api/weekly-mileage` | all-time weekly distance array |
+| GET | `/api/training-mix?weeks=10` | weekly training **hours** split run / strength / other |
 | GET | `/api/calendar?days=365` | daily distances for the heatmap |
 | GET | `/api/personal-records` | 1K/5K/10K/Half/Marathon bests |
 | GET | `/api/vo2max-trend` | `{current, current_date, trend[]}` |
@@ -348,7 +371,7 @@ labwc `~/.config/labwc/autostart` entry).
   hdmi_cvt=1024 600 60 6 0 0 0
   ```
 
-Every tab is built to fit **1024×600 with no scroll** — see the display-target
+Every slide is built to fit **1024×600 with no scroll** — see the display-target
 section up top and `CLAUDE.md`. See "Phase 5" of `docs/plan.md` for background.
 
 ---

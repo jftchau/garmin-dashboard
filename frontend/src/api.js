@@ -2,6 +2,7 @@ import {
   mockActivities,
   mockThisWeek,
   mockWeeklyMileage,
+  mockTrainingMix,
   mockCalendar,
   mockPersonalRecords,
   mockVo2maxTrend,
@@ -99,6 +100,10 @@ export function fetchThisWeek(userId) {
 
 export function fetchWeeklyMileage(userId) {
   return getJSON("/weekly-mileage", mockWeeklyMileage, userId);
+}
+
+export function fetchTrainingMix(weeks = 10, userId) {
+  return getJSON(`/training-mix?weeks=${weeks}`, mockTrainingMix, userId);
 }
 
 export function fetchCalendar(days = 365, userId) {

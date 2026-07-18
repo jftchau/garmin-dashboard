@@ -26,3 +26,24 @@ export function useTwoUsers(fetchFn, users) {
 
   return [a, b];
 }
+
+// Same contract for the slides that show ONE runner at a time (the weekly
+// volume and run-frequency slides, where a head-to-head would be too dense to
+// read at distance). Returns the payload, or null while loading / if that
+// runner slot isn't configured.
+export function useOneUser(fetchFn, users, index) {
+  const [data, setData] = useState(null);
+  const id = users?.[index]?.id;
+
+  useEffect(() => {
+    let alive = true;
+    setData(null);
+    if (id != null) fetchFn(id).then((d) => alive && setData(d));
+    return () => {
+      alive = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id]);
+
+  return data;
+}
