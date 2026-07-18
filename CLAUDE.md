@@ -10,17 +10,32 @@ The dashboard's target hardware is a **1024×600, 7" Raspberry Pi monitor,
 display-only (no touch / keyboard / mouse)**. This is a hard design constraint,
 not a preference. It keeps getting broken by well-meaning feature additions, so:
 
-- **Every tab MUST fit 1024×600 with NO scroll** — you cannot scroll a display-
+- **Every slide MUST fit 1024×600 with NO scroll** — you cannot scroll a display-
   only screen, so anything below the fold is invisible forever. After *any*
   view/chart change, verify at 1024×600 that `document.body.scrollHeight <= 600`
-  on **every** tab, for **both** runners (`preview_resize` to 1024×600, then
-  `preview_eval`). The usable content budget is ~505px (95px is header + tabs).
+  on **every** slide, for **both** runners (resize to 1024×600, then click each
+  `button[aria-label]` in the nav and measure). Content budget is ~538px.
+- **The display is read from several metres away.** One idea per slide, rendered
+  as large as the budget allows — do NOT pack four panels onto a screen. If a
+  slide is getting crowded, split it into two slides; there is no cost to adding
+  slides, and that is the standing fix for "too small to read".
+- **Slides fill the screen via flexbox, not pixel heights.** The app root is
+  `h-screen flex flex-col`; `Slide` is `flex-1 min-h-0 flex flex-col`; the chart
+  card is `<Panel grow>` (or `flex-1 min-h-0`) and charts take `height="100%"`.
+  Don't reintroduce fixed `height={220}` chart props — they leave dead space.
 - **Both runners are shown head-to-head** — there is NO user switcher (nothing to
-  click on the Pi). Views fetch both users with `useTwoUsers()`; runner colors
-  are `RUNNER_COLORS` / `RUNNER_RGB` + `runnerName()` in `utils.js` (Runner A =
-  volt yellow, Runner B = blue). Use `CompareTable` for metric comparisons.
-- **The app auto-rotates** through the 5 tabs every `ROTATE_MS` (=20s) in
-  `App.jsx`; the header ⏸/▶ button or a manual tab click pauses it.
+  click on the Pi). Slides fetch both users with `useTwoUsers()`, or one with
+  `useOneUser()` when a head-to-head would halve the graphic. Runner colors are
+  `RUNNER_COLORS` / `RUNNER_RGB` + `runnerName()` in `utils.js` (Runner A = volt
+  yellow, Runner B = blue).
+- **The app auto-rotates** through the slides in `slides.jsx` every `ROTATE_MS`
+  (=14s) in `App.jsx`; the header ⏸/▶ button or clicking the position bar pauses
+  it. Add a slide by appending to `SLIDES` — the nav and rotation pick it up.
+  Slides needing a second runner set `requiresRunner: 1` so a one-runner install
+  doesn't rotate through blanks.
+- **Activity-type palette** (used by the weekly-volume and training-mix slides):
+  running = the runner's own color, strength = `--color-zone4` (orange), other
+  cross-training = `--color-zone2` (green). Keep these consistent across slides.
 - **Height-gated compact mode**: `@custom-variant short (@media (max-height:700px))`
   in `index.css` plus the `useCompact()` hook (`useCompact.js`) at the SAME 700px
   threshold — keep them in sync. Use `short:` utilities for denser padding/
@@ -28,11 +43,11 @@ not a preference. It keeps getting broken by well-meaning feature additions, so:
   `useCompact()` (CSS can't reach them). Desktop (≥701px tall) is intentionally
   left roomy — don't "fix" the extra whitespace there.
 
-**Adding a feature to a tab?** Keep it in the 600px budget: prefer a compact
-horizontal strip over a tall stacked block, and re-verify no-scroll at 1024×600
-for both runners before finishing. Worked example: `CalendarStats.jsx` puts its
-frequency stats + weekday sparkline in **one row**, not a stacked grid, so two
-runners still fit.
+**Adding a feature?** Prefer a NEW slide over cramming it onto an existing one,
+then re-verify no-scroll at 1024×600 for both runners. Worked example: the
+weekly training chart carries four series (this week's km, last week's ghosted
+km, strength hours, other-training hours), so it gets a whole slide **per
+runner** rather than a head-to-head half-width panel.
 
 ## Run it (Windows dev machine)
 
@@ -74,8 +89,12 @@ npm run build          # prod build -> dist/
 - **Non-runs = cross-training context**: the fetcher stores *all* activity types
   (`activities.activity_type` = Garmin typeKey), but non-runs are lightweight —
   no splits/polyline detail calls. Every run-only stat filters on the `RUN_ONLY`
-  predicate (`app.py`) / `LIKE '%running%'`; only the Calendar heatmap surfaces
-  non-runs, as a slate "cross-training" marker on days with no run. Legacy rows
+  predicate (`app.py`) / `LIKE '%running%'`. Non-runs surface in three places:
+  the Calendar heatmap (slate marker on run-less days), the weekly-volume slide
+  (per-day strength/other **hours** from `/api/this-week`) and the training-mix
+  slide (`/api/training-mix`, weekly hours by bucket). `categorize_activity()`
+  in `app.py` is the single place that maps a typeKey to run/strength/other —
+  extend `STRENGTH_HINTS` there, not in the frontend. Legacy rows
   have `activity_type = NULL` (treated as running via COALESCE). **Historical
   non-runs only appear after a `--full` re-sync** — incremental won't backfill
   them (paging stops at the first already-synced activity).

@@ -6,6 +6,7 @@ Endpoints:
     GET /api/activity/<id>
     GET /api/this-week
     GET /api/weekly-mileage
+    GET /api/training-mix?weeks=10
     GET /api/calendar
     GET /api/personal-records
     POST /api/sync-now           -- runs fetch_garmin.py synchronously
@@ -43,6 +44,23 @@ PR_LABELS = {
 # stored (as cross-training context), so every distance/pace/mileage stat must
 # exclude them. Legacy rows have a NULL type and are all runs, hence COALESCE.
 RUN_ONLY = "COALESCE(activity_type, 'running') LIKE '%running%'"
+
+# Cross-training buckets. Running gets its own bucket everywhere; the rest split
+# into "strength" (gym/resistance-flavoured work) and a catch-all "other"
+# (cycling, swimming, yoga, hiking, walking, ...). Two buckets is deliberate:
+# the wall display has to stay readable from across the room, so a per-typeKey
+# breakdown would be unreadable noise.
+STRENGTH_HINTS = ("strength", "hiit", "functional", "pilates", "bouldering", "climbing")
+
+
+def categorize_activity(activity_type):
+    """'run' | 'strength' | 'other' for a Garmin typeKey. NULL = legacy run row."""
+    t = (activity_type or "running").lower()
+    if "running" in t:
+        return "run"
+    if any(h in t for h in STRENGTH_HINTS):
+        return "strength"
+    return "other"
 
 
 def parse_json_field(value):
@@ -146,9 +164,30 @@ def get_activity(activity_id):
     return jsonify(serialize_activity(row, full=True))
 
 
+def daily_run_km(conn, uid, monday, next_monday):
+    """Per-day running km for the 7 days from `monday`, zero-filled.
+
+    Returned as an ordered Mon→Sun list so callers can zip two weeks together by
+    index (the dashboard overlays last week behind this week that way).
+    """
+    rows = conn.execute(
+        f"SELECT start_time, distance FROM activities WHERE user_id = ? AND {RUN_ONLY} "
+        "AND start_time >= ? AND start_time < ?",
+        (uid, monday.strftime("%Y-%m-%d"), next_monday.strftime("%Y-%m-%d")),
+    ).fetchall()
+
+    daily = {(monday + timedelta(days=i)).strftime("%Y-%m-%d"): 0.0 for i in range(7)}
+    for r in rows:
+        day = r["start_time"][:10]
+        if day in daily:
+            daily[day] += (r["distance"] or 0) / 1000.0
+    return [{"date": d, "distance_km": round(v, 2)} for d, v in daily.items()]
+
+
 @app.route("/api/this-week")
 def this_week():
     monday, next_monday = week_bounds()
+    prev_monday = monday - timedelta(days=7)
     with get_conn() as conn:
         uid = resolve_user_id(conn)
         # Compare on the date prefix only. Garmin stores start_time as a
@@ -168,6 +207,9 @@ def this_week():
             "AND start_time >= ? AND start_time < ? ORDER BY start_time",
             (uid, monday.strftime("%Y-%m-%d"), next_monday.strftime("%Y-%m-%d")),
         ).fetchall()
+        # Last week's per-day running km, for the faint comparison bars behind
+        # this week's, plus its total for the week-over-week delta.
+        prev_daily = daily_run_km(conn, uid, prev_monday, monday)
 
     activities = [serialize_activity(r) for r in rows]
     cross_training = [
@@ -179,6 +221,19 @@ def this_week():
         }
         for r in cross_rows
     ]
+
+    # Per-day cross-training minutes, split strength vs everything else, so the
+    # weekly chart can show non-running load alongside run distance.
+    cross_daily = {
+        (monday + timedelta(days=i)).strftime("%Y-%m-%d"): {"strength_min": 0.0, "other_min": 0.0}
+        for i in range(7)
+    }
+    for r in cross_rows:
+        day = r["start_time"][:10]
+        if day not in cross_daily:
+            continue
+        bucket = "strength_min" if categorize_activity(r["activity_type"]) == "strength" else "other_min"
+        cross_daily[day][bucket] += (r["duration"] or 0) / 60.0
 
     daily = {}
     for i in range(7):
@@ -211,6 +266,13 @@ def this_week():
         "heart_rate_zone_seconds": zone_totals,
         "activities": activities,
         "cross_training": cross_training,
+        "daily_cross_training_min": [
+            {"date": d, "strength_min": round(v["strength_min"]), "other_min": round(v["other_min"])}
+            for d, v in cross_daily.items()
+        ],
+        "prev_week_start": prev_monday.strftime("%Y-%m-%d"),
+        "prev_daily_distance_km": prev_daily,
+        "prev_total_distance_km": round(sum(d["distance_km"] for d in prev_daily), 2),
     })
 
 
@@ -237,6 +299,51 @@ def weekly_mileage():
 
     result = [{"week_start": k, "distance_km": round(v / 1000, 2)} for k, v in sorted(weeks.items())]
     return jsonify(result)
+
+
+@app.route("/api/training-mix")
+def training_mix():
+    """Weekly training *hours* split run / strength / other, most recent weeks last.
+
+    Distance is the wrong unit once cross-training matters (you can't put a
+    strength session in km), so this endpoint reports time for every activity
+    type. Weeks with no activity at all are still emitted (zero-filled) so the
+    bar chart doesn't silently compress a layoff.
+    """
+    weeks_back = max(1, min(int(request.args.get("weeks", 10)), 52))
+    monday, _ = week_bounds()
+    start = monday - timedelta(days=7 * (weeks_back - 1))
+
+    with get_conn() as conn:
+        uid = resolve_user_id(conn)
+        rows = conn.execute(
+            "SELECT start_time, duration, activity_type FROM activities "
+            "WHERE user_id = ? AND start_time >= ?",
+            (uid, start.strftime("%Y-%m-%d")),
+        ).fetchall()
+
+    buckets = {
+        (start + timedelta(days=7 * i)).strftime("%Y-%m-%d"): {"run": 0.0, "strength": 0.0, "other": 0.0}
+        for i in range(weeks_back)
+    }
+    for r in rows:
+        try:
+            dt = datetime.fromisoformat(r["start_time"])
+        except ValueError:
+            continue
+        key = (dt - timedelta(days=dt.weekday())).strftime("%Y-%m-%d")
+        if key in buckets:
+            buckets[key][categorize_activity(r["activity_type"])] += (r["duration"] or 0) / 3600.0
+
+    return jsonify([
+        {
+            "week_start": k,
+            "run_hours": round(v["run"], 2),
+            "strength_hours": round(v["strength"], 2),
+            "other_hours": round(v["other"], 2),
+        }
+        for k, v in sorted(buckets.items())
+    ])
 
 
 @app.route("/api/vo2max-trend")

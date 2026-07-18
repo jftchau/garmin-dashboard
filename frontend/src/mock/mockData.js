@@ -102,6 +102,27 @@ export const mockThisWeek = (() => {
   const totalMeters = inWeek.reduce((s, a) => s + a.distance, 0);
   const totalDuration = inWeek.reduce((s, a) => s + a.duration, 0);
 
+  // Last week's per-day volume (the faint comparison bars) and per-day cross-
+  // training minutes. Both are shaped like the real endpoint; the values are a
+  // fixed pattern so the demo view looks plausible rather than random.
+  const prevMonday = new Date(monday);
+  prevMonday.setDate(prevMonday.getDate() - 7);
+  const PREV_KM = [0, 8.2, 5.1, 0, 10.4, 6.3, 16.8];
+  const prev_daily_distance_km = PREV_KM.map((km, i) => {
+    const d = new Date(prevMonday);
+    d.setDate(d.getDate() + i);
+    return { date: isoLocal(d), distance_km: km };
+  });
+
+  const CROSS_MIN = [
+    [45, 0], [0, 0], [40, 0], [0, 55], [0, 0], [50, 0], [0, 75],
+  ];
+  const daily_cross_training_min = CROSS_MIN.map(([strength_min, other_min], i) => {
+    const d = new Date(monday);
+    d.setDate(d.getDate() + i);
+    return { date: isoLocal(d), strength_min, other_min };
+  });
+
   return {
     week_start: weekStart,
     week_end: weekEnd,
@@ -111,8 +132,24 @@ export const mockThisWeek = (() => {
     avg_pace_sec_per_km: totalMeters > 0 ? Math.round(totalDuration / (totalMeters / 1000)) : 0,
     heart_rate_zone_seconds: ZONE_SAMPLE,
     activities: inWeek,
+    cross_training: [],
+    daily_cross_training_min,
+    prev_week_start: isoLocal(prevMonday),
+    prev_daily_distance_km,
+    prev_total_distance_km: Math.round(PREV_KM.reduce((s, v) => s + v, 0) * 10) / 10,
   };
 })();
+
+export const mockTrainingMix = Array.from({ length: 10 }, (_, i) => {
+  const monday = new Date();
+  monday.setDate(monday.getDate() - ((monday.getDay() + 6) % 7) - (9 - i) * 7);
+  return {
+    week_start: monday.toISOString().slice(0, 10),
+    run_hours: Math.round((3.4 + Math.sin(i / 2) * 1.2) * 10) / 10,
+    strength_hours: Math.round((1.1 + Math.cos(i / 3) * 0.5) * 10) / 10,
+    other_hours: Math.round((0.8 + Math.sin(i / 1.7) * 0.6) * 10) / 10,
+  };
+});
 
 export const mockWeeklyMileage = Array.from({ length: 16 }, (_, i) => {
   const date = new Date();
