@@ -30,7 +30,7 @@ export function Panel({ title, right, children, className = "", grow = false }) 
       {(title || right) && (
         <div className="flex items-baseline justify-between mb-3 short:mb-2 gap-3 shrink-0">
           {title && (
-            <h3 className="heading-display text-base short:text-sm uppercase tracking-wide text-muted">
+            <h3 className="heading-display text-lg short:text-base uppercase tracking-wide text-muted">
               {title}
             </h3>
           )}
@@ -53,7 +53,7 @@ export function BigStat({ label, value, unit, color = "var(--color-chalk)", size
 
   return (
     <div className="min-w-0">
-      <div className="font-mono text-xs short:text-[11px] uppercase tracking-widest text-muted mb-1">
+      <div className="font-mono text-base short:text-base uppercase tracking-widest text-muted mb-1">
         {label}
       </div>
       <div className={`stat-mono ${valueClass} leading-none truncate`} style={{ color }}>
@@ -66,7 +66,7 @@ export function BigStat({ label, value, unit, color = "var(--color-chalk)", size
 
 // Runner name chip, color-coded to match every chart series on the dashboard.
 export function RunnerTag({ users, i, size = "md" }) {
-  const cls = size === "lg" ? "text-2xl short:text-xl" : "text-base short:text-sm";
+  const cls = size === "lg" ? "text-2xl short:text-xl" : "text-lg short:text-base";
   return (
     <span
       className={`heading-display font-semibold tracking-wide ${cls}`}

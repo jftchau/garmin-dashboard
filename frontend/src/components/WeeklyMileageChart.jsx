@@ -11,15 +11,15 @@ import {
   Legend,
 } from "recharts";
 
-const axisTick = { fill: "var(--color-muted)", fontSize: 11, fontFamily: "var(--font-mono)" };
+const axisTick = { fill: "var(--color-muted)", fontSize: 17, fontFamily: "var(--font-mono)" };
 const tooltipStyle = {
   background: "var(--color-surface-2)",
   border: "1px solid var(--color-line)",
   borderRadius: 6,
   fontFamily: "var(--font-mono)",
-  fontSize: 12,
+  fontSize: 14,
 };
-const legendStyle = { fontSize: 11, fontFamily: "var(--font-mono)" };
+const legendStyle = { fontSize: 14, fontFamily: "var(--font-mono)" };
 
 export default function WeeklyMileageChart({
   data,
@@ -51,7 +51,7 @@ export default function WeeklyMileageChart({
       tickLine={false}
     />
   );
-  const yAxis = <YAxis tick={axisTick} axisLine={false} tickLine={false} width={36} />;
+  const yAxis = <YAxis tick={axisTick} axisLine={false} tickLine={false} width={44} />;
   const tooltip = (
     <Tooltip
       contentStyle={tooltipStyle}
@@ -65,7 +65,7 @@ export default function WeeklyMileageChart({
   if (bar) {
     return (
       <ResponsiveContainer width="100%" height={height}>
-        <BarChart data={data} margin={{ top: 8, right: 12, left: -12, bottom: 0 }}>
+        <BarChart data={data} margin={{ top: 8, right: 32, left: 0, bottom: 0 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="var(--color-line)" vertical={false} />
           {xAxis}
           {yAxis}
@@ -81,7 +81,7 @@ export default function WeeklyMileageChart({
 
   return (
     <ResponsiveContainer width="100%" height={height}>
-      <LineChart data={data} margin={{ top: 8, right: 12, left: -12, bottom: 0 }}>
+      <LineChart data={data} margin={{ top: 8, right: 32, left: 0, bottom: 0 }}>
         <CartesianGrid strokeDasharray="3 3" stroke="var(--color-line)" vertical={false} />
         {xAxis}
         {yAxis}

@@ -9,7 +9,7 @@ function Delta({ week }) {
   const diff = +(week.total_distance_km - week.prev_total_distance_km).toFixed(1);
   const color = diff >= 0 ? "var(--color-zone2)" : "var(--color-zone4)";
   return (
-    <div className="font-mono text-sm short:text-xs text-muted mt-1">
+    <div className="font-mono text-base short:text-base text-muted mt-1">
       <span style={{ color }}>
         {diff >= 0 ? "+" : ""}
         {diff} km
@@ -27,7 +27,7 @@ export default function WeekTotalsSlide({ users }) {
 
   return (
     <Slide className="space-y-3 short:space-y-2">
-      <p className="font-mono text-sm short:text-xs text-muted">
+      <p className="font-mono text-base short:text-base text-muted">
         {range?.week_start} → {range?.week_end}
       </p>
 

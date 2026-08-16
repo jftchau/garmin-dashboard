@@ -59,20 +59,32 @@ display-only** (no touch, keyboard, or mouse). That shapes the whole UI:
   **strength and other-training hours** stacked on a right-hand axis. Two axes
   because km and hours are different units; running is no longer the only thing
   on the chart.
+- **Latest runs** — each runner's last four runs as large rows (name, date,
+  distance, pace, training-effect badge).
 - **Training mix** — weekly training *hours* split running / strength / other
   over the last 10 weeks, per runner. Time is the one unit every activity type
   shares, so this is the view that shows a hot-weather swap from running to gym.
+- **Running conditions** — monthly average run temperature, bars ramped cool→hot,
+  with the season's hottest run. Makes the "it's getting hot" story explicit so
+  lighter summer mileage reads as heat, not slacking.
 - **Heart rate zones** — this week's zone split per runner.
 - **Weekly mileage** / **Mileage summary** — 26 weeks overlaid on one line chart,
   then total / avg-per-week / best-week per runner.
+- **Year to date** — cumulative distance for both runners on one chart: a
+  season-long "who's ahead" race, with the current totals and the leader's gap.
 - **&lt;Runner&gt; · run frequency** (one slide each) — 12-month heatmap with
   cross-training markers, plus frequency stats (runs/week, current & longest
   streak, longest layoff, busiest weekday).
 - **Personal records · short / long** — bests for 1K–10K and half/marathon vs
   **Garmin race predictions**.
+- **Running form** — cadence / stride / ground contact / vertical oscillation,
+  averaged over recent runs, head-to-head.
 - **Today's readiness** — resting HR / HRV / sleep score / VO₂max per runner.
 - **Heart · 90 days** / **Fitness & sleep · 90 days** — resting-HR + HRV, then
   VO₂max + sleep trends, overlaid for both runners.
+
+All chart axis text, metric labels and legends are sized for legibility from
+across a room (≥14px; see the "readability floor" note in `CLAUDE.md`).
 
 The kiosk shows only the comparison views above. The richer per-run detail
 (power/dynamics, splits, GPS map) and the sortable activity log were removed from
@@ -154,6 +166,8 @@ Every data endpoint accepts `?user=<id>` (defaults to the first user).
 | GET | `/api/this-week` | daily distances, totals, HR zones, runs, **last week's daily volume**, **per-day cross-training minutes** |
 | GET | `/api/weekly-mileage` | all-time weekly distance array |
 | GET | `/api/training-mix?weeks=10` | weekly training **hours** split run / strength / other |
+| GET | `/api/running-form?runs=30` | recent avg cadence / stride / ground contact / vertical oscillation |
+| GET | `/api/conditions?months=8` | monthly avg + peak run temperature, and the hottest run |
 | GET | `/api/calendar?days=365` | daily distances for the heatmap |
 | GET | `/api/personal-records` | 1K/5K/10K/Half/Marathon bests |
 | GET | `/api/vo2max-trend` | `{current, current_date, trend[]}` |

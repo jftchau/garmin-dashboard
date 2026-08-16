@@ -89,7 +89,7 @@ export default function CalendarHeatmap({ data, rgb = "245,197,24", cell = 10, g
           {monthLabels.map((m) => (
             <span
               key={m.week}
-              className="absolute text-[10px] font-mono text-muted"
+              className="absolute text-xs font-mono text-muted"
               style={{ left: `${m.week * step}px` }}
             >
               {m.label}
@@ -119,7 +119,7 @@ export default function CalendarHeatmap({ data, rgb = "245,197,24", cell = 10, g
 
         {/* Legend: the distance→intensity ramp, right-aligned under the grid. */}
         <div
-          className="flex items-center justify-end gap-1.5 mt-2 text-[10px] font-mono text-muted"
+          className="flex items-center justify-end gap-1.5 mt-2 text-xs font-mono text-muted"
           style={{ width: gridWidth }}
         >
           {hasCrossTrain && (

@@ -28,7 +28,7 @@ export default function FrequencySlide({ users, runner = 0 }) {
     <Slide className="space-y-3 short:space-y-2">
       <div className="flex items-baseline gap-4">
         <RunnerTag users={users} i={runner} size="lg" />
-        <span className="font-mono text-xs uppercase tracking-widest text-muted">
+        <span className="font-mono text-base uppercase tracking-widest text-muted">
           last 12 months
         </span>
       </div>

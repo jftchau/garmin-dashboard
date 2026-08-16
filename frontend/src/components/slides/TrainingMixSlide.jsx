@@ -13,7 +13,7 @@ import Slide, { Loading, RunnerTag } from "../Slide.jsx";
 
 const WEEKS = 10;
 
-const axisTick = { fill: "var(--color-muted)", fontSize: 12, fontFamily: "var(--font-mono)" };
+const axisTick = { fill: "var(--color-muted)", fontSize: 17, fontFamily: "var(--font-mono)" };
 
 // Activity-type palette, shared with WeekVolumeChart so "orange = strength" and
 // "green = other training" mean the same thing on every slide.
@@ -33,7 +33,7 @@ function MixTooltip({ active, payload, label }) {
   const d = payload[0].payload;
   const total = BUCKETS.reduce((s, b) => s + (d[b.key] || 0), 0);
   return (
-    <div className="px-3 py-2 rounded-md border border-line bg-surface-2 font-mono text-xs">
+    <div className="px-3 py-2 rounded-md border border-line bg-surface-2 font-mono text-sm">
       <div className="text-muted mb-1">week of {weekTick(label)}</div>
       {BUCKETS.map((b) => (
         <div key={b.key} className="flex justify-between gap-4">
@@ -59,7 +59,7 @@ function MixChart({ data, height }) {
   }
   return (
     <ResponsiveContainer width="100%" height={height}>
-      <BarChart data={data} margin={{ top: 6, right: 6, left: -14, bottom: 0 }}>
+      <BarChart data={data} margin={{ top: 6, right: 28, left: 0, bottom: 0 }}>
         <CartesianGrid strokeDasharray="3 3" stroke="var(--color-line)" vertical={false} />
         <XAxis
           dataKey="week_start"
@@ -69,7 +69,7 @@ function MixChart({ data, height }) {
           axisLine={{ stroke: "var(--color-line)" }}
           tickLine={false}
         />
-        <YAxis tick={axisTick} axisLine={false} tickLine={false} width={34} />
+        <YAxis tick={axisTick} axisLine={false} tickLine={false} width={40} />
         <Tooltip content={<MixTooltip />} cursor={{ fill: "var(--color-line)", opacity: 0.3 }} />
         {BUCKETS.map((b, i) => (
           <Bar
@@ -103,7 +103,7 @@ export default function TrainingMixSlide({ users }) {
 
   return (
     <Slide className="space-y-2">
-      <div className="shrink-0 flex flex-wrap items-center gap-x-5 gap-y-1 font-mono text-xs short:text-[11px]">
+      <div className="shrink-0 flex flex-wrap items-center gap-x-5 gap-y-1 font-mono text-sm short:text-sm">
         <span className="text-muted uppercase tracking-widest">Hours per week · last {WEEKS} weeks</span>
         {BUCKETS.map((b) => (
           <span key={b.key} className="flex items-center gap-1.5 text-muted">

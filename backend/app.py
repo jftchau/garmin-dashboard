@@ -7,6 +7,8 @@ Endpoints:
     GET /api/this-week
     GET /api/weekly-mileage
     GET /api/training-mix?weeks=10
+    GET /api/running-form?runs=30
+    GET /api/conditions?months=8
     GET /api/calendar
     GET /api/personal-records
     POST /api/sync-now           -- runs fetch_garmin.py synchronously
@@ -500,6 +502,97 @@ def race_predictions():
             (uid,),
         ).fetchone()
     return jsonify(dict(r) if r else {})
+
+
+@app.route("/api/running-form")
+def running_form():
+    """Recent running-form averages for the head-to-head form slide.
+
+    Form metrics (cadence, stride, ground-contact, vertical oscillation) only
+    describe running, and only recent fitness is interesting — so this averages
+    over the last `runs` running activities that actually recorded each metric.
+    Each metric is averaged independently (a run missing one field still counts
+    toward the others). Also returns a coarse per-run series for a sparkline.
+    """
+    n = max(1, min(int(request.args.get("runs", 30)), 200))
+    with get_conn() as conn:
+        uid = resolve_user_id(conn)
+        rows = conn.execute(
+            f"SELECT start_time, cadence_avg, avg_stride_length, avg_ground_contact_time, "
+            f"avg_vertical_oscillation, avg_vertical_ratio FROM activities "
+            f"WHERE user_id = ? AND {RUN_ONLY} ORDER BY start_time DESC LIMIT ?",
+            (uid, n),
+        ).fetchall()
+
+    fields = {
+        "cadence_spm": "cadence_avg",
+        "stride_cm": "avg_stride_length",
+        "ground_contact_ms": "avg_ground_contact_time",
+        "vertical_osc_cm": "avg_vertical_oscillation",
+        "vertical_ratio_pct": "avg_vertical_ratio",
+    }
+    avgs = {}
+    for out_key, col in fields.items():
+        vals = [r[col] for r in rows if r[col] is not None]
+        avgs[out_key] = round(sum(vals) / len(vals), 1) if vals else None
+
+    return jsonify({
+        "runs_counted": len(rows),
+        "averages": avgs,
+    })
+
+
+@app.route("/api/conditions")
+def conditions():
+    """Monthly running temperature — for the 'it's getting hot' conditions slide.
+
+    Returns the last `months` months of average and peak run temperature plus
+    run counts, and the single hottest run in that window. Temperature is only
+    recorded on outdoor runs, so months with only treadmill work come back null.
+    """
+    months = max(1, min(int(request.args.get("months", 8)), 24))
+    # First day of the month, `months-1` months back, as the lower bound.
+    now = datetime.now()
+    y, m = now.year, now.month - (months - 1)
+    while m <= 0:
+        m += 12
+        y -= 1
+    start = f"{y:04d}-{m:02d}-01"
+
+    with get_conn() as conn:
+        uid = resolve_user_id(conn)
+        rows = conn.execute(
+            f"SELECT start_time, temperature, distance FROM activities "
+            f"WHERE user_id = ? AND {RUN_ONLY} AND start_time >= ? ORDER BY start_time",
+            (uid, start),
+        ).fetchall()
+
+    buckets = {}
+    hottest = None
+    for r in rows:
+        month = r["start_time"][:7]
+        b = buckets.setdefault(month, {"temps": [], "runs": 0})
+        b["runs"] += 1
+        t = r["temperature"]
+        if t is not None:
+            b["temps"].append(t)
+            if hottest is None or t > hottest["temperature"]:
+                hottest = {
+                    "temperature": round(t, 1),
+                    "date": r["start_time"][:10],
+                    "distance_km": round((r["distance"] or 0) / 1000, 2),
+                }
+
+    series = [
+        {
+            "month": month,
+            "avg_temp": round(sum(b["temps"]) / len(b["temps"]), 1) if b["temps"] else None,
+            "max_temp": round(max(b["temps"]), 1) if b["temps"] else None,
+            "runs": b["runs"],
+        }
+        for month, b in sorted(buckets.items())
+    ]
+    return jsonify({"months": series, "hottest": hottest})
 
 
 @app.route("/api/wellness-trend")

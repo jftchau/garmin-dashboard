@@ -19,6 +19,23 @@ not a preference. It keeps getting broken by well-meaning feature additions, so:
   as large as the budget allows — do NOT pack four panels onto a screen. If a
   slide is getting crowded, split it into two slides; there is no cost to adding
   slides, and that is the standing fix for "too small to read".
+- **Text has a readability floor — nothing below ~14px.** Metric labels are 16px
+  (`text-base`, via `BigStat`), chart axis ticks are `fontSize: 17`, panel titles
+  ~18px, subtitles/legends 14px. The dense calendar-heatmap micro-labels (weekday
+  letters, month names) are the only exception at 12px. Do NOT reintroduce the old
+  10–12px `text-xs`/`text-[10px]` label sizes — from kiosk distance they're
+  invisible. Axis dates use `axisDate()` from `utils.js` ("May 23", not the full
+  ISO string), which is both shorter and readable.
+- **Chart margins/axis widths must fit the 17px ticks.** Recharts `margin` must
+  be **non-negative** and `YAxis width` wide enough for the largest label —
+  negative left margins (the old space-saving trick) clip multi-digit y-labels,
+  and a too-small right margin clips the last x-label. Working values: `margin`
+  `{ right: ~28–32, left: 0 }` for date x-axes, `YAxis width` ~44–48 for 3-digit
+  values. Put `allowDecimals={false}` on integer axes (e.g. km) so an empty week
+  doesn't render clipping fractional ticks like "0.25".
+- **Every slide shows a page number** (`NN/total`) at the top-left of the header,
+  from the slide's index in `slides.jsx`. It's there so a viewer can say "page 7
+  is wrong" — keep slide order stable-ish, or expect the numbers to shift.
 - **Slides fill the screen via flexbox, not pixel heights.** The app root is
   `h-screen flex flex-col`; `Slide` is `flex-1 min-h-0 flex flex-col`; the chart
   card is `<Panel grow>` (or `flex-1 min-h-0`) and charts take `height="100%"`.

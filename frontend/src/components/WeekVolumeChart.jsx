@@ -8,13 +8,13 @@ import {
   ResponsiveContainer,
 } from "recharts";
 
-const axisTick = { fill: "var(--color-muted)", fontSize: 13, fontFamily: "var(--font-mono)" };
+const axisTick = { fill: "var(--color-muted)", fontSize: 17, fontFamily: "var(--font-mono)" };
 const tooltipStyle = {
   background: "var(--color-surface-2)",
   border: "1px solid var(--color-line)",
   borderRadius: 6,
   fontFamily: "var(--font-mono)",
-  fontSize: 13,
+  fontSize: 14,
 };
 
 // Cross-training colors. Deliberately NOT the runner colors: on this chart the
@@ -125,7 +125,7 @@ export default function WeekVolumeChart({ week, color }) {
     <div className="h-full flex flex-col">
       <div className="flex-1 min-h-0">
       <ResponsiveContainer width="100%" height="100%">
-        <ComposedChart data={data} margin={{ top: 8, right: 4, left: -6, bottom: 0 }} barGap={6}>
+        <ComposedChart data={data} margin={{ top: 8, right: 8, left: 0, bottom: 0 }} barGap={6}>
           <CartesianGrid strokeDasharray="3 3" stroke="var(--color-line)" vertical={false} />
           <XAxis
             dataKey="date"
@@ -141,7 +141,8 @@ export default function WeekVolumeChart({ week, color }) {
             tick={axisTick}
             axisLine={false}
             tickLine={false}
-            width={38}
+            width={40}
+            allowDecimals={false}
           />
           <YAxis
             yAxisId="hours"
@@ -150,7 +151,7 @@ export default function WeekVolumeChart({ week, color }) {
             tick={axisTick}
             axisLine={false}
             tickLine={false}
-            width={30}
+            width={44}
           />
           <Tooltip content={<WeekTooltip />} cursor={{ fill: "var(--color-line)", opacity: 0.3 }} />
           <Bar
@@ -184,7 +185,7 @@ export default function WeekVolumeChart({ week, color }) {
 
       {/* Hand-rolled legend: the ghost bars aren't a real Recharts series, and a
           bigger, plain-language key reads better at distance than the default. */}
-      <div className="shrink-0 flex flex-wrap items-center gap-x-5 gap-y-1 mt-2 short:mt-1 font-mono text-xs short:text-[11px]">
+      <div className="shrink-0 flex flex-wrap items-center gap-x-5 gap-y-1 mt-2 short:mt-1 font-mono text-sm short:text-sm">
         <Key color={color} label="This week · km" />
         <Key color={color} label="Last week · km" opacity={0.28} wide />
         <Key color={STRENGTH_COLOR} label="Strength · h" />

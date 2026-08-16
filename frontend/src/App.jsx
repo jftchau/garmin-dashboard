@@ -64,6 +64,13 @@ export default function App() {
       <header className="flex items-center justify-between px-5 sm:px-6 short:px-4 pt-4 short:pt-2 pb-2 short:pb-1 gap-4">
         <div className="flex items-baseline gap-3 min-w-0">
           <span className="w-2.5 h-2.5 rounded-full bg-volt shrink-0 translate-y-[-2px]" />
+          {/* Slide number, so a viewer can say "page 7 needs updating" without
+              guessing what the slide is called. Zero-padded for a stable width. */}
+          {slides.length > 0 && (
+            <span className="font-mono text-sm short:text-xs text-muted shrink-0 tabular-nums">
+              {String(safeIdx + 1).padStart(2, "0")}/{slides.length}
+            </span>
+          )}
           {/* The slide title is the only large text in the chrome — it tells you
               what you're looking at from across the room, which the old tab bar
               could no longer do once the slide count tripled. */}
