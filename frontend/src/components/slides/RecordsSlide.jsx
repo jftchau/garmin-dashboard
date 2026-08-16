@@ -43,7 +43,7 @@ export default function RecordsSlide({ users, distances }) {
               key={dist}
               className="bg-surface border border-line rounded-xl p-5 short:p-3 text-center flex flex-col justify-center min-h-0"
             >
-              <div className="heading-display text-lg short:text-base uppercase tracking-widest text-muted mb-4 short:mb-3">
+              <div className="heading-display text-xl short:text-lg uppercase tracking-widest text-muted mb-4 short:mb-3">
                 {t.label}
               </div>
               <div className="space-y-4 short:space-y-3">
@@ -53,7 +53,7 @@ export default function RecordsSlide({ users, distances }) {
                   return (
                     <div key={u.id} className={i === 1 ? "pt-4 short:pt-3 border-t border-line/60" : ""}>
                       <div
-                        className="font-mono text-xs uppercase tracking-widest mb-1"
+                        className="font-mono text-sm uppercase tracking-widest mb-1"
                         style={{ color: RUNNER_COLORS[i] }}
                       >
                         {runnerName(users, i)}
@@ -64,7 +64,7 @@ export default function RecordsSlide({ users, distances }) {
                       >
                         {r?.best_time_sec ? formatDuration(r.best_time_sec) : "—"}
                       </div>
-                      <div className="text-muted text-xs font-mono mt-1.5">
+                      <div className="text-muted text-sm font-mono mt-1.5">
                         {r?.achieved_at ? formatDateShort(r.achieved_at) : "—"}
                         {predicted != null && <span> · pred {formatDuration(predicted)}</span>}
                       </div>

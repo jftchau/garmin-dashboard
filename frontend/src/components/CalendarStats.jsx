@@ -79,10 +79,10 @@ function calendarStats(data) {
 function Stat({ label, value, unit, color }) {
   return (
     <div className="whitespace-nowrap">
-      <div className="font-mono text-[10px] uppercase tracking-wide text-muted">{label}</div>
-      <div className="stat-mono text-lg short:text-base leading-tight" style={{ color }}>
+      <div className="font-mono text-sm uppercase tracking-wide text-muted">{label}</div>
+      <div className="stat-mono text-2xl short:text-xl leading-tight" style={{ color }}>
         {value}
-        {unit && <span className="text-xs text-muted ml-0.5">{unit}</span>}
+        {unit && <span className="text-sm text-muted ml-0.5">{unit}</span>}
       </div>
     </div>
   );
@@ -105,7 +105,7 @@ export default function CalendarStats({ data, color, rgb }) {
       <Stat label="Busiest day" value={stats.topWeekday} color={color} />
 
       <div className="ml-auto">
-        <div className="font-mono text-[10px] uppercase tracking-wide text-muted mb-1">By weekday</div>
+        <div className="font-mono text-sm uppercase tracking-wide text-muted mb-1">By weekday</div>
         <div className="flex items-end gap-1 h-9 short:h-7">
           {stats.byWeekday.map((count, i) => (
             <div key={i} className="flex flex-col items-center justify-end h-full gap-0.5 w-5 short:w-4">
@@ -118,7 +118,7 @@ export default function CalendarStats({ data, color, rgb }) {
                 }}
                 title={`${WEEKDAYS[i]}: ${count} runs`}
               />
-              <span className="font-mono text-[9px] text-muted">{WEEKDAYS[i][0]}</span>
+              <span className="font-mono text-xs text-muted">{WEEKDAYS[i][0]}</span>
             </div>
           ))}
         </div>

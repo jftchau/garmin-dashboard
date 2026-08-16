@@ -257,3 +257,35 @@ export const mockPersonalRecords = [
   { distance_name: "HALF", label: "Half Marathon", best_time_sec: 6720, activity_id: 1, achieved_at: "2026-02-01" },
   { distance_name: "MARATHON", label: "Marathon", best_time_sec: null, activity_id: null, achieved_at: null },
 ];
+
+export const mockRunningForm = {
+  runs_counted: 30,
+  averages: {
+    cadence_spm: 168.4,
+    stride_cm: 116.2,
+    ground_contact_ms: 246.8,
+    vertical_osc_cm: 8.3,
+    vertical_ratio_pct: 7.2,
+  },
+};
+
+export const mockConditions = (() => {
+  const now = new Date();
+  const months = [];
+  // Eight months trending warmer, so the demo view tells the "getting hot" story.
+  const base = [12, 14, 18, 22, 26, 29, 31, 33];
+  for (let i = 7; i >= 0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    const avg = base[7 - i];
+    months.push({
+      month: `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`,
+      avg_temp: avg,
+      max_temp: avg + 4,
+      runs: 6 + ((i * 3) % 8),
+    });
+  }
+  return {
+    months,
+    hottest: { temperature: 37, date: months[months.length - 1].month + "-14", distance_km: 12.4 },
+  };
+})();

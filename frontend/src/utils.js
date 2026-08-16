@@ -34,6 +34,17 @@ export function formatDayLabel(isoString) {
   return d.toLocaleDateString(undefined, { weekday: "short" });
 }
 
+// "2026-05-23" -> "May 23", parsed in local time so the day doesn't shift.
+// Used for chart axis ticks, where the full ISO date is long and unreadable at
+// kiosk distance.
+export function axisDate(iso) {
+  if (!iso) return "";
+  return new Date(`${iso}T00:00:00`).toLocaleDateString(undefined, {
+    month: "short",
+    day: "numeric",
+  });
+}
+
 // Head-to-head runner colors, indexed by position in the users array (Runner A
 // = volt, Runner B = blue). Mirrors --color-runner-a/-b in index.css. RGB
 // strings feed the calendar heatmap's rgba() ramp.

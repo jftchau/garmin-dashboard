@@ -3,6 +3,8 @@ import {
   mockThisWeek,
   mockWeeklyMileage,
   mockTrainingMix,
+  mockRunningForm,
+  mockConditions,
   mockCalendar,
   mockPersonalRecords,
   mockVo2maxTrend,
@@ -104,6 +106,14 @@ export function fetchWeeklyMileage(userId) {
 
 export function fetchTrainingMix(weeks = 10, userId) {
   return getJSON(`/training-mix?weeks=${weeks}`, mockTrainingMix, userId);
+}
+
+export function fetchRunningForm(runs = 30, userId) {
+  return getJSON(`/running-form?runs=${runs}`, mockRunningForm, userId);
+}
+
+export function fetchConditions(months = 8, userId) {
+  return getJSON(`/conditions?months=${months}`, mockConditions, userId);
 }
 
 export function fetchCalendar(days = 365, userId) {

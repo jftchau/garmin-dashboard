@@ -17,7 +17,7 @@ export default function HRZoneDoughnut({ zoneSeconds, height = 220 }) {
   if (data.length === 0) {
     return (
       <div
-        className="flex items-center justify-center text-muted text-xs font-mono text-center px-2"
+        className="flex items-center justify-center text-muted text-base font-mono text-center px-2"
         style={{ height }}
       >
         No heart rate data
@@ -49,12 +49,12 @@ export default function HRZoneDoughnut({ zoneSeconds, height = 220 }) {
             border: "1px solid var(--color-line)",
             borderRadius: 6,
             fontFamily: "var(--font-mono)",
-            fontSize: 12,
+            fontSize: 14,
           }}
           formatter={(value) => formatDuration(value)}
         />
         <Legend
-          wrapperStyle={{ fontSize: 11, fontFamily: "var(--font-mono)", color: "var(--color-muted)" }}
+          wrapperStyle={{ fontSize: 14, fontFamily: "var(--font-mono)", color: "var(--color-muted)" }}
           iconSize={8}
         />
       </PieChart>

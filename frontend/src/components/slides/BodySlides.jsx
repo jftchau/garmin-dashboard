@@ -10,15 +10,16 @@ import {
 import { fetchVo2maxTrend, fetchWellnessTrend, fetchCurrentStatus } from "../../api.js";
 import { useTwoUsers } from "../../useTwoUsers.js";
 import Slide, { BigStat, Loading, RunnerTag } from "../Slide.jsx";
-import { RUNNER_COLORS } from "../../utils.js";
+import { RUNNER_COLORS, axisDate } from "../../utils.js";
 
-const axisTick = { fill: "var(--color-muted)", fontSize: 12, fontFamily: "var(--font-mono)" };
+const axisTick = { fill: "var(--color-muted)", fontSize: 17, fontFamily: "var(--font-mono)" };
+
 const tooltipStyle = {
   background: "var(--color-surface-2)",
   border: "1px solid var(--color-line)",
   borderRadius: 6,
   fontFamily: "var(--font-mono)",
-  fontSize: 13,
+  fontSize: 14,
 };
 
 // Union two runners' time series into one row per date: { date, a, b }.
@@ -46,10 +47,10 @@ function TrendChart({ data, height, pad, fmt }) {
   }
   return (
     <ResponsiveContainer width="100%" height={height}>
-      <LineChart data={data} margin={{ top: 6, right: 8, left: -14, bottom: 0 }}>
+      <LineChart data={data} margin={{ top: 6, right: 32, left: 0, bottom: 0 }}>
         <CartesianGrid strokeDasharray="3 3" stroke="var(--color-line)" vertical={false} />
-        <XAxis dataKey="date" tick={axisTick} axisLine={{ stroke: "var(--color-line)" }} tickLine={false} minTickGap={52} />
-        <YAxis tick={axisTick} axisLine={false} tickLine={false} width={36} domain={[`dataMin - ${pad}`, `dataMax + ${pad}`]} />
+        <XAxis dataKey="date" tick={axisTick} tickFormatter={axisDate} axisLine={{ stroke: "var(--color-line)" }} tickLine={false} minTickGap={44} />
+        <YAxis tick={axisTick} axisLine={false} tickLine={false} width={44} domain={[`dataMin - ${pad}`, `dataMax + ${pad}`]} />
         <Tooltip contentStyle={tooltipStyle} labelStyle={{ color: "var(--color-muted)" }} formatter={(v, n) => [fmt(v), n]} />
         <Line type="monotone" dataKey="a" name="A" stroke={RUNNER_COLORS[0]} strokeWidth={3} dot={false} connectNulls activeDot={{ r: 5 }} isAnimationActive={false} />
         <Line type="monotone" dataKey="b" name="B" stroke={RUNNER_COLORS[1]} strokeWidth={3} dot={false} connectNulls activeDot={{ r: 5 }} isAnimationActive={false} />
@@ -62,8 +63,8 @@ function TrendPanel({ title, subtitle, children }) {
   return (
     <div className="bg-surface border border-line rounded-xl p-4 short:p-3 flex flex-col min-h-0">
       <div className="flex items-baseline justify-between mb-2 short:mb-1 gap-3 shrink-0">
-        <h3 className="heading-display text-base short:text-sm uppercase tracking-wide text-muted">{title}</h3>
-        <p className="text-muted text-xs font-mono">{subtitle}</p>
+        <h3 className="heading-display text-lg short:text-base uppercase tracking-wide text-muted">{title}</h3>
+        <p className="text-muted text-sm font-mono">{subtitle}</p>
       </div>
       <div className="flex-1 min-h-0">{children}</div>
     </div>

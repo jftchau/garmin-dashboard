@@ -3,7 +3,7 @@ import { fetchWeeklyMileage } from "../../api.js";
 import { useTwoUsers } from "../../useTwoUsers.js";
 import Slide, { BigStat, Loading, Panel, RunnerTag } from "../Slide.jsx";
 import WeeklyMileageChart from "../WeeklyMileageChart.jsx";
-import { RUNNER_COLORS, runnerName } from "../../utils.js";
+import { RUNNER_COLORS, runnerName, axisDate } from "../../utils.js";
 
 const WEEKS = 26;
 
@@ -38,7 +38,7 @@ export function MileageTrendSlide({ users }) {
   return (
     <Slide>
       <Panel grow title={`Kilometres per week · last ${WEEKS} weeks`}>
-        <WeeklyMileageChart data={merged.slice(-WEEKS)} series={series(users)} height="100%" />
+        <WeeklyMileageChart data={merged.slice(-WEEKS)} series={series(users)} height="100%" tickFormatter={axisDate} />
       </Panel>
     </Slide>
   );
@@ -66,7 +66,7 @@ export function MileageSummarySlide({ users }) {
 
   return (
     <Slide className="space-y-3 short:space-y-2">
-      <p className="font-mono text-xs uppercase tracking-widest text-muted">
+      <p className="font-mono text-base uppercase tracking-widest text-muted">
         Last {WEEKS} weeks
       </p>
       {(users || []).slice(0, 2).map((u, i) => {

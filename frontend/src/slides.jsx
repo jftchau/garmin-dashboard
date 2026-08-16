@@ -6,6 +6,10 @@ import { MileageTrendSlide, MileageSummarySlide } from "./components/slides/Mile
 import FrequencySlide from "./components/slides/FrequencySlide.jsx";
 import RecordsSlide from "./components/slides/RecordsSlide.jsx";
 import { HeartTrendsSlide, FitnessTrendsSlide, StatusSlide } from "./components/slides/BodySlides.jsx";
+import YearToDateSlide from "./components/slides/YearToDateSlide.jsx";
+import ConditionsSlide from "./components/slides/ConditionsSlide.jsx";
+import RunningFormSlide from "./components/slides/RunningFormSlide.jsx";
+import RecentRunsSlide from "./components/slides/RecentRunsSlide.jsx";
 import { runnerName } from "./utils.js";
 
 /**
@@ -44,10 +48,22 @@ export const SLIDES = [
     requiresRunner: 1,
   },
   {
+    id: "recent-runs",
+    title: "Latest runs",
+    navLabel: "Latest runs",
+    Component: RecentRunsSlide,
+  },
+  {
     id: "training-mix",
     title: "Training mix",
     navLabel: "Training mix",
     Component: TrainingMixSlide,
+  },
+  {
+    id: "conditions",
+    title: "Running conditions",
+    navLabel: "Conditions / heat",
+    Component: ConditionsSlide,
   },
   {
     id: "hr-zones",
@@ -66,6 +82,12 @@ export const SLIDES = [
     title: "Mileage summary",
     navLabel: "Mileage summary",
     Component: MileageSummarySlide,
+  },
+  {
+    id: "year-to-date",
+    title: "Year to date",
+    navLabel: "YTD race",
+    Component: YearToDateSlide,
   },
   {
     id: "frequency-a",
@@ -95,6 +117,12 @@ export const SLIDES = [
     navLabel: "Records half & full",
     Component: RecordsSlide,
     props: { distances: ["HALF", "MARATHON"] },
+  },
+  {
+    id: "running-form",
+    title: "Running form",
+    navLabel: "Running form",
+    Component: RunningFormSlide,
   },
   {
     id: "status",
