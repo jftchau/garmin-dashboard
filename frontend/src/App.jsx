@@ -69,7 +69,7 @@ export default function App() {
     <div className="h-screen flex flex-col">
       <header className="flex items-center justify-between px-5 sm:px-6 short:px-4 pt-4 short:pt-2 pb-2 short:pb-1 gap-4">
         <div className="flex items-baseline gap-3 min-w-0">
-          <span className="w-2.5 h-2.5 rounded-full bg-volt shrink-0 translate-y-[-2px]" />
+          <span className="w-2.5 h-2.5 rounded-full bg-chalk shrink-0 translate-y-[-2px]" />
           {/* Slide number, so a viewer can say "page 7 needs updating" without
               guessing what the slide is called. Zero-padded for a stable width. */}
           {slides.length > 0 && (
@@ -91,7 +91,7 @@ export default function App() {
           <button
             onClick={() => setPaused((p) => !p)}
             title={paused ? "Resume auto-rotation" : "Pause auto-rotation"}
-            className="font-mono text-xs px-3 py-1.5 rounded border border-line bg-surface hover:border-volt hover:text-volt transition-colors"
+            className="font-mono text-xs px-3 py-1.5 rounded border border-line bg-surface hover:border-chalk hover:text-chalk transition-colors"
           >
             {paused ? "▶" : "⏸"}
           </button>

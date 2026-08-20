@@ -35,14 +35,14 @@ export default function WeekVolumeSlide({ users, runner = 0 }) {
           label="Change"
           value={`${diff >= 0 ? "+" : ""}${diff}`}
           unit="km"
-          color={diff >= 0 ? "var(--color-zone2)" : "var(--color-zone4)"}
+          color="var(--color-chalk)"
           size="lg"
         />
         <BigStat
           label="Cross-training"
           value={hours ? hours.toFixed(1) : "0"}
           unit="h"
-          color="var(--color-zone4)"
+          color="var(--color-slate)"
           size="lg"
         />
       </div>

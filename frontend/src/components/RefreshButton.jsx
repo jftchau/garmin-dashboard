@@ -23,7 +23,7 @@ export default function RefreshButton({ onDone }) {
     <button
       onClick={handleClick}
       disabled={state === "loading"}
-      className="font-mono text-xs sm:text-sm px-3 py-2 rounded border border-line bg-surface hover:border-volt hover:text-volt transition-colors disabled:opacity-60"
+      className="font-mono text-xs sm:text-sm px-3 py-2 rounded border border-line bg-surface hover:border-chalk hover:text-chalk transition-colors disabled:opacity-60"
     >
       {label}
     </button>

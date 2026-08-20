@@ -43,22 +43,29 @@ export function Panel({ title, right, children, className = "", grow = false }) 
 }
 
 // A single headline number. `size` steps the value type; labels stay constant so
-// the eye can scan a row of these without re-anchoring.
+// the eye can scan a row of these without re-anchoring. `hero` is for slides
+// that carry nothing but numbers (this week, mileage summary) — there the type
+// has to grow to fill the screen or the slide reads as half-empty.
 export function BigStat({ label, value, unit, color = "var(--color-chalk)", size = "xl" }) {
   const valueClass = {
-    xl: "text-6xl short:text-5xl",
-    lg: "text-5xl short:text-4xl",
-    md: "text-4xl short:text-3xl",
+    // 5rem is the largest the four-column "this week" row can take before a
+    // five-character value ("10:23" /km) would clip in its column.
+    hero: "text-[6.5rem] short:text-[5rem]",
+    xl: "text-7xl short:text-6xl",
+    lg: "text-6xl short:text-5xl",
+    md: "text-5xl short:text-4xl",
+    sm: "text-4xl short:text-3xl",
   }[size];
+  const unitClass = size === "hero" || size === "xl" ? "text-3xl short:text-2xl" : "text-2xl short:text-xl";
 
   return (
     <div className="min-w-0">
-      <div className="font-mono text-base short:text-base uppercase tracking-widest text-muted mb-1">
+      <div className="font-mono text-lg short:text-base uppercase tracking-widest text-muted mb-1">
         {label}
       </div>
       <div className={`stat-mono ${valueClass} leading-none truncate`} style={{ color }}>
         {value ?? "—"}
-        {unit && <span className="text-2xl short:text-xl text-muted ml-1.5">{unit}</span>}
+        {unit && <span className={`${unitClass} text-muted ml-1.5`}>{unit}</span>}
       </div>
     </div>
   );
@@ -66,7 +73,7 @@ export function BigStat({ label, value, unit, color = "var(--color-chalk)", size
 
 // Runner name chip, color-coded to match every chart series on the dashboard.
 export function RunnerTag({ users, i, size = "md" }) {
-  const cls = size === "lg" ? "text-2xl short:text-xl" : "text-lg short:text-base";
+  const cls = { xl: "text-3xl short:text-2xl", lg: "text-2xl short:text-xl" }[size] || "text-lg short:text-base";
   return (
     <span
       className={`heading-display font-semibold tracking-wide ${cls}`}

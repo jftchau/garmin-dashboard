@@ -1,9 +1,19 @@
 import { useEffect, useState } from "react";
 import { fetchActivities } from "../../api.js";
 import Slide, { Loading, RunnerTag } from "../Slide.jsx";
-import { formatDistanceKm, formatPace, formatDateShort, RUNNER_COLORS, trainingEffect } from "../../utils.js";
+import { formatDistanceKm, formatPace, RUNNER_COLORS, trainingEffect } from "../../utils.js";
 
-const N = 4; // runs per runner — enough to fill the column at a readable row size
+// "Sat 16 Aug" — the run's identity on this slide. The activity name used to
+// lead each row, but every run is logged from the same place and came back
+// "Jing'an Running", so it was a column of identical text that pushed the
+// numbers small and wrapped unevenly. The date is what actually differs.
+function runDate(iso) {
+  if (!iso) return "—";
+  const d = new Date(iso);
+  return d.toLocaleDateString(undefined, { weekday: "short", day: "numeric", month: "short" });
+}
+
+const N = 5; // runs per runner — enough to fill the column at a readable row size
 
 // Fetch the most recent runs for both runners. fetchActivities returns all
 // activity types; we filter to runs so cross-training doesn't crowd the list.
@@ -37,26 +47,23 @@ function useRecentRuns(users) {
 function RunRow({ a, color }) {
   const te = trainingEffect(a.training_effect_label);
   return (
-    <div className="flex items-baseline justify-between gap-3 py-2 short:py-1.5 border-b border-line/50 last:border-0">
+    <div className="flex items-baseline justify-between gap-3 py-3 short:py-2.5 border-b border-line/50 last:border-0">
       <div className="min-w-0">
-        <div className="font-mono text-base short:text-sm truncate" style={{ color }}>
-          {a.activity_name || "Run"}
-        </div>
-        <div className="font-mono text-sm text-muted">{formatDateShort(a.start_time)}</div>
+        <div className="font-mono text-xl short:text-lg text-chalk whitespace-nowrap">{runDate(a.start_time)}</div>
+        {te && (
+          <div className="font-mono text-base short:text-sm" style={{ color: te.color }}>
+            {te.text}
+          </div>
+        )}
       </div>
       <div className="flex items-baseline gap-5 short:gap-4 shrink-0">
-        <span className="stat-mono text-2xl short:text-xl" style={{ color }}>
+        <span className="stat-mono text-4xl short:text-3xl" style={{ color }}>
           {formatDistanceKm(a.distance)}
-          <span className="text-sm text-muted ml-1">km</span>
+          <span className="text-base text-muted ml-1">km</span>
         </span>
-        <span className="stat-mono text-xl short:text-lg text-chalk w-[7.5ch] text-right">
+        <span className="stat-mono text-3xl short:text-2xl text-chalk w-[5ch] text-right">
           {formatPace(a.pace).replace(" /km", "")}
         </span>
-        {te && (
-          <span className="font-mono text-sm px-2 py-0.5 rounded" style={{ color: te.color, background: "var(--color-surface-2)" }}>
-            {te.text}
-          </span>
-        )}
       </div>
     </div>
   );
@@ -81,8 +88,11 @@ export default function RecentRunsSlide({ users }) {
           const list = runs[i];
           return (
             <div key={u.id} className="bg-surface border border-line rounded-xl p-4 short:p-3 flex flex-col min-h-0">
-              <div className="mb-2 short:mb-1 shrink-0">
+              <div className="mb-2 short:mb-1 shrink-0 flex items-baseline justify-between gap-2">
                 <RunnerTag users={users} i={i} size="lg" />
+                {/* Units are stated once per column instead of on every row —
+                    the pace column carries no suffix of its own. */}
+                <span className="font-mono text-sm text-muted uppercase tracking-widest">km · pace /km</span>
               </div>
               <div className="flex-1 min-h-0 flex flex-col justify-center">
                 {list && list.length ? (

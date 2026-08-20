@@ -15,7 +15,8 @@ The dashboard is built to run on a **1024×600, 7" Raspberry Pi monitor that is
 display-only** (no touch, keyboard, or mouse). That shapes the whole UI:
 
 - **Head-to-head, both runners at once.** Most slides compare the two runners on
-  shared charts, color-coded (Runner A = volt yellow, Runner B = blue) — there is
+  shared charts, color-coded (Runner A = marigold, Runner B = olive green; see
+  the four-layer palette at the top of `frontend/src/index.css`) — there is
   no user switcher, because nothing on the Pi can click it. A few slides show one
   runner at a time, where a head-to-head would halve the graphic.
 - **Read from across the room.** One idea per slide at the largest size the

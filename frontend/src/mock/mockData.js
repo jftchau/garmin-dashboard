@@ -277,11 +277,15 @@ export const mockConditions = (() => {
   for (let i = 7; i >= 0; i--) {
     const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
     const avg = base[7 - i];
+    const runs = 6 + ((i * 3) % 8);
     months.push({
       month: `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`,
       avg_temp: avg,
       max_temp: avg + 4,
-      runs: 6 + ((i * 3) % 8),
+      runs,
+      // Volume tapers as the months warm — the pairing the conditions slide is
+      // there to show.
+      distance_km: Math.round(runs * (9 - (7 - i) * 0.6) * 10) / 10,
     });
   }
   return {

@@ -10,32 +10,36 @@ import {
 import { fetchTrainingMix } from "../../api.js";
 import { useTwoUsers } from "../../useTwoUsers.js";
 import Slide, { Loading, RunnerTag } from "../Slide.jsx";
+import { RUNNER_COLORS } from "../../utils.js";
 
 const WEEKS = 10;
 
 const axisTick = { fill: "var(--color-muted)", fontSize: 17, fontFamily: "var(--font-mono)" };
 
-// Activity-type palette, shared with WeekVolumeChart so "orange = strength" and
-// "green = other training" mean the same thing on every slide.
-const BUCKETS = [
-  { key: "run_hours", label: "Running", color: "var(--color-volt)" },
-  { key: "strength_hours", label: "Strength", color: "var(--color-zone4)" },
-  { key: "other_hours", label: "Other", color: "var(--color-zone2)" },
+// Activity-type palette, shared with WeekVolumeChart so the greys mean the same
+// thing on every slide: light = strength, dim = other. Running takes the
+// runner's own color (each chart here is one runner), same as every other
+// slide — so the legend's running swatch shows both runner colors.
+const RUN_BUCKET = { key: "run_hours", label: "Running" };
+const CROSS_BUCKETS = [
+  { key: "strength_hours", label: "Strength", color: "var(--color-slate)" },
+  { key: "other_hours", label: "Other", color: "var(--color-slate-dim)" },
 ];
+const bucketsFor = (runnerColor) => [{ ...RUN_BUCKET, color: runnerColor }, ...CROSS_BUCKETS];
 
 const weekTick = (iso) =>
   new Date(`${iso}T00:00:00`).toLocaleDateString(undefined, { month: "numeric", day: "numeric" });
 
 const hrs = (h) => `${(+h).toFixed(1)} h`;
 
-function MixTooltip({ active, payload, label }) {
+function MixTooltip({ active, payload, label, buckets }) {
   if (!active || !payload?.length) return null;
   const d = payload[0].payload;
-  const total = BUCKETS.reduce((s, b) => s + (d[b.key] || 0), 0);
+  const total = buckets.reduce((s, b) => s + (d[b.key] || 0), 0);
   return (
     <div className="px-3 py-2 rounded-md border border-line bg-surface-2 font-mono text-sm">
       <div className="text-muted mb-1">week of {weekTick(label)}</div>
-      {BUCKETS.map((b) => (
+      {buckets.map((b) => (
         <div key={b.key} className="flex justify-between gap-4">
           <span style={{ color: b.color }}>{b.label}</span>
           <span>{hrs(d[b.key] || 0)}</span>
@@ -49,10 +53,11 @@ function MixTooltip({ active, payload, label }) {
   );
 }
 
-function MixChart({ data, height }) {
+function MixChart({ data, height, runnerColor }) {
+  const buckets = bucketsFor(runnerColor);
   if (!data?.length) {
     return (
-      <div className="flex items-center justify-center text-muted font-mono text-sm" style={{ height }}>
+      <div className="flex items-center justify-center text-muted font-mono text-base" style={{ height }}>
         No data
       </div>
     );
@@ -70,14 +75,14 @@ function MixChart({ data, height }) {
           tickLine={false}
         />
         <YAxis tick={axisTick} axisLine={false} tickLine={false} width={40} />
-        <Tooltip content={<MixTooltip />} cursor={{ fill: "var(--color-line)", opacity: 0.3 }} />
-        {BUCKETS.map((b, i) => (
+        <Tooltip content={<MixTooltip buckets={buckets} />} cursor={{ fill: "var(--color-line)", opacity: 0.3 }} />
+        {buckets.map((b, i) => (
           <Bar
             key={b.key}
             dataKey={b.key}
             stackId="mix"
             fill={b.color}
-            radius={i === BUCKETS.length - 1 ? [3, 3, 0, 0] : undefined}
+            radius={i === buckets.length - 1 ? [3, 3, 0, 0] : undefined}
             isAnimationActive={false}
           />
         ))}
@@ -103,9 +108,17 @@ export default function TrainingMixSlide({ users }) {
 
   return (
     <Slide className="space-y-2">
-      <div className="shrink-0 flex flex-wrap items-center gap-x-5 gap-y-1 font-mono text-sm short:text-sm">
+      <div className="shrink-0 flex flex-wrap items-center gap-x-5 gap-y-1 font-mono text-base">
         <span className="text-muted uppercase tracking-widest">Hours per week · last {WEEKS} weeks</span>
-        {BUCKETS.map((b) => (
+        <span className="flex items-center gap-1.5 text-muted">
+          {/* Split swatch: running is drawn in whichever runner's chart it is. */}
+          <span
+            className="w-4 h-3 rounded-sm"
+            style={{ background: `linear-gradient(90deg, ${RUNNER_COLORS[0]} 50%, ${RUNNER_COLORS[1]} 50%)` }}
+          />
+          {RUN_BUCKET.label}
+        </span>
+        {CROSS_BUCKETS.map((b) => (
           <span key={b.key} className="flex items-center gap-1.5 text-muted">
             <span className="w-3 h-3 rounded-sm" style={{ background: b.color }} />
             {b.label}
@@ -125,7 +138,7 @@ export default function TrainingMixSlide({ users }) {
               <RunnerTag users={users} i={i} />
             </div>
             <div className="flex-1 min-h-0">
-              <MixChart data={mixes[i]} height="100%" />
+              <MixChart data={mixes[i]} height="100%" runnerColor={RUNNER_COLORS[i]} />
             </div>
           </div>
         ))}

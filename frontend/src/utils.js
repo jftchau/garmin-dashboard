@@ -46,10 +46,23 @@ export function axisDate(iso) {
 }
 
 // Head-to-head runner colors, indexed by position in the users array (Runner A
-// = volt, Runner B = blue). Mirrors --color-runner-a/-b in index.css. RGB
-// strings feed the calendar heatmap's rgba() ramp.
+// = marigold, Runner B = olive green). Mirrors --color-runner-a/-b in
+// index.css. RGB strings feed the calendar heatmap's rgba() ramp.
 export const RUNNER_COLORS = ["var(--color-runner-a)", "var(--color-runner-b)"];
-export const RUNNER_RGB = ["245,197,24", "79,168,224"];
+export const RUNNER_RGB = ["245,165,36", "155,181,59"];
+
+// Neutral + alert channels as rgb strings, for the places that need to ramp
+// opacity in an inline style (a chart fill can't take a CSS var with an alpha).
+export const SLATE_RGB = "152,162,179";
+export const EMBER_RGB = "229,72,77";
+
+// Layer 2 of the palette: "more of the same person" is the SAME hue at a higher
+// opacity, never a different hue. One shared ramp, so a heavy week on the
+// calendar and a hard heart-rate zone darken the same way. Index 0 = lightest.
+export const INTENSITY_STEPS = [0.32, 0.48, 0.66, 0.82, 1];
+
+export const intensity = (rgb, step) =>
+  `rgba(${rgb},${INTENSITY_STEPS[Math.max(0, Math.min(INTENSITY_STEPS.length - 1, step))]})`;
 
 // Short display name for a runner slot, falling back to "Runner N" when unnamed.
 export function runnerName(users, i) {
@@ -57,13 +70,11 @@ export function runnerName(users, i) {
   return (u && u.name && u.name.trim()) || `Runner ${i + 1}`;
 }
 
-export const ZONE_COLORS = {
-  "1": "var(--color-zone1)",
-  "2": "var(--color-zone2)",
-  "3": "var(--color-zone3)",
-  "4": "var(--color-zone4)",
-  "5": "var(--color-zone5)",
-};
+// Heart-rate zones are shades of whoever's zones they are: zone N takes step
+// N-1 of the shared intensity ramp. Zones used to be five unrelated hues, which
+// put five extra colors on screen and made the two runners' doughnuts look like
+// different charts rather than the same chart twice.
+export const zoneColor = (rgb, zone) => intensity(rgb, Number(zone) - 1);
 
 // --- Tier-1 enrichment formatters (metrics sourced from the run summary) ---
 
@@ -123,17 +134,19 @@ export function prettyStatus(s) {
     .replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
-// Map a Garmin trainingEffectLabel to a display label + zone-palette color.
+// Map a Garmin trainingEffectLabel to a display label + color. Effort is a
+// scale, so it rides the neutral lightness ramp (easy = dim, hard = bright) and
+// only the genuinely maximal efforts reach for the one alert hue.
 const TE_COLORS = {
-  RECOVERY: "var(--color-zone1)",
-  BASE: "var(--color-zone2)",
-  AEROBIC_BASE: "var(--color-zone2)",
-  TEMPO: "var(--color-zone3)",
-  THRESHOLD: "var(--color-zone4)",
-  LACTATE_THRESHOLD: "var(--color-zone4)",
-  VO2MAX: "var(--color-zone5)",
-  ANAEROBIC: "var(--color-zone5)",
-  SPRINT: "var(--color-zone5)",
+  RECOVERY: "var(--color-slate-dim)",
+  BASE: "var(--color-slate-dim)",
+  AEROBIC_BASE: "var(--color-slate-dim)",
+  TEMPO: "var(--color-slate)",
+  THRESHOLD: "var(--color-chalk)",
+  LACTATE_THRESHOLD: "var(--color-chalk)",
+  VO2MAX: "var(--color-ember)",
+  ANAEROBIC: "var(--color-ember)",
+  SPRINT: "var(--color-ember)",
 };
 
 export function trainingEffect(label) {

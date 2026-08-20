@@ -32,14 +32,14 @@ export default function WeeklyMileageChart({
   // of a week); let recharts thin them out otherwise.
   interval,
   // Head-to-head: array of { dataKey, color, name } to render one bar/line per
-  // runner (grouped bars / overlaid lines + legend). Falls back to the single
-  // volt series keyed by dataKeyY when omitted.
+  // runner (grouped bars / overlaid lines + legend). Falls back to a single
+  // neutral series keyed by dataKeyY when omitted.
   series,
 }) {
   const multi = Array.isArray(series) && series.length > 0;
   const specs = multi
     ? series
-    : [{ dataKey: dataKeyY, color: "var(--color-volt)", name: "Distance" }];
+    : [{ dataKey: dataKeyY, color: "var(--color-chalk)", name: "Distance" }];
 
   const xAxis = (
     <XAxis

@@ -41,9 +41,12 @@ export default function RecordsSlide({ users, distances }) {
           return (
             <div
               key={dist}
-              className="bg-surface border border-line rounded-xl p-5 short:p-3 text-center flex flex-col justify-center min-h-0"
+              // justify-evenly, not justify-center: these cards are two thirds
+              // of the screen tall, and centring the content left a band of
+              // empty card above and below it.
+              className="bg-surface border border-line rounded-xl p-5 short:p-3 text-center flex flex-col justify-evenly min-h-0"
             >
-              <div className="heading-display text-xl short:text-lg uppercase tracking-widest text-muted mb-4 short:mb-3">
+              <div className="heading-display text-3xl short:text-2xl uppercase tracking-widest text-muted">
                 {t.label}
               </div>
               <div className="space-y-4 short:space-y-3">
@@ -53,18 +56,22 @@ export default function RecordsSlide({ users, distances }) {
                   return (
                     <div key={u.id} className={i === 1 ? "pt-4 short:pt-3 border-t border-line/60" : ""}>
                       <div
-                        className="font-mono text-sm uppercase tracking-widest mb-1"
+                        className="font-mono text-lg short:text-base uppercase tracking-widest mb-1"
                         style={{ color: RUNNER_COLORS[i] }}
                       >
                         {runnerName(users, i)}
                       </div>
                       <div
-                        className="stat-mono text-5xl short:text-4xl leading-none"
+                        // Two distances per slide leave enough width for the
+                        // marathon's seven characters at the larger step.
+                        className={`stat-mono leading-none ${
+                          template.length > 2 ? "text-7xl short:text-6xl" : "text-8xl short:text-7xl"
+                        }`}
                         style={{ color: RUNNER_COLORS[i] }}
                       >
                         {r?.best_time_sec ? formatDuration(r.best_time_sec) : "—"}
                       </div>
-                      <div className="text-muted text-sm font-mono mt-1.5">
+                      <div className="text-muted text-base font-mono mt-1.5">
                         {r?.achieved_at ? formatDateShort(r.achieved_at) : "—"}
                         {predicted != null && <span> · pred {formatDuration(predicted)}</span>}
                       </div>

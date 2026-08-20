@@ -7,24 +7,44 @@
 @custom-variant short (@media (max-height: 700px));
 
 @theme {
+  /* ---------------------------------------------------------------------
+     The palette is four layers, and nothing on the dashboard is allowed to
+     invent a fifth. Adding a color? It belongs to one of these or it doesn't
+     go on the screen.
+
+     1. IDENTITY — two hues, and only these two, answer "whose data is this":
+        marigold = Runner A, olive = Runner B. Never used for anything else.
+     2. EMPHASIS — more or less of the SAME person is the same hue at a
+        different opacity (last week's ghost, heatmap intensity, HR zones),
+        never a different hue.
+     3. NEUTRALS — anything that isn't a person is a grey, and greys are told
+        apart by lightness, not hue (cross-training series, structure, labels).
+     4. ALERT — one hue, ember, for genuine extremes only: 30°C+ months, the
+        peak temperature, a form metric outside its band. Never decorative.
+
+     Chrome (header dot, nav, focus ring, hovers) is deliberately neutral: it
+     used to be a third yellow, which read as a third runner.
+     --------------------------------------------------------------------- */
+
   --color-ink: #14151a;
   --color-surface: #1c1e24;
   --color-surface-2: #23262e;
   --color-line: #2a2d35;
   --color-chalk: #f2f3f5;
   --color-muted: #8a8f99;
-  --color-volt: #f5c518;
-  --color-volt-dim: #b8951a;
 
-  /* Head-to-head runner colors — used consistently across every chart, legend,
-     and comparison stat. Runner A = the brand volt; Runner B = blue. */
-  --color-runner-a: #f5c518;
-  --color-runner-b: #4fa8e0;
-  --color-zone1: #4fa8e0;
-  --color-zone2: #4fc0a0;
-  --color-zone3: #f5c518;
-  --color-zone4: #ef8d3c;
-  --color-zone5: #e5484d;
+  /* 1. Identity */
+  --color-runner-a: #f5a524;
+  --color-runner-b: #9bb53b;
+
+  /* 3. Neutral data greys — the two cross-training series and the heatmap's
+        "trained, but didn't run" marker. Separated by lightness so a stacked
+        bar still reads at kiosk distance without borrowing a hue. */
+  --color-slate: #98a2b3;
+  --color-slate-dim: #5d6673;
+
+  /* 4. Alert */
+  --color-ember: #e5484d;
 
   --font-display: "Space Grotesk", "Inter", sans-serif;
   --font-mono: "JetBrains Mono", monospace;
@@ -42,17 +62,22 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* Lane-marking divider — the dashboard's signature motif, echoed in the
-   tab bar and section separators, evoking a running track's lane lines. */
+/* Lane-marking divider — the dashboard's signature motif, evoking a running
+   track's lane lines. Dashed in the two identity hues, alternating, so even the
+   furniture says "two runners". */
 .lane-rule {
   position: relative;
   height: 3px;
   background: repeating-linear-gradient(
     to right,
-    var(--color-volt) 0px,
-    var(--color-volt) 14px,
+    var(--color-runner-a) 0px,
+    var(--color-runner-a) 14px,
     transparent 14px,
-    transparent 22px
+    transparent 22px,
+    var(--color-runner-b) 22px,
+    var(--color-runner-b) 36px,
+    transparent 36px,
+    transparent 44px
   );
   opacity: 0.55;
 }
@@ -87,7 +112,7 @@ body {
 }
 
 :focus-visible {
-  outline: 2px solid var(--color-volt);
+  outline: 2px solid var(--color-chalk);
   outline-offset: 2px;
 }
 
