@@ -19,18 +19,18 @@ export default function SlideNav({ slides, index, onSelect, rotating, rotateMs, 
             aria-label={s.navLabel}
             aria-current={isActive ? "true" : undefined}
             className={`h-1.5 short:h-1 flex-1 rounded-full overflow-hidden transition-colors ${
-              isPast ? "bg-volt-dim/50" : "bg-line"
+              isPast ? "bg-slate-dim/60" : "bg-line"
             }`}
           >
             {isActive &&
               (rotating ? (
                 <span
                   key={cycle}
-                  className="block h-full bg-volt origin-left"
+                  className="block h-full bg-chalk origin-left"
                   style={{ animation: `tab-progress ${rotateMs}ms linear forwards` }}
                 />
               ) : (
-                <span className="block h-full bg-volt" />
+                <span className="block h-full bg-chalk" />
               ))}
           </button>
         );

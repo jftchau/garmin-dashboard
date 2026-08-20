@@ -118,7 +118,7 @@ export default function CalendarStats({ data, color, rgb }) {
                 }}
                 title={`${WEEKDAYS[i]}: ${count} runs`}
               />
-              <span className="font-mono text-xs text-muted">{WEEKDAYS[i][0]}</span>
+              <span className="font-mono text-sm text-muted">{WEEKDAYS[i][0]}</span>
             </div>
           ))}
         </div>

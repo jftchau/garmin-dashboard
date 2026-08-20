@@ -12,6 +12,17 @@ import { useTwoUsers } from "../../useTwoUsers.js";
 import Slide, { BigStat, Loading, RunnerTag } from "../Slide.jsx";
 import { RUNNER_COLORS, axisDate } from "../../utils.js";
 
+// Window for the two trend slides. 90 days squeezed a quarter of a year into
+// 480px, so day-to-day movement turned into noise; a month of points is what
+// this display can actually resolve.
+const TREND_DAYS = 30;
+
+const sinceCutoff = () => {
+  const d = new Date();
+  d.setDate(d.getDate() - TREND_DAYS);
+  return d.toISOString().slice(0, 10);
+};
+
 const axisTick = { fill: "var(--color-muted)", fontSize: 17, fontFamily: "var(--font-mono)" };
 
 const tooltipStyle = {
@@ -40,7 +51,7 @@ const round = (v) => (v != null ? Math.round(v) : null);
 function TrendChart({ data, height, pad, fmt }) {
   if (!data?.length) {
     return (
-      <div className="flex items-center justify-center text-muted font-mono text-sm" style={{ height }}>
+      <div className="flex items-center justify-center text-muted font-mono text-base" style={{ height }}>
         No data
       </div>
     );
@@ -88,7 +99,7 @@ function TrendPairSlide({ panels }) {
 }
 
 export function HeartTrendsSlide({ users }) {
-  const [wellA, wellB] = useTwoUsers((uid) => fetchWellnessTrend(90, uid), users);
+  const [wellA, wellB] = useTwoUsers((uid) => fetchWellnessTrend(TREND_DAYS, uid), users);
   if (!wellA && !wellB) return <Loading what="wellness" />;
 
   return (
@@ -115,8 +126,13 @@ export function HeartTrendsSlide({ users }) {
 
 export function FitnessTrendsSlide({ users }) {
   const [vo2A, vo2B] = useTwoUsers(fetchVo2maxTrend, users);
-  const [wellA, wellB] = useTwoUsers((uid) => fetchWellnessTrend(90, uid), users);
+  const [wellA, wellB] = useTwoUsers((uid) => fetchWellnessTrend(TREND_DAYS, uid), users);
   if (!vo2A && !vo2B && !wellA && !wellB) return <Loading what="fitness" />;
+
+  // /vo2max-trend has no window parameter — it returns the whole per-run
+  // series, so the 30-day cut happens here.
+  const cutoff = sinceCutoff();
+  const recent = (trend) => (trend || []).filter((d) => d.date >= cutoff);
 
   return (
     <TrendPairSlide
@@ -124,7 +140,7 @@ export function FitnessTrendsSlide({ users }) {
         {
           title: "VO₂max",
           subtitle: "per-run estimate",
-          data: mergeByDate(vo2A?.trend, vo2B?.trend, "vo2max"),
+          data: mergeByDate(recent(vo2A?.trend), recent(vo2B?.trend), "vo2max"),
           pad: 1,
           fmt: (v) => v,
         },
@@ -157,13 +173,15 @@ export function StatusSlide({ users }) {
         return (
           <div key={u.id} className="bg-surface border border-line rounded-xl p-5 short:p-3 flex-1 min-h-0 flex flex-col justify-center">
             <div className="mb-3 short:mb-2">
-              <RunnerTag users={users} i={i} size="lg" />
+              <RunnerTag users={users} i={i} size="xl" />
             </div>
+            {/* Four two-digit numbers in a full-width card — they can carry the
+                same headline size as the "this week" slide. */}
             <div className="grid grid-cols-4 gap-4 short:gap-3">
-              <BigStat label="Resting HR" value={s?.resting_hr} unit="bpm" color={color} />
-              <BigStat label="HRV" value={s?.hrv_last_night} unit="ms" color={color} />
-              <BigStat label="Sleep score" value={s?.sleep_score} color={color} />
-              <BigStat label="VO₂max" value={round(vo2[i]?.current)} color={color} />
+              <BigStat label="Resting HR" value={s?.resting_hr} unit="bpm" color={color} size="hero" />
+              <BigStat label="HRV" value={s?.hrv_last_night} unit="ms" color={color} size="hero" />
+              <BigStat label="Sleep score" value={s?.sleep_score} color={color} size="hero" />
+              <BigStat label="VO₂max" value={round(vo2[i]?.current)} color={color} size="hero" />
             </div>
           </div>
         );

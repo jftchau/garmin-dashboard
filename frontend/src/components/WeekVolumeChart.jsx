@@ -20,8 +20,10 @@ const tooltipStyle = {
 // Cross-training colors. Deliberately NOT the runner colors: on this chart the
 // runner is already identified by the slide title, so the palette is free to
 // encode activity type instead.
-const STRENGTH_COLOR = "var(--color-zone4)";
-const OTHER_COLOR = "var(--color-zone2)";
+// Cross-training is not a person, so it is neutral: two greys told apart by
+// lightness rather than two more hues competing with the runner's color.
+const STRENGTH_COLOR = "var(--color-slate)";
+const OTHER_COLOR = "var(--color-slate-dim)";
 
 const dayTick = (iso) =>
   new Date(`${iso}T00:00:00`).toLocaleDateString(undefined, { weekday: "short" });

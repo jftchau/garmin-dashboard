@@ -1,6 +1,5 @@
 import { fetchCalendar } from "../../api.js";
 import { useOneUser } from "../../useTwoUsers.js";
-import { useCompact } from "../../useCompact.js";
 import Slide, { BigStat, Loading, RunnerTag } from "../Slide.jsx";
 import CalendarHeatmap from "../CalendarHeatmap.jsx";
 import CalendarStats from "../CalendarStats.jsx";
@@ -15,7 +14,6 @@ import { RUNNER_COLORS, RUNNER_RGB } from "../../utils.js";
  */
 export default function FrequencySlide({ users, runner = 0 }) {
   const data = useOneUser((uid) => fetchCalendar(365, uid), users, runner);
-  const compact = useCompact();
 
   if (!data) return <Loading what="run history" />;
 
@@ -33,20 +31,19 @@ export default function FrequencySlide({ users, runner = 0 }) {
         </span>
       </div>
 
-      <div className="grid grid-cols-3 gap-4 short:gap-3">
+      <div className="grid grid-cols-3 gap-4 short:gap-3 shrink-0">
         <BigStat label="Run days" value={runDays} color={color} size="lg" />
         <BigStat label="Distance" value={totalKm.toFixed(0)} unit="km" color={color} size="lg" />
-        <BigStat label="Cross-training days" value={crossDays} color="var(--color-zone4)" size="lg" />
+        <BigStat label="Cross-training days" value={crossDays} color="var(--color-slate)" size="lg" />
       </div>
 
-      <div className="bg-surface border border-line rounded-xl p-4 short:p-3 flex-1 min-h-0 flex flex-col justify-center">
-        <CalendarHeatmap
-          data={data}
-          rgb={RUNNER_RGB[runner]}
-          cell={compact ? 13 : 15}
-          gap={3}
-          showHover={false}
-        />
+      {/* cell="auto" lets the grid solve its own cell size from this card, so
+          the year of squares spans the full width and depth of the box instead
+          of sitting in its top-left corner at a hardcoded 13px. */}
+      <div className="bg-surface border border-line rounded-xl p-4 short:p-3 flex-1 min-h-0 flex flex-col">
+        <div className="flex-1 min-h-0">
+          <CalendarHeatmap data={data} rgb={RUNNER_RGB[runner]} cell="auto" gap={3} showHover={false} />
+        </div>
         <CalendarStats data={data} color={color} rgb={RUNNER_RGB[runner]} />
       </div>
     </Slide>

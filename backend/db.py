@@ -157,7 +157,7 @@ def init_db():
     """Create tables if they don't exist yet, and apply column migrations.
     Safe to call every run."""
     with get_conn() as conn:
-        with open(SCHEMA_PATH) as f:
+        with open(SCHEMA_PATH, encoding="utf-8") as f:
             conn.executescript(f.read())
         _migrate(conn)
         conn.commit()

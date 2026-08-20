@@ -132,13 +132,13 @@ export const SLIDES = [
   },
   {
     id: "heart-trends",
-    title: "Heart · 90 days",
+    title: "Heart · 30 days",
     navLabel: "Heart trends",
     Component: HeartTrendsSlide,
   },
   {
     id: "fitness-trends",
-    title: "Fitness & sleep · 90 days",
+    title: "Fitness & sleep · 30 days",
     navLabel: "Fitness trends",
     Component: FitnessTrendsSlide,
   },

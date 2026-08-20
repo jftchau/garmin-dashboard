@@ -547,8 +547,10 @@ def conditions():
     """Monthly running temperature — for the 'it's getting hot' conditions slide.
 
     Returns the last `months` months of average and peak run temperature plus
-    run counts, and the single hottest run in that window. Temperature is only
-    recorded on outdoor runs, so months with only treadmill work come back null.
+    run counts and total distance, and the single hottest run in that window.
+    Temperature is only recorded on outdoor runs, so months with only treadmill
+    work come back null. Distance rides along because the slide is only
+    informative as a pair: how hot it was *and* how much was run in that heat.
     """
     months = max(1, min(int(request.args.get("months", 8)), 24))
     # First day of the month, `months-1` months back, as the lower bound.
@@ -571,8 +573,9 @@ def conditions():
     hottest = None
     for r in rows:
         month = r["start_time"][:7]
-        b = buckets.setdefault(month, {"temps": [], "runs": 0})
+        b = buckets.setdefault(month, {"temps": [], "runs": 0, "dist": 0.0})
         b["runs"] += 1
+        b["dist"] += r["distance"] or 0
         t = r["temperature"]
         if t is not None:
             b["temps"].append(t)
@@ -589,6 +592,7 @@ def conditions():
             "avg_temp": round(sum(b["temps"]) / len(b["temps"]), 1) if b["temps"] else None,
             "max_temp": round(max(b["temps"]), 1) if b["temps"] else None,
             "runs": b["runs"],
+            "distance_km": round(b["dist"] / 1000, 1),
         }
         for month, b in sorted(buckets.items())
     ]

@@ -43,16 +43,36 @@ not a preference. It keeps getting broken by well-meaning feature additions, so:
 - **Both runners are shown head-to-head** — there is NO user switcher (nothing to
   click on the Pi). Slides fetch both users with `useTwoUsers()`, or one with
   `useOneUser()` when a head-to-head would halve the graphic. Runner colors are
-  `RUNNER_COLORS` / `RUNNER_RGB` + `runnerName()` in `utils.js` (Runner A = volt
-  yellow, Runner B = blue).
+  `RUNNER_COLORS` / `RUNNER_RGB` + `runnerName()` in `utils.js` (Runner A =
+  marigold `#f5a524`, Runner B = olive green `#9bb53b`). Keep `RUNNER_RGB` in
+  sync with the hexes — the calendar heatmap ramps its own rgba() from it.
 - **The app auto-rotates** through the slides in `slides.jsx` every `ROTATE_MS`
   (=14s) in `App.jsx`; the header ⏸/▶ button or clicking the position bar pauses
   it. Add a slide by appending to `SLIDES` — the nav and rotation pick it up.
   Slides needing a second runner set `requiresRunner: 1` so a one-runner install
   doesn't rotate through blanks.
-- **Activity-type palette** (used by the weekly-volume and training-mix slides):
-  running = the runner's own color, strength = `--color-zone4` (orange), other
-  cross-training = `--color-zone2` (green). Keep these consistent across slides.
+- **The palette is four layers, and nothing may invent a fifth** (defined with
+  the reasoning at the top of `index.css`). Before adding *any* color, place it
+  in one of these:
+  1. **Identity — two hues.** `--color-runner-a` marigold `#f5a524` = Runner A,
+     `--color-runner-b` olive `#9bb53b` = Runner B. These two answer "whose data
+     is this" and are used for nothing else, ever.
+  2. **Emphasis — the same hue, different opacity.** More/less of the *same*
+     person never changes hue: last week's ghost bars, the calendar heatmap's
+     distance ramp and the heart-rate zones all step through
+     `INTENSITY_STEPS` (`utils.js`) via `intensity(rgb, step)` / `zoneColor()`.
+     HR zones are shades of that runner's own color, NOT five separate hues.
+  3. **Neutrals — everything that isn't a person.** Told apart by lightness, not
+     hue: `--color-slate` (strength), `--color-slate-dim` (other cross-training),
+     `--color-chalk`, `--color-muted`, `--color-line`. Chrome (header dot, nav,
+     focus ring, hovers) is neutral too — it used to be a third yellow, which
+     read as a third runner.
+  4. **Alert — one hue.** `--color-ember` `#e5484d`, for genuine extremes only:
+     30°C+ months, the peak temperature, a form metric outside its band. Never
+     decorative, and never more than one or two on a slide.
+  Deltas (week-over-week change) are **not** color-coded — the sign carries it;
+  a lighter week is not a failure. There is no zone palette and no `--color-volt`
+  any more; a slide rendering more than ~4 hues has broken the system.
 - **Height-gated compact mode**: `@custom-variant short (@media (max-height:700px))`
   in `index.css` plus the `useCompact()` hook (`useCompact.js`) at the SAME 700px
   threshold — keep them in sync. Use `short:` utilities for denser padding/

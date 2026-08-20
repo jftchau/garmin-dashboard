@@ -2,7 +2,7 @@ import { fetchThisWeek } from "../../api.js";
 import { useTwoUsers } from "../../useTwoUsers.js";
 import Slide, { Loading, RunnerTag } from "../Slide.jsx";
 import HRZoneDoughnut from "../HRZoneDoughnut.jsx";
-import { formatDuration } from "../../utils.js";
+import { formatDuration, RUNNER_RGB } from "../../utils.js";
 
 const totalSecs = (zones) =>
   Object.values(zones || {}).reduce((s, v) => s + v, 0);
@@ -29,7 +29,7 @@ export default function HRZonesSlide({ users }) {
                 </span>
               </div>
               <div className="flex-1 min-h-0">
-                <HRZoneDoughnut zoneSeconds={weeks[i]?.heart_rate_zone_seconds} height="100%" />
+                <HRZoneDoughnut zoneSeconds={weeks[i]?.heart_rate_zone_seconds} rgb={RUNNER_RGB[i]} height="100%" />
               </div>
             </div>
           );
