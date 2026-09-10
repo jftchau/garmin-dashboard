@@ -68,11 +68,15 @@ not a preference. It keeps getting broken by well-meaning feature additions, so:
      focus ring, hovers) is neutral too — it used to be a third yellow, which
      read as a third runner.
   4. **Alert — one hue.** `--color-ember` `#e5484d`, for genuine extremes only:
-     30°C+ months, the peak temperature, a form metric outside its band. Never
+     30°C+ months, the peak temperature, a form metric outside its band, and the
+     header's data-health warnings ("⚠ stale" sync, "Demo data"). Never
      decorative, and never more than one or two on a slide.
   Deltas (week-over-week change) are **not** color-coded — the sign carries it;
   a lighter week is not a failure. There is no zone palette and no `--color-volt`
   any more; a slide rendering more than ~4 hues has broken the system.
+  **Tailwind v4 fails silently here:** a class naming a colour that isn't in
+  `@theme` (e.g. a leftover `text-zone4`) just generates no CSS — no build error.
+  After touching the palette, grep for classes using removed tokens.
 - **Height-gated compact mode**: `@custom-variant short (@media (max-height:700px))`
   in `index.css` plus the `useCompact()` hook (`useCompact.js`) at the SAME 700px
   threshold — keep them in sync. Use `short:` utilities for denser padding/
@@ -118,16 +122,18 @@ npm run build          # prod build -> dist/
   caches a session token per user (`.garmin_tokens*`); every later sync reuses it.
   Unattended runs (cron) never prompt — `get_client()` raises `GarminAuthRequired`
   with a "run --login" message when stdin isn't a tty, so cron fails loudly instead
-  of hanging. A dead fetcher surfaces on the kiosk as an amber "⚠ stale" header
+  of hanging. A dead fetcher surfaces on the kiosk as an ember "⚠ stale" header
   badge after 24h (`LastSyncBadge.jsx`).
 - **Multi-user**: `users` table + `user_id` on every data table. API endpoints
   take `?user=<id>` (default = first user). Credentials per slot in `.env`
-  (`GARMIN_EMAIL[_2]` / `GARMIN_PASSWORD[_2]`). Names are editable in the UI and
-  stored in `users.name` — **don't** overwrite them from env on sync.
+  (`GARMIN_EMAIL[_2]` / `GARMIN_PASSWORD[_2]`). Names live in `users.name`,
+  seeded from `USER<n>_NAME`; the kiosk has no rename UI, so change one with
+  `PATCH /api/users/<id>`. **Don't** overwrite a set name from env on sync.
 - **DB migrations** run automatically in `db.py init_db()` → `_migrate()`
   (adds columns, rebuilds composite-PK tables). Safe to re-run.
-- **Two VO₂max numbers**: `activities.vo2max` = per-run (Insights *trend*);
-  `user_metrics.vo2max` = watch's Max-Metrics value (Insights *current*).
+- **Two VO₂max numbers**: `activities.vo2max` = per-run (the "Fitness & sleep"
+  slide's trend line); `user_metrics.vo2max` = watch's Max-Metrics value (the
+  "Today's readiness" number, matches the device).
 - **Incremental fetch**: skips known `garmin_id`s and stops paging at the first
   already-synced activity. Use `--full` to force reprocessing.
 - **Non-runs = cross-training context**: the fetcher stores *all* activity types
@@ -142,9 +148,19 @@ npm run build          # prod build -> dist/
   have `activity_type = NULL` (treated as running via COALESCE). **Historical
   non-runs only appear after a `--full` re-sync** — incremental won't backfill
   them (paging stops at the first already-synced activity).
-- **Mock fallback**: `frontend/src/api.js` silently returns mock data on any
-  fetch error — a broken backend can look like real (wrong) data. When mock
-  values appear (e.g. 5K = 23:10), suspect the backend, not the frontend.
+- **Mock fallback**: `frontend/src/api.js` returns mock data on any fetch error
+  — a broken backend can look like real (wrong) data. The header's
+  `DataSourceBadge` flips from "Live data" to "Demo data" when that happens. When
+  mock values appear (e.g. 5K = 23:10), suspect the backend, not the frontend.
+- **On the Pi, two separate mechanisms keep things fresh.** *Code:* the
+  `garmin-update.timer` (04:30 daily) runs `deploy/update.sh`, which deploys
+  **`main` only** and hard-resets to it (hand edits to tracked files on the Pi
+  are lost). *Data:* an hourly **cron** job from `deploy/cron_setup.sh`. The
+  header Refresh button (`POST /api/sync-now`) runs the fetcher from the
+  `garmin-api` service as the same user, cwd and no-tty path as cron — so if
+  Refresh works but data only updates when it's pressed, the fetcher is fine
+  and the cron job is missing (`crontab -l`). Until 2026-09-10 `cron_setup.sh`
+  installed an *empty* crontab for a user with no other jobs (fixed in PR #13).
 - Flask `FLASK_DEBUG` is off by default (no reloader) — **restart `app.py`** to
   pick up backend route changes.
 
@@ -159,37 +175,31 @@ merges on the GitHub website.
    don't force-add them. End commit messages with the
    `Co-Authored-By: Claude <noreply@anthropic.com>` trailer.
 3. **Push:** `git push -u origin <branch>`. The repo is preconfigured with the
-   local proxy (`http.proxy = http://127.0.0.1:3213`) and a cached PAT, so this
-   works without prompting. The push prints a "Create a pull request for
-   '<branch>'" URL.
-4. **Open a PR targeting `main`:**
-   - **Default — on the website:** open the printed URL (or the repo's *Pull
-     requests* tab), set **base = `main`**, and create it. The user reviews &
-     merges there.
-   - `gh` CLI is **not installed** here, so `gh pr create` won't work. An agent
-     that must open the PR itself can POST to the GitHub REST API through the
-     proxy with the cached token (never hard-code the token):
-     ```bash
-     TOKEN=$(printf 'protocol=https\nhost=github.com\n\n' | git credential fill | sed -n 's/^password=//p')
-     curl -sS -x http://127.0.0.1:3213 \
-       -H "Authorization: token $TOKEN" -H "Accept: application/vnd.github+json" \
-       https://api.github.com/repos/jftchau/garmin-dashboard/pulls \
-       -d '{"title":"…","head":"<branch>","base":"main","body":"…"}'
-     ```
+   local proxy (`http.proxy = http://127.0.0.1:3213`) and a PAT cached in Git
+   Credential Manager, so this works without prompting. Don't push with
+   `-c credential.helper=` — that bypasses the cached token and the push fails
+   asking for a username.
+4. **Open a PR targeting `main`:** the `gh` CLI is installed, so
+   `gh pr create --base main --head <branch> --title "…" --body-file -` works
+   directly. Or open the "Create a pull request" URL the push prints. The user
+   reviews & merges on GitHub. Merging is what deploys: the Pi picks up `main`
+   at its next 04:30 run.
 5. **Never force-push `main`.** The user verifies and merges the PR on GitHub.
 
 ## Don't
 
-- Commit `.env`, `*.db`, `*.db.bak`, or `.garmin_tokens*` (all gitignored).
+- Commit `.env`, `*.db`, `*.db.bak`, `.garmin_tokens*`, or `backend/backups/`
+  (all gitignored). The repo is **public**.
 - Assume training status/readiness data exists (empty/unsupported on the test
   account — UI already handles the "—" case).
 
 ## Current state / next steps
 
 Both runners are populated and connected — **Jeffrey** (user 1) and **Eugenia**
-(user 2). The UI is the two-runner auto-rotating kiosk (see the display-fit
-section above). `deploy/` now includes the kiosk scripts (`kiosk.sh`,
-`kiosk_setup.sh`) alongside nginx/systemd/cron; see the "Deploying to the
-Raspberry Pi" section of `README.md`. **Not yet physically deployed to the Pi.**
+(user 2). The UI is the two-runner auto-rotating kiosk (18 slides; see the
+display-fit section above). **Deployed on the Pi** at
+`/home/jftchau/garmin-dashboard`, running as user `jftchau` (not `pi`), with the
+04:30 self-update and the hourly cron sync. See "Deploying to the Raspberry Pi"
+and "Troubleshooting" in `README.md`.
 Note: Eugenia's daily-wellness history may be thin until
 `fetch_garmin.py --wellness 90` is run for user 2.
