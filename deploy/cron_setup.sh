@@ -24,7 +24,13 @@ mkdir -p "$BACKEND_DIR/logs"
 # Match on the backend path: the old filter looked for "$BACKEND_DIR/fetch_garmin.py",
 # a string this line never contained, so re-running this script appended a second
 # copy of the job every time.
-( crontab -l 2>/dev/null | grep -vF "$BACKEND_DIR" ; echo "$CRON_LINE" ) | crontab -
+#
+# `|| true` is load-bearing. With no other cron jobs — the normal case for a
+# dedicated Pi user — `crontab -l` exits 1 ("no crontab") and grep -v selects no
+# lines (also exit 1). Under pipefail that aborted the subshell *before* the echo,
+# so `crontab -` installed an EMPTY table and the script died silently: no error,
+# no "Installed" line, and no hourly sync. Every re-run did the same.
+( crontab -l 2>/dev/null | grep -vF "$BACKEND_DIR" || true ; echo "$CRON_LINE" ) | crontab -
 
 echo "Installed cron job:"
 echo "  $CRON_LINE"
