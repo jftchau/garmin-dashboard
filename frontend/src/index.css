@@ -3,7 +3,7 @@
 /* Compact layout for short screens (e.g. the 1024×600 Raspberry Pi display).
    `short:` utilities only apply when the viewport is ≤700px tall, so the
    desktop dev view is untouched while the Pi gets a denser, no-scroll layout.
-   Keep the max-height threshold in sync with useCompact() in utils.js. */
+   Keep the max-height threshold in sync with useCompact() in useCompact.js. */
 @custom-variant short (@media (max-height: 700px));
 
 @theme {
@@ -20,7 +20,8 @@
      3. NEUTRALS — anything that isn't a person is a grey, and greys are told
         apart by lightness, not hue (cross-training series, structure, labels).
      4. ALERT — one hue, ember, for genuine extremes only: 30°C+ months, the
-        peak temperature, a form metric outside its band. Never decorative.
+        peak temperature, a form metric outside its band, and the header's
+        data-health warnings (stale sync, demo data). Never decorative.
 
      Chrome (header dot, nav, focus ring, hovers) is deliberately neutral: it
      used to be a third yellow, which read as a third runner.

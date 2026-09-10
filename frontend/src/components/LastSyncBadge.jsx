@@ -53,13 +53,14 @@ export default function LastSyncBadge() {
   return (
     <span
       className={`font-mono text-[11px] whitespace-nowrap ${
-        stale ? "text-zone4 font-semibold" : "text-muted"
+        stale ? "text-ember font-semibold" : "text-muted"
       }`}
       title={
         stale
           ? `Garmin data last synced ${iso} — the hourly sync has stopped. ` +
-            `The session token has probably expired: run ` +
-            `fetch_garmin.py --login on the Pi to re-authenticate (needs the 2FA code).`
+            `If the Refresh button still works, the cron job isn't running ` +
+            `(check crontab -l on the Pi). If Refresh fails too, the Garmin ` +
+            `session expired: run fetch_garmin.py --login (needs the 2FA code).`
           : `Garmin data last synced: ${iso}`
       }
     >

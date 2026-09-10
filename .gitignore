@@ -4,6 +4,8 @@ backend/*.db
 backend/*.db.bak
 backend/*.db-journal
 backend/*.db-wal
+# Pre-deploy DB snapshots written by deploy/update.sh — personal data, never commit
+backend/backups/
 backend/logs/*.log
 # Cached Garmin session tokens (per user) — sensitive, never commit
 .garmin_tokens*
