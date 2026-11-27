@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { fetchLastSync } from "../api.js";
+import { useDataSource } from "../useDataSource.js";
 
 // Compact "x ago" from an ISO timestamp (UTC-marked by the backend).
 function ago(iso, now) {
@@ -45,15 +46,23 @@ export default function LastSyncBadge() {
     };
   }, []);
 
+  const source = useDataSource();
   const label = ago(iso, now);
-  if (!label) return null;
+  // On demo data the sync time is the mock's, not Garmin's; the "Demo data"
+  // chip already says the numbers aren't real, and two alert chips would push
+  // the slide title out of the header.
+  if (!label || source === "mock") return null;
 
   const stale = now - new Date(iso).getTime() > STALE_MS;
 
+  // Stale = the one alert hue, as a chip with a glyph and a word (design: an
+  // alert is never a bare colour). Otherwise quiet walk-closer status.
   return (
     <span
-      className={`font-mono text-[11px] whitespace-nowrap ${
-        stale ? "text-ember font-semibold" : "text-muted"
+      className={`t-meta whitespace-nowrap ${
+        stale
+          ? "inline-flex items-center rounded-full px-3 py-1.5 bg-ember/20 border border-ember text-chalk font-semibold"
+          : "text-muted"
       }`}
       title={
         stale
@@ -64,7 +73,7 @@ export default function LastSyncBadge() {
           : `Garmin data last synced: ${iso}`
       }
     >
-      {stale ? "⚠ stale — " : ""}updated {label}
+      {stale ? "⚠ Stale · " : "Synced "}{label}
     </span>
   );
 }

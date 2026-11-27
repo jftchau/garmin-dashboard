@@ -14,7 +14,8 @@ not a preference. It keeps getting broken by well-meaning feature additions, so:
   only screen, so anything below the fold is invisible forever. After *any*
   view/chart change, verify at 1024×600 that `document.body.scrollHeight <= 600`
   on **every** slide, for **both** runners (resize to 1024×600, then click each
-  `button[aria-label]` in the nav and measure). Content budget is ~538px.
+  `button[aria-label]` in the nav and measure). Content budget is 549px (600 −
+  48px header − 3px progress rule).
 - **The display is read from several metres away.** One idea per slide, rendered
   as large as the budget allows — do NOT pack four panels onto a screen. If a
   slide is getting crowded, split it into two slides; there is no cost to adding
@@ -26,7 +27,12 @@ not a preference. It keeps getting broken by well-meaning feature additions, so:
   10–12px `text-xs`/`text-[10px]` label sizes — from kiosk distance they're
   invisible. Axis dates use `axisDate()` from `utils.js` ("May 23", not the full
   ISO string), which is both shorter and readable.
-- **A redesign is specified in `design/` (v2, not yet implemented in `frontend/`).**
+- **A redesign is specified in `design/` (v2, being rolled out slide by slide).**
+  Done so far: tokens, self-hosted Outfit, the room/glass/grain frame, header and
+  progress rule, and the two head-to-head number slides ("This week", "Last 3
+  months"), built from `components/glass.jsx` and the `.t-*` type classes in
+  `index.css`. Slides marked `glass: true` in `slides.jsx` are on v2; the rest
+  still use `Slide.jsx`'s v1 layout until they are restyled.
   The screen is read from **2.25 m**, where the ~14px floor above is roughly 7×
   too small (the biggest number today, 80px, is below the ISO legibility
   minimum). Any restyle takes its sizes, colours and font from `design/`:
@@ -53,7 +59,7 @@ not a preference. It keeps getting broken by well-meaning feature additions, so:
   click on the Pi). Slides fetch both users with `useTwoUsers()`, or one with
   `useOneUser()` when a head-to-head would halve the graphic. Runner colors are
   `RUNNER_COLORS` / `RUNNER_RGB` + `runnerName()` in `utils.js` (Runner A =
-  marigold `#f5a524`, Runner B = olive green `#9bb53b`). Keep `RUNNER_RGB` in
+  Jeffrey, orange `#ff9147`; Runner B = Eugenia, blue `#7aa7ff`). Keep `RUNNER_RGB` in
   sync with the hexes — the calendar heatmap ramps its own rgba() from it.
 - **The app auto-rotates** through the slides in `slides.jsx` every `ROTATE_MS`
   (=14s) in `App.jsx`; the header ⏸/▶ button or clicking the position bar pauses
@@ -63,9 +69,11 @@ not a preference. It keeps getting broken by well-meaning feature additions, so:
 - **The palette is four layers, and nothing may invent a fifth** (defined with
   the reasoning at the top of `index.css`). Before adding *any* color, place it
   in one of these:
-  1. **Identity — two hues.** `--color-runner-a` marigold `#f5a524` = Runner A,
-     `--color-runner-b` olive `#9bb53b` = Runner B. These two answer "whose data
-     is this" and are used for nothing else, ever.
+  1. **Identity — two hues.** `--color-runner-a` orange `#ff9147` = Runner A,
+     `--color-runner-b` blue `#7aa7ff` = Runner B. These two answer "whose data
+     is this" and are used for nothing else, ever. On v2 slides they live in
+     light (room haze, card glow) and marks (bars, dots) only — numbers and
+     names stay `--color-chalk`.
   2. **Emphasis — the same hue, different opacity.** More/less of the *same*
      person never changes hue: last week's ghost bars, the calendar heatmap's
      distance ramp and the heart-rate zones all step through
@@ -76,9 +84,9 @@ not a preference. It keeps getting broken by well-meaning feature additions, so:
      `--color-chalk`, `--color-muted`, `--color-line`. Chrome (header dot, nav,
      focus ring, hovers) is neutral too — it used to be a third yellow, which
      read as a third runner.
-  4. **Alert — one hue.** `--color-ember` `#e5484d`, for genuine extremes only:
+  4. **Alert — one hue.** `--color-ember` `#ff2d55`, for genuine extremes only:
      30°C+ months, the peak temperature, a form metric outside its band, and the
-     header's data-health warnings ("⚠ stale" sync, "Demo data"). Never
+     header's data-health warnings ("⚠ Stale" sync, "⚠ Demo data" chips). Never
      decorative, and never more than one or two on a slide.
   Deltas (week-over-week change) are **not** color-coded — the sign carries it;
   a lighter week is not a failure. There is no zone palette and no `--color-volt`
@@ -159,7 +167,8 @@ npm run build          # prod build -> dist/
   them (paging stops at the first already-synced activity).
 - **Mock fallback**: `frontend/src/api.js` returns mock data on any fetch error
   — a broken backend can look like real (wrong) data. The header's
-  `DataSourceBadge` flips from "Live data" to "Demo data" when that happens. When
+  `DataSourceBadge` shows a "⚠ Demo data" chip when that happens (live data
+  shows nothing). When
   mock values appear (e.g. 5K = 23:10), suspect the backend, not the frontend.
 - **On the Pi, two separate mechanisms keep things fresh.** *Code:* the
   `garmin-update.timer` (04:30 daily) runs `deploy/update.sh`, which deploys
@@ -183,9 +192,10 @@ merges on the GitHub website.
 2. **Commit.** `.env`, `*.db`, `*.db.bak`, and `.garmin_tokens*` are gitignored —
    don't force-add them. End commit messages with the
    `Co-Authored-By: Claude <noreply@anthropic.com>` trailer.
-3. **Push:** `git push -u origin <branch>`. The repo is preconfigured with the
-   local proxy (`http.proxy = http://127.0.0.1:3213`) and a PAT cached in Git
-   Credential Manager, so this works without prompting. Don't push with
+3. **Push:** `git push -u origin <branch>`. Git uses the machine-wide proxy
+   (Clash Verge, `http.proxy = http://127.0.0.1:7897` in the global git config;
+   the old repo-local `:3213` proxy is gone) and a PAT cached in Git Credential
+   Manager, so this works without prompting. Don't push with
    `-c credential.helper=` — that bypasses the cached token and the push fails
    asking for a username.
 4. **Open a PR targeting `main`:** the `gh` CLI is installed, so

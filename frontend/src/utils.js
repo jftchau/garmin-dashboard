@@ -46,15 +46,16 @@ export function axisDate(iso) {
 }
 
 // Head-to-head runner colors, indexed by position in the users array (Runner A
-// = marigold, Runner B = olive green). Mirrors --color-runner-a/-b in
-// index.css. RGB strings feed the calendar heatmap's rgba() ramp.
+// = Jeffrey, orange; Runner B = Eugenia, blue — design/tokens.json). Mirrors
+// --color-runner-a/-b in index.css. RGB strings feed the rgba() ramps (calendar
+// heatmap, HR zones). Keep both in sync with the hexes.
 export const RUNNER_COLORS = ["var(--color-runner-a)", "var(--color-runner-b)"];
-export const RUNNER_RGB = ["245,165,36", "155,181,59"];
+export const RUNNER_RGB = ["255,145,71", "122,167,255"];
 
 // Neutral + alert channels as rgb strings, for the places that need to ramp
 // opacity in an inline style (a chart fill can't take a CSS var with an alpha).
-export const SLATE_RGB = "152,162,179";
-export const EMBER_RGB = "229,72,77";
+export const SLATE_RGB = "181,173,159";
+export const EMBER_RGB = "255,45,85";
 
 // Layer 2 of the palette: "more of the same person" is the SAME hue at a higher
 // opacity, never a different hue. One shared ramp, so a heavy week on the

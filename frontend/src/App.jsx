@@ -61,41 +61,44 @@ export default function App() {
     setPaused(true); // manual navigation stops the carousel
   }
 
+  // Whose light fills the room (design/README.md, "The room"): a per-runner
+  // slide takes that runner's light; everything else is lit by both.
+  const runner = slide?.props?.runner;
+  const light = slide?.light ?? (runner === 0 ? "a" : runner === 1 ? "b" : "both");
+
   return (
     // h-screen (not min-h-screen) so the slide area is a *definite* height that
-    // charts can size themselves against — the whole point of the redesign is
-    // that every graphic fills the screen instead of sitting in a fixed-height
-    // box with dead space beneath it.
-    <div className="h-screen flex flex-col">
-      <header className="flex items-center justify-between px-5 sm:px-6 short:px-4 pt-4 short:pt-2 pb-2 short:pb-1 gap-4">
-        <div className="flex items-baseline gap-3 min-w-0">
-          <span className="w-2.5 h-2.5 rounded-full bg-chalk shrink-0 translate-y-[-2px]" />
-          {/* Slide number, so a viewer can say "page 7 needs updating" without
-              guessing what the slide is called. Zero-padded for a stable width. */}
-          {slides.length > 0 && (
-            <span className="font-mono text-sm short:text-xs text-muted shrink-0 tabular-nums">
-              {String(safeIdx + 1).padStart(2, "0")}/{slides.length}
-            </span>
-          )}
-          {/* The slide title is the only large text in the chrome — it tells you
-              what you're looking at from across the room, which the old tab bar
-              could no longer do once the slide count tripled. */}
-          <h1 className="heading-display text-3xl short:text-2xl font-bold tracking-tight truncate">
-            {slide ? slideTitle(slide, users) : "Run.Dashboard"}
-          </h1>
-        </div>
-        <div className="flex items-center gap-3 shrink-0">
-          <RunnerLegend users={users} />
+    // charts can size themselves against. Header 48px + progress rule 3px leaves
+    // the 549px content budget the design is sized for.
+    <div className={`h-screen flex flex-col room room-${light}`}>
+      <header className="h-12 shrink-0 flex items-center gap-4 px-10">
+        {/* Slide number, so a viewer can say "page 7 needs updating" without
+            guessing what the slide is called. Zero-padded for a stable width. */}
+        {slides.length > 0 && (
+          <span className="t-meta text-muted shrink-0">
+            {String(safeIdx + 1).padStart(2, "0")}/{slides.length}
+          </span>
+        )}
+        <h1 className="t-title truncate min-w-0">{slide ? slideTitle(slide, users) : "Run Dashboard"}</h1>
+        <div className="ml-auto flex items-center gap-4 shrink-0">
+          {/* Restyled slides carry identity on their cards, and a per-runner
+              slide names its runner in the title; only the two-runner slides
+              still on the v1 layout need the header legend. */}
+          {slide && !slide.glass && runner == null && <RunnerLegend users={users} />}
           <LastSyncBadge />
           <DataSourceBadge />
+          {/* Desktop-only controls: the Pi has no input, so they're hidden on
+              the short (kiosk) viewport rather than spending header width. */}
           <button
             onClick={() => setPaused((p) => !p)}
             title={paused ? "Resume auto-rotation" : "Pause auto-rotation"}
-            className="font-mono text-xs px-3 py-1.5 rounded border border-line bg-surface hover:border-chalk hover:text-chalk transition-colors"
+            className="short:hidden text-sm px-3 py-1.5 rounded-full border border-line bg-surface hover:border-chalk transition-colors"
           >
             {paused ? "▶" : "⏸"}
           </button>
-          <RefreshButton onDone={() => window.location.reload()} />
+          <span className="short:hidden">
+            <RefreshButton onDone={() => window.location.reload()} />
+          </span>
         </div>
       </header>
 

@@ -1,7 +1,8 @@
 import { useMemo } from "react";
 import { fetchWeeklyMileage } from "../../api.js";
 import { useTwoUsers } from "../../useTwoUsers.js";
-import Slide, { BigStat, Loading, Panel, RunnerTag } from "../Slide.jsx";
+import Slide, { Loading, Panel } from "../Slide.jsx";
+import { GlassSlide, GlassCard, RunnerHead, GlassStat, MiniStats } from "../glass.jsx";
 import WeeklyMileageChart from "../WeeklyMileageChart.jsx";
 import { RUNNER_COLORS, runnerName, axisDate } from "../../utils.js";
 
@@ -77,28 +78,32 @@ export function MileageSummarySlide({ users }) {
   const cutoff = summaryCutoff();
   const rows = merged.filter((r) => r.week_start >= cutoff);
   const from = rows.length ? rows[0].week_start : cutoff;
+  const shown = (users || []).slice(0, 2);
 
+  // Head-to-head, v2 glass: the three-month total is the number; average and
+  // best week support it in the walk-closer tier.
   return (
-    <Slide className="space-y-3 short:space-y-2">
-      <p className="font-mono text-lg short:text-base uppercase tracking-widest text-muted shrink-0">
-        Last 3 months · {rows.length} weeks from {axisDate(from)}
-      </p>
-      {(users || []).slice(0, 2).map((u, i) => {
+    <GlassSlide cols={shown.length || 1}>
+      {shown.map((u, i) => {
         const s = summarize(rows, i === 0 ? "a" : "b");
-        const color = RUNNER_COLORS[i];
         return (
-          <div key={u.id} className="bg-surface border border-line rounded-xl p-5 short:p-3 flex-1 min-h-0 flex flex-col justify-center">
-            <div className="mb-3 short:mb-2">
-              <RunnerTag users={users} i={i} size="xl" />
+          <GlassCard key={u.id} runner={i}>
+            <RunnerHead users={users} i={i} />
+            <div>
+              <GlassStat value={s.total} unit="km" />
+              <div className="t-caption text-soft mt-5 whitespace-nowrap">
+                {rows.length} weeks from {axisDate(from)}
+              </div>
             </div>
-            <div className="grid grid-cols-3 gap-4 short:gap-3">
-              <BigStat label="Total" value={s.total} unit="km" color={color} size="hero" />
-              <BigStat label="Avg / week" value={s.avg} unit="km" color={color} size="hero" />
-              <BigStat label="Best week" value={s.best} unit="km" color={color} size="hero" />
-            </div>
-          </div>
+            <MiniStats
+              items={[
+                { label: "km / week", value: s.avg },
+                { label: "best week", value: s.best },
+              ]}
+            />
+          </GlassCard>
         );
       })}
-    </Slide>
+    </GlassSlide>
   );
 }
