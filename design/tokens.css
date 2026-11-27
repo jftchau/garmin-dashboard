@@ -1,0 +1,90 @@
+/* =====================================================================
+   Pi Run Dashboard — glass system · decisions locked so far
+   Step 1 (neutral) + Step 2 (runner colours), 2026-11-26.
+   Step 3 (typography) 2026-11-27: Outfit, numbers at 600, type scale locked. Label weight 700 and tracking still provisional.
+   Labs: labs/neutral-system.html, runner-colours.html, typography.html, compare.html, scale.html.
+   ===================================================================== */
+:root {
+  /* ---- Ground & light (step 1 · "Ref 5 + 7 blend") ---- */
+  --ground:        #090b10;   /* hsl(222 28% 5%) near-black, navy tint */
+  --light:         #d7ddea;   /* neutral light, for slides with no runner */
+  --haze-neutral:  .16;       /* alpha of the neutral light sources */
+
+  /* ---- Glass ---- */
+  --glass-fill:    rgb(255 255 255 / .05);
+  --glass-edge:    rgb(255 255 255 / .10);   /* 1px border */
+  --glass-hl:      inset 0 1px 0 rgb(255 255 255 / .14);
+  --glass-shadow:  0 24px 48px -12px rgb(0 0 0 / .55);
+  --glass-blur:    24px;      /* optional: over a smooth haze it is near-invisible — measure on the Pi before keeping */
+  --glow-neutral:  .10;       /* card corner glow, neutral slides */
+  --radius-card:   28px;
+  --radius-pill:   999px;
+  --grain:         .04;       /* soft-light noise, dithers dark gradients on a 6-bit panel */
+
+  /* ---- Text (lifted for glass: background behind labels reaches ~#36) ---- */
+  --text-1:        #f3f4f6;   /* numbers, titles, names   ≥ 12.9:1 measured */
+  --text-2:        #c9ccd4;   /* labels, captions         ≥ 7.8:1 measured */
+  --text-3:        #8f95a3;   /* walk-closer only         ≥ 4.5:1 */
+
+  /* ---- Marks ---- */
+  --mark-lit:      var(--text-1);              /* "now" on neutral slides */
+  --mark-unlit:    rgb(255 255 255 / .16);     /* tracks, past bars */
+
+  /* ---- Runners (step 2 · ref 7 orange / blue) ---- */
+  --runner-a:      #ff9147;   /* Jeffrey */
+  --runner-a-rgb:  255 145 71;
+  --runner-b:      #7aa7ff;   /* Eugenia — lifted from #5c8dff so a lit bar clears 3:1 on its track */
+  --runner-b-rgb:  122 167 255;
+  --runner-haze:   .18;       /* alpha of a runner's light source */
+  --runner-glow:   .14;       /* card corner glow in the runner's colour */
+  --mark-halo:     22px;      /* glow around lit runner marks */
+
+  /* ---- Type (step 3 · Outfit, OFL) ---- */
+  /* Self-hosted: fonts/outfit/ (variable woff2, latin, 32 KB + OFL.txt + outfit.css). Copy that folder into the app; no network needed. */
+  --font-ui:       "Outfit", system-ui, sans-serif;
+  --font-mono:     "JetBrains Mono", ui-monospace, monospace;   /* page counter only */
+  --num-weight:    600;       /* LOCKED 2026-11-27 (scale.html). 500 is ~3 pts less look-alike; 600 chosen for presence */
+  --num-track:    -.045em;    /* PROVISIONAL */
+  --num-variant:   tabular-nums;   /* NB: re-apply after any `font:` shorthand, which resets it */
+  --label-weight:  700;       /* PROVISIONAL */
+  --label-track:   .08em;     /* uppercase runner names */
+  --small-weight:  500;       /* captions, axis, meta */
+
+  /* ---- Type scale (step 3c · locked 2026-11-27, measured on Outfit 600) ----
+     Outfit: digit height .725 · cap .705 · x-height .485 of font size.
+     arcmin = apparent height at 2.25 m (ISO 9241-303: 16′ min, 20′ comfortable).          */
+  /* Read from the sofa */
+  --fs-hero:      208px;   /* 34.5′  the one number on a solo slide           lh .86 */
+  --fs-stat-xl:   160px;   /* 26.5′  two numbers, head-to-head                lh .86 */
+  --fs-stat-lg:   128px;   /* 21.2′  up to four numbers                       lh .86 */
+  --fs-stat-md:   104px;   /* 17.3′  last resort — prefer splitting the slide lh .86 */
+  /* Recognised from the sofa (learned shapes) */
+  --fs-unit:       56px;   /*  6.2′ x-height · beside its number; 64 overflows head-to-head */
+  --fs-label:      52px;   /*  8.4′ cap · UPPERCASE runner / stat names (was 40) */
+  --fs-title:      44px;   /*  4.9′ x-height · slide title, header row is 48px */
+  /* Walk closer */
+  --fs-caption:    40px;   /*  4.4′ · context under a number (was 36) */
+  --fs-axis:       28px;   /*  3.1′ · chart ticks, ~6 per axis */
+  --fs-meta:       24px;   /*  2.6′ · status, page counter (was 22) */
+}
+
+/* Rules
+   1. Colour lives in LIGHT (room haze from the runner's corner, card glow) and
+      MARKS (bars, ring, progress). Names and numbers stay neutral.
+      Why: on glass, orange-as-text measures 5.6:1, under the 7:1 needed at 2.25 m.
+   2. Head-to-head: Jeffrey's light top-left, Eugenia's bottom-right; each card
+      glows from its outer corner. Solo: the whole room takes one runner's light.
+   3. One lit mark per chart; everything else is --mark-unlit.
+
+   Measured (ΔE2000, Machado 2009 CVD simulation, on the slides themselves):
+     Jeffrey vs Eugenia      normal 48 · deuteranopia 56 · protanopia 52   (need ≥ 40)
+     runner vs neutral lit   Jeffrey 30 · Eugenia 27 (worst CVD)           (need ≥ 20)
+     lit mark vs track       Jeffrey 4.82:1 · Eugenia 3.32:1               (need ≥ 3)
+   Why Outfit (compare.html, weight 600, head-to-head card interior 396px):
+     room for 88.8 km          Outfit +7px · Red Hat Display +5 · Figtree −2
+     decimal point from sofa   Outfit 6.2′ (largest) · RHD 4.6′ · Figtree 5.3′
+     look-alike digits (avg)   Outfit 75% · RHD 74% · Figtree 79%   (weak pair: 3/5, 87%)
+   Heavier weights make digits more alike for every face (500 best, 700 worst).
+   Pace "4:52 /km" at 160px overflows the head-to-head card by ~13px → move "/km" to the caption.
+   Scale verified to fit: head-to-head (stat-xl), solo hero, four stats (stat-lg) — scale.html.
+   Not yet verified on the physical Pi panel. */

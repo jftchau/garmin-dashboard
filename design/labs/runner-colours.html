@@ -1,0 +1,387 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Step 2 · Runner colours — Pi Run Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<!-- Type is a PLACEHOLDER (Inter). Typography is a later, separate experiment. -->
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ---- Neutral base: locked to step 1 "Ref 5 + 7 blend" ---- */
+:root{
+  --ground:#090b10; --light-rgb:216 222 233;
+  --text-1:#f3f4f6; --text-2:#c7ccd5; --text-3:#8d95a5;
+  --glass:.05; --edge:.10; --hl:.14; --blur:24px; --radius:28px; --dim:.16; --grain:.04;
+  --a-rgb:255 143 69; --b-rgb:122 167 255; --mglow:22px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:#030304;color:#d8dce4;font-family:Inter,system-ui,sans-serif}
+body{min-width:1064px;padding:20px 20px 60px}
+
+.screen{position:relative;width:1024px;height:600px;overflow:hidden;background:var(--ground);isolation:isolate;outline:1px solid #1b1d22;margin-bottom:12px}
+.field{position:absolute;inset:0;z-index:0}
+.grain{position:absolute;inset:0;z-index:5;pointer-events:none;opacity:var(--grain);mix-blend-mode:soft-light;
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");}
+.ui{position:relative;z-index:1;height:100%;display:flex;flex-direction:column}
+
+.header{height:48px;flex:none;display:flex;align-items:center;gap:16px;padding:0 40px}
+.page{font:500 22px/1 "JetBrains Mono",monospace;color:var(--text-3);font-variant-numeric:tabular-nums}
+.title{font:600 44px/1 Inter,sans-serif;letter-spacing:-.015em;color:var(--text-1)}
+.status{margin-left:auto;font:500 22px/1 Inter,sans-serif;color:var(--text-3)}
+.rule{height:3px;flex:none;margin:0 40px;border-radius:3px;background:rgb(255 255 255 / .08);overflow:hidden}
+.rule i{display:block;height:100%;background:var(--text-1);border-radius:3px}
+
+.glass{position:relative;min-height:0;border-radius:var(--radius);
+  background:rgb(255 255 255 / var(--glass));
+  border:1px solid rgb(255 255 255 / var(--edge));
+  box-shadow:inset 0 1px 0 rgb(255 255 255 / var(--hl)), 0 24px 48px -12px rgb(0 0 0 / .55);
+  -webkit-backdrop-filter:blur(var(--blur)) saturate(140%);backdrop-filter:blur(var(--blur)) saturate(140%);
+  overflow:hidden;padding:24px}
+.glass::before{content:"";position:absolute;inset:0;pointer-events:none;background:var(--glow, none)}
+.glass>*{position:relative}
+
+.label{font:700 40px/1 Inter,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:var(--text-2)}
+.cap{font:500 36px/1 Inter,sans-serif;color:var(--text-2)}
+.cap.faint{color:var(--text-3)}
+.value{font:600 160px/.86 Inter,sans-serif;letter-spacing:-.045em;color:var(--text-1);font-variant-numeric:tabular-nums}
+.sup{font:600 56px/1 Inter,sans-serif;color:var(--text-2);margin-top:6px}
+.valrow{display:flex;align-items:flex-start;gap:10px}
+.track{height:20px;border-radius:999px;background:rgb(255 255 255 / var(--dim));overflow:hidden}
+.track i{display:block;height:100%;border-radius:999px;background:rgb(var(--rgb));box-shadow:0 0 var(--mglow) rgb(var(--rgb) / .6)}
+.caprow{display:flex;justify-content:space-between;align-items:baseline;margin-top:16px}
+
+/* runner identity: a dot + neutral name by default; coloured name is opt-in */
+.who{display:flex;align-items:center;gap:14px}
+.who .dot{width:22px;height:22px;border-radius:50%;background:rgb(var(--rgb));box-shadow:0 0 14px rgb(var(--rgb) / .7);flex:none}
+.who .label{color:var(--text-1)}
+.tint-names .who .label{color:rgb(var(--rgb))}
+.tint-numbers .value, .tint-numbers .ringnum{color:rgb(var(--rgb))}
+
+/* --- screen A: head to head --- */
+.h2h{flex:1;min-height:0;display:grid;grid-template-columns:1fr 1fr;gap:20px;padding:18px 40px 28px}
+.h2h .glass{padding:28px 32px;display:flex;flex-direction:column;justify-content:space-between}
+
+/* --- screen B: solo (step-1 layout) --- */
+.solo{flex:1;min-height:0;display:grid;grid-template-columns:1fr 360px;grid-template-rows:1fr 1fr;gap:20px;padding:18px 40px 28px}
+.hero{grid-row:1 / span 2;padding:30px 36px;display:flex;flex-direction:column;justify-content:space-between}
+.ringcard{display:flex;align-items:center;gap:18px}
+.ringwrap{position:relative;width:168px;height:168px;flex:none}
+.ringwrap svg{display:block;transform:rotate(-90deg)}
+.ringwrap .arc{stroke:rgb(var(--rgb));filter:drop-shadow(0 0 8px rgb(var(--rgb) / .6))}
+.ringnum{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font:600 96px/1 Inter,sans-serif;letter-spacing:-.04em;color:var(--text-1)}
+.ringside{display:flex;flex-direction:column;gap:12px;min-width:0}
+.ringside .label{letter-spacing:.05em}
+.barcard{display:flex;flex-direction:column;justify-content:flex-end;gap:12px}
+.bars{height:140px;display:flex;align-items:flex-end;justify-content:space-between}
+.bar{width:28px;border-radius:999px;background:rgb(255 255 255 / var(--dim))}
+.bar.lit{background:rgb(var(--rgb));box-shadow:0 0 var(--mglow) rgb(var(--rgb) / .6)}
+.days{display:flex;justify-content:space-between}
+.days span{width:28px;text-align:center;font:500 28px/1 Inter,sans-serif;color:var(--text-3)}
+.days span.lit{color:var(--text-1);font-weight:700}
+
+/* ---- workbench ---- */
+.note{width:1024px;margin:2px 0 18px;font:500 12px/1.5 "JetBrains Mono",monospace;letter-spacing:.04em;color:#7d8594}
+.note b{color:#c9ced8;font-weight:600}
+.tools{width:1024px;margin:6px 0 0;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.tools .k{font:600 11px "JetBrains Mono",monospace;letter-spacing:.1em;text-transform:uppercase;color:#8b93a1;margin-right:4px;min-width:64px}
+button{font:500 13px Inter,sans-serif;color:#e6e9ef;background:#15171c;border:1px solid #2a2d35;border-radius:999px;padding:7px 14px;cursor:pointer;display:inline-flex;align-items:center;gap:6px}
+button:hover{border-color:#4a4f5a}
+button.on{background:#e6e9ef;color:#0b0c0f;border-color:#e6e9ef}
+button i{width:10px;height:10px;border-radius:50%;display:inline-block}
+label.tog{display:flex;align-items:center;gap:6px;font:500 13px Inter,sans-serif;margin-left:10px}
+.bench{width:1024px;margin-top:18px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;font-size:13px;color:#c9ced8}
+fieldset{border:1px solid #23262e;border-radius:12px;padding:10px 14px 8px;margin:0;min-width:0}
+legend{font:600 11px/1 "JetBrains Mono",monospace;letter-spacing:.1em;text-transform:uppercase;color:#8b93a1;padding:0 6px}
+.ctl{display:grid;grid-template-columns:96px 1fr 50px;align-items:center;gap:8px;margin:7px 0}
+.ctl output{font:500 12px "JetBrains Mono",monospace;text-align:right;color:#e6e9ef}
+input[type=range]{width:100%;accent-color:#e6e9ef}
+.full{grid-column:1 / -1}
+table{width:100%;border-collapse:collapse;font:500 12px "JetBrains Mono",monospace}
+td,th{padding:6px 8px;border-bottom:1px solid #1d2026;text-align:left;white-space:nowrap}
+th{color:#8b93a1;font-weight:500}
+.sw{display:inline-block;width:14px;height:14px;border-radius:4px;vertical-align:-2px;margin-right:6px;border:1px solid #333}
+.pass{color:#7fdc9a}.fail{color:#ff6b81}.warn{color:#f5c26b}
+pre{margin:0;font:500 12px/1.55 "JetBrains Mono",monospace;color:#c9ced8;white-space:pre-wrap;user-select:all}
+.hexout{font:500 12px "JetBrains Mono",monospace;color:#e6e9ef;margin:2px 0 4px}
+</style>
+</head>
+<body>
+
+<!-- ============ Screen A · head to head ============ -->
+<div class="screen" id="scrA">
+  <div class="field"></div>
+  <div class="ui">
+    <div class="header"><span class="page">01/22</span><span class="title">This week</span><span class="status">Synced 2h ago</span></div>
+    <div class="rule"><i style="width:5%"></i></div>
+    <div class="h2h">
+      <div class="glass" data-runner="a" data-glow="tl">
+        <div class="who"><i class="dot"></i><span class="label">Jeffrey</span></div>
+        <div class="valrow"><span class="value">32.4</span><span class="sup">km</span></div>
+        <div><div class="track"><i style="width:64%"></i></div>
+          <div class="caprow"><span class="cap">64% of 50</span><span class="cap faint">5 runs</span></div></div>
+      </div>
+      <div class="glass" data-runner="b" data-glow="br">
+        <div class="who"><i class="dot"></i><span class="label">Eugenia</span></div>
+        <div class="valrow"><span class="value">18.9</span><span class="sup">km</span></div>
+        <div><div class="track"><i style="width:47%"></i></div>
+          <div class="caprow"><span class="cap">47% of 40</span><span class="cap faint">3 runs</span></div></div>
+      </div>
+    </div>
+  </div>
+  <div class="grain"></div>
+</div>
+<div class="note"><b>A · head to head.</b> Each runner's light comes from their own corner; marks take the runner colour, numbers and names stay neutral.</div>
+
+<!-- ============ Screen B · solo ============ -->
+<div class="screen" id="scrB">
+  <div class="field"></div>
+  <div class="ui">
+    <div class="header"><span class="page">05/22</span><span class="title" id="soloTitle">Jeffrey · this week</span><span class="status">Synced 2h ago</span></div>
+    <div class="rule"><i style="width:23%"></i></div>
+    <div class="solo">
+      <div class="glass hero" data-glow="tl">
+        <div class="who"><i class="dot"></i><span class="label">Distance</span></div>
+        <div class="valrow"><span class="value">32.4</span><span class="sup">km</span></div>
+        <div><div class="track"><i style="width:64%"></i></div>
+          <div class="caprow"><span class="cap">64% of 50 km</span><span class="cap faint">18 km to go</span></div></div>
+      </div>
+      <div class="glass ringcard" data-glow="tl">
+        <div class="ringwrap">
+          <svg width="168" height="168" viewBox="0 0 168 168">
+            <circle cx="84" cy="84" r="74" fill="none" stroke="rgb(255 255 255 / var(--dim))" stroke-width="16"/>
+            <circle class="arc" cx="84" cy="84" r="74" fill="none" stroke-width="16" stroke-linecap="round" stroke-dasharray="387 465"/>
+          </svg>
+          <div class="ringnum">5</div>
+        </div>
+        <div class="ringside"><span class="label">Runs</span><span class="cap faint">of 6</span></div>
+      </div>
+      <div class="glass barcard" data-glow="br">
+        <div class="bars">
+          <i class="bar" style="height:46%"></i><i class="bar" style="height:20%"></i>
+          <i class="bar" style="height:66%"></i><i class="bar" style="height:34%"></i>
+          <i class="bar lit" style="height:100%"></i><i class="bar" style="height:20%"></i>
+          <i class="bar" style="height:40%"></i>
+        </div>
+        <div class="days"><span>M</span><span>T</span><span>W</span><span>T</span><span class="lit">F</span><span>S</span><span>S</span></div>
+      </div>
+    </div>
+  </div>
+  <div class="grain"></div>
+</div>
+<div class="note"><b>B · solo slide.</b> The whole room takes one runner's light. Same layout as step 1 — only the light and the lit marks changed.</div>
+
+<div class="tools" id="pairs"><span class="k">Pairs</span></div>
+<div class="tools">
+  <span class="k">Solo</span>
+  <button data-solo="a" class="on">Jeffrey</button><button data-solo="b">Eugenia</button>
+  <label class="tog"><input type="checkbox" id="tNames"> colour the names</label>
+  <label class="tog"><input type="checkbox" id="tNums"> colour the numbers</label>
+</div>
+
+<div class="bench" id="bench"></div>
+
+<script>
+/* ---------- colour maths ---------- */
+function hsl(h,s,l){ s/=100; l/=100; const k=n=>(n+h/30)%12, a=s*Math.min(l,1-l);
+  const f=n=>l-a*Math.max(-1,Math.min(k(n)-3,Math.min(9-k(n),1))); return [f(0),f(8),f(4)].map(v=>Math.round(v*255)); }
+function rgb2hsl([r,g,b]){ r/=255;g/=255;b/=255; const mx=Math.max(r,g,b),mn=Math.min(r,g,b),l=(mx+mn)/2; let h=0,s=0;
+  if(mx!==mn){const d=mx-mn; s=l>.5?d/(2-mx-mn):d/(mx+mn); h=mx===r?((g-b)/d+(g<b?6:0)):mx===g?((b-r)/d+2):((r-g)/d+4); h*=60;}
+  return [Math.round(h),Math.round(s*100),Math.round(l*100)]; }
+const fromHex = h => [1,3,5].map(i=>parseInt(h.slice(i,i+2),16));
+const hex = c => '#'+c.map(v=>Math.max(0,Math.min(255,Math.round(v))).toString(16).padStart(2,'0')).join('');
+const over = (b,t,a) => b.map((v,i)=>v*(1-a)+t[i]*a);
+const lin = v => { v/=255; return v<=.04045? v/12.92 : Math.pow((v+.055)/1.055,2.4); };
+const gam = v => 255*(v<=.0031308? 12.92*v : 1.055*Math.pow(v,1/2.4)-.055);
+const lum = c => .2126*lin(c[0])+.7152*lin(c[1])+.0722*lin(c[2]);
+const cr = (a,b) => { const x=lum(a), y=lum(b); return (Math.max(x,y)+.05)/(Math.min(x,y)+.05); };
+// Machado et al. 2009, severity 1.0, applied in linear RGB
+const CVD = {
+  deutan:[[0.367322,0.860646,-0.227968],[0.280085,0.672501,0.047413],[-0.011820,0.042940,0.968881]],
+  protan:[[0.152286,1.052583,-0.204868],[0.114503,0.786281,0.099216],[-0.003882,-0.048116,1.051998]],
+};
+const sim = (c,M) => { const l=c.map(lin); return M.map(r=>gam(Math.max(0,Math.min(1,r[0]*l[0]+r[1]*l[1]+r[2]*l[2])))); };
+function lab(c){ const [r,g,b]=c.map(lin);
+  const X=(0.4124*r+0.3576*g+0.1805*b)/0.95047, Y=0.2126*r+0.7152*g+0.0722*b, Z=(0.0193*r+0.1192*g+0.9505*b)/1.08883;
+  const f=t=>t>0.008856?Math.cbrt(t):7.787*t+16/116; return [116*f(Y)-16,500*(f(X)-f(Y)),200*(f(Y)-f(Z))]; }
+function de00(c1,c2){ const [L1,a1,b1]=lab(c1),[L2,a2,b2]=lab(c2), rad=Math.PI/180;
+  const Cm=(Math.hypot(a1,b1)+Math.hypot(a2,b2))/2, G=.5*(1-Math.sqrt(Cm**7/(Cm**7+25**7)));
+  const a1p=a1*(1+G), a2p=a2*(1+G), C1=Math.hypot(a1p,b1), C2=Math.hypot(a2p,b2);
+  const hh=(x,y)=>{ if(!x&&!y) return 0; const v=Math.atan2(y,x)/rad; return v<0?v+360:v; };
+  const h1=hh(a1p,b1), h2=hh(a2p,b2);
+  let dh=0; if(C1*C2){ dh=h2-h1; if(dh>180) dh-=360; else if(dh<-180) dh+=360; }
+  const dL=L2-L1, dC=C2-C1, dH=2*Math.sqrt(C1*C2)*Math.sin(dh*rad/2);
+  const Lm=(L1+L2)/2, Cmp=(C1+C2)/2;
+  let hm=h1+h2; if(C1*C2){ hm = Math.abs(h1-h2)>180 ? (hm<360? (hm+360)/2 : (hm-360)/2) : hm/2; }
+  const T=1-.17*Math.cos((hm-30)*rad)+.24*Math.cos(2*hm*rad)+.32*Math.cos((3*hm+6)*rad)-.2*Math.cos((4*hm-63)*rad);
+  const dT=30*Math.exp(-(((hm-275)/25)**2)), RC=2*Math.sqrt(Cmp**7/(Cmp**7+25**7));
+  const SL=1+.015*(Lm-50)**2/Math.sqrt(20+(Lm-50)**2), SC=1+.045*Cmp, SH=1+.015*Cmp*T, RT=-Math.sin(2*dT*rad)*RC;
+  return Math.sqrt((dL/SL)**2+(dC/SC)**2+(dH/SH)**2+RT*(dC/SC)*(dH/SH)); }
+const deAll = (x,y) => ({n:de00(x,y), d:de00(sim(x,CVD.deutan),sim(y,CVD.deutan)), p:de00(sim(x,CVD.protan),sim(y,CVD.protan))});
+
+/* ---------- neutral base (locked from step 1 blend) ---------- */
+const N = { ground:hsl(222,28,5), light:hsl(222,30,88), t1:hsl(222,14,96), t2:hsl(222,12,81), t3:hsl(222,10,60),
+            amb:.16, glass:.05, dim:.16 };
+const W=[255,255,255];
+
+/* ---------- runner candidates ---------- */
+const PAIRS = [
+  {id:'kit',   name:'Kit · orange / cyan',       a:'#ff7a2f', b:'#22d3ee'},
+  {id:'ref7',  name:'Ref 7 · orange / blue (chosen)',     a:'#ff8f45', b:'#7aa7ff'},
+  {id:'ref13', name:'Ref 1+3 · lime / magenta',  a:'#c6f24e', b:'#e15cff'},
+  {id:'ref5',  name:'Ref 5 · amber / violet',    a:'#ffb22e', b:'#9d7dff'},
+];
+const S = { a:rgb2hsl(fromHex(PAIRS[1].a)), b:rgb2hsl(fromHex(PAIRS[1].b)), haze:.18, glow:.14, mglow:22, solo:'a', pair:'ref7' };
+window.S = S;
+
+/* ---------- light field: one source of truth for CSS and maths ---------- */
+function blobsFor(id, A, B){
+  const solo = S.solo==='a'?A:B;
+  if (id==='scrA') return [
+    {x:1024,y:648,rx:640,ry:520,c:B,a:S.haze},
+    {x:512,y:300,rx:320,ry:260,c:N.light,a:N.amb*.3},
+    {x:82,y:-36,rx:560,ry:460,c:A,a:S.haze},
+  ];
+  return [
+    {x:1024,y:648,rx:640,ry:520,c:solo,a:S.haze*.6},
+    {x:655,y:228,rx:320,ry:260,c:N.light,a:N.amb*.35},
+    {x:82,y:-36,rx:560,ry:460,c:solo,a:S.haze},
+  ];
+}
+const grad = b => `radial-gradient(${b.rx}px ${b.ry}px at ${b.x}px ${b.y}px, rgb(${b.c.join(' ')} / ${b.a}), transparent 70%)`;
+const fall = (x,y,b) => b.a*Math.max(0, 1 - Math.hypot((x-b.x)/b.rx,(y-b.y)/b.ry)/.7);
+
+function paint(){
+  const A=hsl(...S.a), B=hsl(...S.b), solo=S.solo==='a'?A:B;
+  const root=document.documentElement.style;
+  root.setProperty('--a-rgb',A.join(' ')); root.setProperty('--b-rgb',B.join(' ')); root.setProperty('--mglow',S.mglow+'px');
+  for (const id of ['scrA','scrB']){
+    const scr=document.getElementById(id), blobs=blobsFor(id,A,B);
+    scr._blobs = blobs.slice().reverse();               // CSS paints first-listed on top; maths composites bottom-up
+    scr.querySelector('.field').style.background = blobs.slice().reverse().map(grad).join(',');
+    if (id==='scrB') scr.style.setProperty('--rgb', solo.join(' '));
+    scr.querySelectorAll('.glass').forEach(card=>{
+      const c = card.dataset.runner ? (card.dataset.runner==='a'?A:B) : solo;
+      if (card.dataset.runner) card.style.setProperty('--rgb', c.join(' '));
+      const at = card.dataset.glow==='br' ? '100% 100%' : '0% 0%';
+      card.style.setProperty('--glow', `radial-gradient(420px 300px at ${at}, rgb(${c.join(' ')} / ${S.glow}), transparent 70%)`);
+      card._glow = {c, at:card.dataset.glow};
+    });
+  }
+  document.getElementById('soloTitle').textContent = (S.solo==='a'?'Jeffrey':'Eugenia')+' · this week';
+  for (const k in inputs){ const {inp,out,get,fmt}=inputs[k]; inp.value=get(); out.textContent=fmt(get()); }
+  document.getElementById('hexA').textContent='Jeffrey  '+hex(A);
+  document.getElementById('hexB').textContent='Eugenia  '+hex(B);
+  measure(A,B);
+}
+
+/* measured background behind an element (field + glass + that card's glow) */
+function bgAt(scr,x,y,card){
+  const sr=scr.getBoundingClientRect(); x-=sr.left; y-=sr.top;
+  let c=N.ground; for (const b of scr._blobs) c=over(c,b.c,fall(x,y,b));
+  if (card){ const r=card.getBoundingClientRect(); c=over(c,W,N.glass);
+    const gx = card._glow.at==='br' ? r.right-sr.left : r.left-sr.left, gy = card._glow.at==='br' ? r.bottom-sr.top : r.top-sr.top;
+    c=over(c,card._glow.c,fall(x,y,{x:gx,y:gy,rx:420,ry:300,a:S.glow})); }
+  return c;
+}
+function worst(sel){ let w=N.ground, wl=-1;
+  document.querySelectorAll(sel).forEach(el=>{ const b=el.getBoundingClientRect(), scr=el.closest('.screen'), card=el.closest('.glass');
+    for (const [px,py] of [[b.left,b.top],[b.right,b.top],[b.left,b.bottom],[b.right,b.bottom],[(b.left+b.right)/2,(b.top+b.bottom)/2]]){
+      const c=bgAt(scr,px,py,card), l=lum(c); if(l>wl){wl=l;w=c;} } });
+  return w; }
+
+const row = (name,f,b,v,need,why,kind) => `<tr><td>${name}</td><td>${f?`<i class="sw" style="background:${hex(f)}"></i>${hex(f)}`:''}</td>`+
+  `<td>${b?`<i class="sw" style="background:${hex(b)}"></i>${hex(b)}`:''}</td><td>${v}</td><td>${need} — ${why}</td><td class="${kind}">${kind==='pass'?'pass':kind==='warn'?'note':'FAIL'}</td></tr>`;
+
+function measure(A,B){
+  const bgNum=worst('#scrA .value, #scrB .value, #scrB .ringnum, .title');
+  const bgLab=worst('#scrA .who .label, #scrB .label, .cap:not(.faint), .sup');
+  const bgA=worst('#scrA [data-runner=a] .track'), bgB=worst('#scrA [data-runner=b] .track');
+  const nameA=worst('#scrA [data-runner=a] .who .label'), nameB=worst('#scrA [data-runner=b] .who .label');
+  const unA=over(bgA,W,N.dim), unB=over(bgB,W,N.dim);
+  const ab=deAll(A,B), aw=deAll(A,N.t1), bw=deAll(B,N.t1);
+  const minw = o => Math.min(o.n,o.d,o.p);
+  const r=[];
+  const c1=cr(N.t1,bgNum), c2=cr(N.t2,bgLab);
+  r.push(row('neutral numbers (text-1)',N.t1,bgNum,c1.toFixed(2)+':1','7:1','readable at 2.25 m',c1>=7?'pass':'fail'));
+  r.push(row('neutral labels (text-2)',N.t2,bgLab,c2.toFixed(2)+':1','7:1','labels at distance',c2>=7?'pass':'fail'));
+  for (const [n,c,u] of [['Jeffrey lit mark vs unlit',A,unA],['Eugenia lit mark vs unlit',B,unB]]){
+    const v=cr(c,u); r.push(row(n,c,u,v.toFixed(2)+':1','3:1','mark pops off its track',v>=3?'pass':'fail')); }
+  for (const [n,c,bg] of [['Jeffrey as text',A,nameA],['Eugenia as text',B,nameB]]){
+    const v=cr(c,bg); r.push(row(n,c,bg,v.toFixed(2)+':1','7:1','only needed if names/numbers are coloured',v>=7?'pass':'warn')); }
+  r.push(row('Jeffrey vs Eugenia · normal',A,B,'ΔE '+ab.n.toFixed(0),'≥ 40','tell apart at a glance',ab.n>=40?'pass':'fail'));
+  r.push(row('Jeffrey vs Eugenia · deuteranopia',sim(A,CVD.deutan),sim(B,CVD.deutan),'ΔE '+ab.d.toFixed(0),'≥ 40','red-green (most common)',ab.d>=40?'pass':'fail'));
+  r.push(row('Jeffrey vs Eugenia · protanopia',sim(A,CVD.protan),sim(B,CVD.protan),'ΔE '+ab.p.toFixed(0),'≥ 40','red-green',ab.p>=40?'pass':'fail'));
+  r.push(row('Jeffrey vs neutral lit (worst CVD)',A,N.t1,'ΔE '+minw(aw).toFixed(0),'≥ 20','never confused with a "now" mark',minw(aw)>=20?'pass':'fail'));
+  r.push(row('Eugenia vs neutral lit (worst CVD)',B,N.t1,'ΔE '+minw(bw).toFixed(0),'≥ 20','never confused with a "now" mark',minw(bw)>=20?'pass':'fail'));
+  document.getElementById('ro').innerHTML='<tr><th>check</th><th>fg</th><th>bg</th><th>value</th><th>need</th><th></th></tr>'+r.join('');
+
+  // static comparison of all candidate pairs on the same measured card background
+  const bgRef = over(N.ground,W,N.glass);
+  document.getElementById('cmp').innerHTML='<tr><th>pair</th><th>ΔE normal</th><th>ΔE deutan</th><th>ΔE protan</th><th>A vs white (CVD min)</th><th>B vs white (CVD min)</th><th>A mark vs track</th><th>B mark vs track</th><th>A text on card</th><th>B text on card</th></tr>'+
+    PAIRS.map(p=>{ const a=fromHex(p.a), b=fromHex(p.b), x=deAll(a,b), wa=minw(deAll(a,N.t1)), wb=minw(deAll(b,N.t1));
+      const cls=(v,t)=>v>=t?'pass':'fail';
+      return `<tr><td><i class="sw" style="background:${p.a}"></i><i class="sw" style="background:${p.b}"></i>${p.name}</td>`+
+        `<td class="${cls(x.n,40)}">${x.n.toFixed(0)}</td><td class="${cls(x.d,40)}">${x.d.toFixed(0)}</td><td class="${cls(x.p,40)}">${x.p.toFixed(0)}</td>`+
+        `<td class="${cls(wa,20)}">${wa.toFixed(0)}</td><td class="${cls(wb,20)}">${wb.toFixed(0)}</td>`+
+        `<td class="${cls(cr(a,unA),3)}">${cr(a,unA).toFixed(2)}:1</td><td class="${cls(cr(b,unB),3)}">${cr(b,unB).toFixed(2)}:1</td>`+
+        `<td>${cr(a,bgRef).toFixed(1)}:1</td><td>${cr(b,bgRef).toFixed(1)}:1</td></tr>`; }).join('');
+
+  document.getElementById('tokens').textContent =
+`/* Runner colours — step 2 (on the step-1 blend neutral) */
+--runner-a:      ${hex(A)};   /* Jeffrey */
+--runner-b:      ${hex(B)};   /* Eugenia */
+--runner-haze:   ${S.haze};          /* alpha of each runner's light source */
+--runner-glow:   ${S.glow};          /* card corner glow alpha */
+--mark-glow:     ${S.mglow}px;       /* halo on lit marks */
+/* rule: colour lives in light + marks; names and numbers stay neutral */`;
+  window.TOKENS=document.getElementById('tokens').textContent;
+}
+
+/* ---------- controls ---------- */
+const pairsEl=document.getElementById('pairs');
+PAIRS.forEach(p=>{ const b=document.createElement('button'); b.dataset.pair=p.id;
+  b.innerHTML=`<i style="background:${p.a}"></i><i style="background:${p.b}"></i>${p.name}`;
+  if(p.id===S.pair) b.classList.add('on');
+  b.onclick=()=>{ S.a=rgb2hsl(fromHex(p.a)); S.b=rgb2hsl(fromHex(p.b)); S.pair=p.id; setOn(pairsEl,b); paint(); };
+  pairsEl.appendChild(b); });
+const setOn=(wrap,b)=>{ wrap.querySelectorAll('button').forEach(x=>x.classList.remove('on')); if(b) b.classList.add('on'); };
+document.querySelectorAll('[data-solo]').forEach(b=>b.onclick=()=>{ S.solo=b.dataset.solo; setOn(b.parentElement,b); paint(); });
+document.getElementById('tNames').onchange=e=>{ document.body.classList.toggle('tint-names',e.target.checked); };
+document.getElementById('tNums').onchange=e=>{ document.body.classList.toggle('tint-numbers',e.target.checked); };
+
+const inputs={};
+const bench=document.getElementById('bench');
+function group(title, ctls, extra){
+  const fs=document.createElement('fieldset'); fs.innerHTML=`<legend>${title}</legend>`+(extra||'');
+  for (const [key,lab,min,max,step,get,set,fmt] of ctls){
+    const row=document.createElement('div'); row.className='ctl';
+    row.innerHTML=`<span>${lab}</span><input type="range" min="${min}" max="${max}" step="${step}"><output></output>`;
+    const inp=row.querySelector('input'), out=row.querySelector('output');
+    inp.oninput=()=>{ set(+inp.value); setOn(pairsEl,null); paint(); };
+    inputs[key]={inp,out,get,fmt}; fs.appendChild(row); }
+  bench.appendChild(fs); }
+const hslCtls = r => [
+  [r+'h','Hue',0,360,1,()=>S[r][0],v=>S[r][0]=v,v=>v+'°'],
+  [r+'s','Saturation',30,100,1,()=>S[r][1],v=>S[r][1]=v,v=>v+'%'],
+  [r+'l','Lightness',40,80,1,()=>S[r][2],v=>S[r][2]=v,v=>v+'%'],
+];
+group('Jeffrey · runner A', hslCtls('a'), '<div class="hexout" id="hexA"></div>');
+group('Eugenia · runner B', hslCtls('b'), '<div class="hexout" id="hexB"></div>');
+group('How much colour', [
+  ['haze','Room light',0,.4,.01,()=>S.haze,v=>S.haze=v,v=>v],
+  ['glow','Card glow',0,.3,.01,()=>S.glow,v=>S.glow=v,v=>v],
+  ['mglow','Mark halo',0,40,1,()=>S.mglow,v=>S.mglow=v,v=>v+'px'],
+]);
+const ro=document.createElement('fieldset'); ro.className='full';
+ro.innerHTML='<legend>Checks · current colours, measured on the slides above</legend><table id="ro"></table>'; bench.appendChild(ro);
+const cm=document.createElement('fieldset'); cm.className='full';
+cm.innerHTML='<legend>Candidate pairs compared · ΔE2000, colour-blindness simulated (Machado 2009)</legend><table id="cmp"></table>'; bench.appendChild(cm);
+const tk=document.createElement('fieldset'); tk.className='full';
+tk.innerHTML='<legend>Tokens (click to select)</legend><pre id="tokens"></pre>'; bench.appendChild(tk);
+
+paint();
+document.fonts.ready.then(paint);
+</script>
+</body>
+</html>

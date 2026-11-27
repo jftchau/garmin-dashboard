@@ -1,0 +1,85 @@
+<!-- @dsCard group="Layout" height=640 width=1024 subtitle="A whole head-to-head slide at 1024x600: room, light, glass" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<style>
+  :root { color-scheme: dark; }
+  body { margin:0; padding:0; width:1024px; background:#030304; }
+  .screen {
+    position:relative; width:1024px; height:600px; overflow:hidden; isolation:isolate;
+    background-color: var(--ground, #090b10);
+    /* the room: Jeffrey's light top-left, Eugenia's bottom-right, a faint neutral fill between */
+    background-image:
+      radial-gradient(560px 460px at 82px -36px, var(--runner-a-haze, rgba(255,145,71,.18)), transparent 70%),
+      radial-gradient(320px 260px at 512px 300px, rgba(215,221,234,.05), transparent 70%),
+      radial-gradient(640px 520px at 1024px 648px, var(--runner-b-haze, rgba(122,167,255,.18)), transparent 70%);
+    font-family: var(--font-display, Outfit, system-ui, sans-serif);
+    color: var(--text-1, #f3f4f6);
+  }
+  /* grain: soft-light noise, dithers the gradients on a 6-bit panel */
+  .screen::after {
+    content:""; position:absolute; inset:0; pointer-events:none; z-index:2;
+    opacity: var(--grain, 0.04); mix-blend-mode: soft-light;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='160' height='160' filter='url(%23n)'/></svg>");
+  }
+  .ui { position:relative; z-index:1; height:100%; display:flex; flex-direction:column; }
+  .header { height:var(--header-h,48px); flex:none; display:flex; align-items:center; gap:16px; padding:0 var(--gutter,40px); }
+  .page { font-size:24px; font-weight:500; line-height:1; color:var(--text-3,#8f95a3); font-variant-numeric:tabular-nums; }
+  .title { font-size:44px; font-weight:700; line-height:1; letter-spacing:-.015em; }
+  .status { margin-left:auto; font-size:24px; font-weight:500; line-height:1; color:var(--text-3,#8f95a3); }
+  .rule { height:var(--rule-h,3px); flex:none; margin:0 var(--gutter,40px); border-radius:3px; background:rgba(255,255,255,.08); overflow:hidden; }
+  .rule i { display:block; height:100%; width:5%; background:var(--text-1,#f3f4f6); }
+  .body { flex:1; min-height:0; display:grid; grid-template-columns:1fr 1fr; gap:var(--card-gap,20px);
+          padding:var(--content-top,18px) var(--gutter,40px) var(--content-bottom,28px); }
+  .glass {
+    position:relative; overflow:hidden; min-height:0;
+    border-radius:var(--radius-card,28px);
+    background:var(--glass-fill, rgba(255,255,255,.05));
+    border:1px solid var(--glass-edge, rgba(255,255,255,.10));
+    box-shadow: var(--glass-inset, inset 0 1px 0 rgba(255,255,255,.14)), var(--glass-drop, 0 24px 48px -12px rgba(0,0,0,.55));
+    padding:var(--card-pad-y,28px) var(--card-pad-x,32px);
+    display:flex; flex-direction:column; justify-content:space-between;
+  }
+  .glass::before { content:""; position:absolute; inset:0; pointer-events:none; }
+  .a::before { background:radial-gradient(420px 300px at 0% 0%, var(--runner-a-glow, rgba(255,145,71,.14)), transparent 70%); }
+  .b::before { background:radial-gradient(420px 300px at 100% 100%, var(--runner-b-glow, rgba(122,167,255,.14)), transparent 70%); }
+  .glass > * { position:relative; }
+  .a { --c: var(--runner-a, #ff9147); --halo: var(--mark-halo-a, 0 0 22px rgba(255,145,71,.6)); }
+  .b { --c: var(--runner-b, #7aa7ff); --halo: var(--mark-halo-b, 0 0 22px rgba(122,167,255,.6)); }
+  .who { display:flex; align-items:center; gap:14px; }
+  .dot { width:var(--runner-dot,22px); height:var(--runner-dot,22px); border-radius:50%; background:var(--c); box-shadow:var(--halo); flex:none; }
+  .label { font-size:52px; font-weight:700; line-height:1; letter-spacing:.08em; text-transform:uppercase; }
+  .valrow { display:flex; align-items:flex-start; gap:var(--unit-gap,10px); }
+  .value { font-size:160px; font-weight:600; line-height:.86; letter-spacing:-.045em; font-variant-numeric:tabular-nums; white-space:nowrap; }
+  .unit { font-size:56px; font-weight:600; line-height:1; color:var(--text-2,#c9ccd4); margin-top:6px; }
+  .track { height:var(--bar-h,20px); border-radius:999px; background:var(--mark-unlit, rgba(255,255,255,.16)); overflow:hidden; }
+  .track i { display:block; height:100%; border-radius:999px; background:var(--c); box-shadow:var(--halo); }
+  .caprow { display:flex; justify-content:space-between; align-items:baseline; margin-top:var(--caption-gap,16px); }
+  .cap { font-size:40px; font-weight:500; line-height:1; color:var(--text-2,#c9ccd4); font-variant-numeric:tabular-nums; }
+  .cap.faint { color:var(--text-3,#8f95a3); }
+</style>
+</head>
+<body>
+<div class="screen">
+  <div class="ui">
+    <div class="header"><span class="page">01/22</span><span class="title">This week</span><span class="status">Synced 2h ago</span></div>
+    <div class="rule"><i></i></div>
+    <div class="body">
+      <div class="glass a">
+        <div class="who"><i class="dot"></i><span class="label">Jeffrey</span></div>
+        <div class="valrow"><span class="value">71.1</span><span class="unit">km</span></div>
+        <div><div class="track"><i style="width:64%"></i></div>
+          <div class="caprow"><span class="cap">64% of 50</span><span class="cap faint">5 runs</span></div></div>
+      </div>
+      <div class="glass b">
+        <div class="who"><i class="dot"></i><span class="label">Eugenia</span></div>
+        <div class="valrow"><span class="value">36.9</span><span class="unit">km</span></div>
+        <div><div class="track"><i style="width:47%"></i></div>
+          <div class="caprow"><span class="cap">47% of 40</span><span class="cap faint">3 runs</span></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

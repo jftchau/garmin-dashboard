@@ -1,0 +1,290 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Step 1 · Neutral system — Pi Run Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<!-- Type is a PLACEHOLDER (Inter). Typography is a later, separate experiment. -->
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ground:#090b10;
+  --light-rgb:200 210 230;
+  --text-1:#f2f4f8; --text-2:#adb4c0; --text-3:#727a88;
+  --ambient:.16; --glass:.05; --edge:.10; --hl:.14; --blur:24px; --corner:.10;
+  --radius:28px; --dim:.16; --grain:.04;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:#030304;color:#d8dce4;font-family:Inter,system-ui,sans-serif}
+body{min-width:1064px;padding:20px 20px 60px}
+
+/* ================= the 1024x600 screen ================= */
+.screen{position:relative;width:1024px;height:600px;overflow:hidden;background:var(--ground);isolation:isolate;outline:1px solid #1b1d22}
+.field{position:absolute;inset:0;z-index:0;
+  background:
+    radial-gradient(560px 460px at 8% -6%,  rgb(var(--light-rgb) / var(--ambient)), transparent 70%),
+    radial-gradient(640px 520px at 100% 108%, rgb(var(--light-rgb) / calc(var(--ambient) * .75)), transparent 70%),
+    radial-gradient(320px 260px at 64% 38%, rgb(var(--light-rgb) / calc(var(--ambient) * .35)), transparent 70%);}
+.grain{position:absolute;inset:0;z-index:5;pointer-events:none;opacity:var(--grain);mix-blend-mode:soft-light;
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");}
+.ui{position:relative;z-index:1;height:100%;display:flex;flex-direction:column}
+
+.header{height:48px;flex:none;display:flex;align-items:center;gap:16px;padding:0 40px}
+.page{font:500 22px/1 "JetBrains Mono",monospace;color:var(--text-3);font-variant-numeric:tabular-nums}
+.title{font:600 44px/1 Inter,sans-serif;letter-spacing:-.015em;color:var(--text-1)}
+.status{margin-left:auto;font:500 22px/1 Inter,sans-serif;color:var(--text-3)}
+.rule{height:3px;flex:none;margin:0 40px;border-radius:3px;background:rgb(255 255 255 / .08);overflow:hidden}
+.rule i{display:block;height:100%;width:38%;background:var(--text-1);border-radius:3px}
+
+.content{flex:1;min-height:0;display:grid;grid-template-columns:1fr 360px;grid-template-rows:1fr 1fr;gap:20px;padding:18px 40px 28px}
+
+.glass{position:relative;min-height:0;border-radius:var(--radius);
+  background:rgb(255 255 255 / var(--glass));
+  border:1px solid rgb(255 255 255 / var(--edge));
+  box-shadow:inset 0 1px 0 rgb(255 255 255 / var(--hl)), 0 24px 48px -12px rgb(0 0 0 / .55);
+  -webkit-backdrop-filter:blur(var(--blur)) saturate(140%);backdrop-filter:blur(var(--blur)) saturate(140%);
+  overflow:hidden;padding:24px}
+.glass::before{content:"";position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(420px 300px at 0% 0%, rgb(var(--light-rgb) / var(--corner)), transparent 70%)}
+.glass>*{position:relative}
+.nobf .glass{-webkit-backdrop-filter:none;backdrop-filter:none}
+
+.label{font:700 40px/1 Inter,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:var(--text-2)}
+.cap{font:500 36px/1 Inter,sans-serif;color:var(--text-2)}
+.cap.faint{color:var(--text-3)}
+
+/* hero card */
+.hero{grid-row:1 / span 2;padding:30px 36px;display:flex;flex-direction:column;justify-content:space-between}
+.valrow{display:flex;align-items:flex-start;gap:10px}
+.value{font:600 160px/.86 Inter,sans-serif;letter-spacing:-.045em;color:var(--text-1);font-variant-numeric:tabular-nums}
+.sup{font:600 56px/1 Inter,sans-serif;color:var(--text-2);margin-top:6px}
+.track{height:20px;border-radius:999px;background:rgb(255 255 255 / var(--dim));overflow:hidden}
+.track i{display:block;height:100%;width:64%;border-radius:999px;background:var(--text-1);box-shadow:0 0 18px rgb(var(--light-rgb) / .55)}
+.caprow{display:flex;justify-content:space-between;align-items:baseline;margin-top:16px}
+
+/* ring card */
+.ringcard{display:flex;align-items:center;gap:18px}
+.ringwrap{position:relative;width:168px;height:168px;flex:none}
+.ringwrap svg{display:block;transform:rotate(-90deg)}
+.ringnum{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font:600 96px/1 Inter,sans-serif;letter-spacing:-.04em;color:var(--text-1)}
+.ringside{display:flex;flex-direction:column;gap:12px;min-width:0}
+.ringside .label{letter-spacing:.05em}
+
+/* bars card */
+.barcard{display:flex;flex-direction:column;justify-content:flex-end;gap:12px}
+.bars{height:140px;display:flex;align-items:flex-end;justify-content:space-between}
+.bar{width:28px;border-radius:999px;background:rgb(255 255 255 / var(--dim))}
+.bar.lit{background:var(--text-1);box-shadow:0 0 22px rgb(var(--light-rgb) / .6)}
+.days{display:flex;justify-content:space-between}
+.days span{width:28px;text-align:center;font:500 28px/1 Inter,sans-serif;color:var(--text-3)}
+.days span.lit{color:var(--text-1);font-weight:700}
+
+/* ================= workbench below the screen ================= */
+.note{width:1024px;margin:14px 0 0;font:500 12px/1.5 "JetBrains Mono",monospace;letter-spacing:.04em;color:#7d8594}
+.note b{color:#c9ced8;font-weight:600}
+.bench{width:1024px;margin-top:20px;display:grid;grid-template-columns:1fr 1fr;gap:16px;font-size:13px;color:#c9ced8}
+fieldset{border:1px solid #23262e;border-radius:12px;padding:10px 14px 8px;margin:0;min-width:0}
+legend{font:600 11px/1 "JetBrains Mono",monospace;letter-spacing:.1em;text-transform:uppercase;color:#8b93a1;padding:0 6px}
+.ctl{display:grid;grid-template-columns:128px 1fr 58px;align-items:center;gap:10px;margin:7px 0}
+.ctl output{font:500 12px "JetBrains Mono",monospace;text-align:right;color:#e6e9ef}
+input[type=range]{width:100%;accent-color:#e6e9ef}
+.bar-tools{width:1024px;margin-top:18px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.bar-tools span{font:600 11px "JetBrains Mono",monospace;letter-spacing:.1em;text-transform:uppercase;color:#8b93a1;margin-right:4px}
+button{font:500 13px Inter,sans-serif;color:#e6e9ef;background:#15171c;border:1px solid #2a2d35;border-radius:999px;padding:7px 14px;cursor:pointer}
+button:hover{border-color:#4a4f5a}
+button.on{background:#e6e9ef;color:#0b0c0f;border-color:#e6e9ef}
+label.tog{margin-left:auto;display:flex;align-items:center;gap:8px;font:500 13px Inter,sans-serif}
+.full{grid-column:1 / -1}
+table{width:100%;border-collapse:collapse;font:500 12px "JetBrains Mono",monospace}
+td,th{padding:6px 8px;border-bottom:1px solid #1d2026;text-align:left}
+th{color:#8b93a1;font-weight:500}
+.sw{display:inline-block;width:14px;height:14px;border-radius:4px;vertical-align:-2px;margin-right:8px;border:1px solid #333}
+.pass{color:#7fdc9a}.fail{color:#ff6b81}
+pre{margin:0;font:500 12px/1.55 "JetBrains Mono",monospace;color:#c9ced8;white-space:pre-wrap;user-select:all}
+</style>
+</head>
+<body>
+
+<div class="screen" id="screen">
+  <div class="field"></div>
+  <div class="ui">
+    <div class="header">
+      <span class="page">03/22</span>
+      <span class="title">This week</span>
+      <span class="status">Synced 2h ago</span>
+    </div>
+    <div class="rule"><i></i></div>
+    <div class="content">
+      <div class="glass hero">
+        <div class="label">Distance</div>
+        <div class="valrow"><span class="value">32.4</span><span class="sup">km</span></div>
+        <div>
+          <div class="track"><i></i></div>
+          <div class="caprow"><span class="cap">64% of 50 km</span><span class="cap faint">18 km to go</span></div>
+        </div>
+      </div>
+      <div class="glass ringcard">
+        <div class="ringwrap">
+          <svg width="168" height="168" viewBox="0 0 168 168">
+            <circle cx="84" cy="84" r="74" fill="none" stroke="rgb(255 255 255 / var(--dim))" stroke-width="16"/>
+            <circle cx="84" cy="84" r="74" fill="none" stroke="var(--text-1)" stroke-width="16" stroke-linecap="round"
+                    stroke-dasharray="387 465"/>
+          </svg>
+          <div class="ringnum">5</div>
+        </div>
+        <div class="ringside"><span class="label">Runs</span><span class="cap faint">of 6</span></div>
+      </div>
+      <div class="glass barcard">
+        <div class="bars">
+          <i class="bar" style="height:46%"></i><i class="bar" style="height:20%"></i>
+          <i class="bar" style="height:66%"></i><i class="bar" style="height:34%"></i>
+          <i class="bar lit" style="height:100%"></i><i class="bar" style="height:20%"></i>
+          <i class="bar" style="height:40%"></i>
+        </div>
+        <div class="days"><span>M</span><span>T</span><span>W</span><span>T</span><span class="lit">F</span><span>S</span><span>S</span></div>
+      </div>
+    </div>
+  </div>
+  <div class="grain"></div>
+</div>
+
+<div class="note">
+  <b>Step 1 · neutral system.</b> No accent colour yet — hierarchy is carried by light alone (lit vs unlit).
+  The two haze sources are where Jeffrey's and Eugenia's colours will enter in step 2. Type is a placeholder (Inter).
+</div>
+
+<div class="bar-tools" id="presets">
+  <span>Presets</span>
+  <button data-p="blend" class="on">Ref 5 + 7 blend</button>
+  <button data-p="haze">Ref 7 · ambient haze</button>
+  <button data-p="corner">Ref 5 · corner glow</button>
+  <button data-p="flat">Flat (no glass)</button>
+  <label class="tog"><input type="checkbox" id="bf" checked> backdrop-filter on</label>
+</div>
+
+<div class="bench" id="bench"></div>
+
+<script>
+const PRESETS = {
+  blend:  {gh:222,gs:28,gl:5,ls:30,amb:.16,corner:.10,glass:.05,edge:.10,hl:.14,blur:24,radius:28,t2:81,t3:60,dim:.16,grain:.04},
+  haze:   {gh:224,gs:40,gl:5,ls:40,amb:.24,corner:.04,glass:.045,edge:.09,hl:.12,blur:28,radius:28,t2:80,t3:64,dim:.16,grain:.04},
+  corner: {gh:220,gs:12,gl:4,ls:18,amb:.07,corner:.17,glass:.05,edge:.11,hl:.16,blur:20,radius:24,t2:81,t3:56,dim:.16,grain:.04},
+  flat:   {gh:222,gs:14,gl:6,ls:10,amb:0,corner:0,glass:.06,edge:.08,hl:.05,blur:0,radius:24,t2:69,t3:56,dim:.16,grain:0},
+};
+const S = Object.assign({}, PRESETS.blend);
+window.S = S;
+
+const SPEC = [
+  ['Ground',       [['gh','Hue',0,360,1,'°'],['gs','Saturation',0,60,1,'%'],['gl','Lightness',0,14,.5,'%']]],
+  ['Light',        [['amb','Ambient haze',0,.4,.01,''],['corner','Card corner glow',0,.3,.01,''],['ls','Light tint',0,60,1,'%']]],
+  ['Glass',        [['glass','Fill',0,.16,.005,''],['edge','Edge',0,.3,.01,''],['hl','Top highlight',0,.4,.01,''],['blur','Backdrop blur',0,48,1,'px'],['radius','Radius',8,40,1,'px']]],
+  ['Text & marks', [['t2','Muted text L',50,90,1,'%'],['t3','Faint text L',35,75,1,'%'],['dim','Unlit mark',.04,.4,.01,''],['grain','Grain (dither)',0,.15,.01,'']]],
+];
+
+const bench = document.getElementById('bench');
+const inputs = {};
+for (const [name, ctls] of SPEC){
+  const fs = document.createElement('fieldset');
+  fs.innerHTML = `<legend>${name}</legend>`;
+  for (const [k,lab,min,max,step,unit] of ctls){
+    const row = document.createElement('div'); row.className='ctl';
+    row.innerHTML = `<span>${lab}</span><input type="range" min="${min}" max="${max}" step="${step}"><output></output>`;
+    const inp = row.querySelector('input'), out = row.querySelector('output');
+    inp.oninput = () => { S[k] = +inp.value; apply(); markCustom(); };
+    inputs[k] = {inp, out, unit};
+    fs.appendChild(row);
+  }
+  bench.appendChild(fs);
+}
+const ro = document.createElement('fieldset'); ro.className='full';
+ro.innerHTML = '<legend>Contrast · measured against the brightest background actually behind each text style</legend><table id="ro"></table>';
+bench.appendChild(ro);
+const tk = document.createElement('fieldset'); tk.className='full';
+tk.innerHTML = '<legend>Tokens (click to select)</legend><pre id="tokens"></pre>';
+bench.appendChild(tk);
+
+function hsl(h,s,l){ s/=100; l/=100; const k=n=>(n+h/30)%12, a=s*Math.min(l,1-l);
+  const f=n=>l-a*Math.max(-1,Math.min(k(n)-3,Math.min(9-k(n),1))); return [f(0),f(8),f(4)].map(v=>Math.round(v*255)); }
+const hex = c => '#'+c.map(v=>Math.round(v).toString(16).padStart(2,'0')).join('');
+const over = (b,t,a) => b.map((v,i)=>v*(1-a)+t[i]*a);
+const lin = v => { v/=255; return v<=.04045? v/12.92 : Math.pow((v+.055)/1.055,2.4); };
+const lum = c => .2126*lin(c[0])+.7152*lin(c[1])+.0722*lin(c[2]);
+const cr = (a,b) => { const x=lum(a), y=lum(b); return (Math.max(x,y)+.05)/(Math.min(x,y)+.05); };
+const W = [255,255,255];
+
+function apply(){
+  const r = document.documentElement.style;
+  const ground = hsl(S.gh,S.gs,S.gl), light = hsl(S.gh,S.ls,88);
+  const t1 = hsl(S.gh,14,96), t2 = hsl(S.gh,12,S.t2), t3 = hsl(S.gh,10,S.t3);
+  r.setProperty('--ground', hex(ground));
+  r.setProperty('--light-rgb', light.join(' '));
+  r.setProperty('--text-1', hex(t1)); r.setProperty('--text-2', hex(t2)); r.setProperty('--text-3', hex(t3));
+  for (const k of ['amb','glass','edge','hl','corner','dim','grain'])
+    r.setProperty('--'+({amb:'ambient'}[k]||k), S[k]);
+  r.setProperty('--blur', S.blur+'px'); r.setProperty('--radius', S.radius+'px');
+
+  for (const k in inputs){ const {inp,out,unit}=inputs[k]; inp.value=S[k]; out.textContent=S[k]+unit; }
+
+  const plainCard = over(ground, W, S.glass);
+  // Measure the background actually behind each piece of text: same ellipses
+  // and falloff as the CSS gradients (colour at 0, transparent at 70%).
+  const scr = document.getElementById('screen').getBoundingClientRect();
+  const fall = (x,y,cx,cy,rx,ry,a) => a*Math.max(0, 1 - Math.hypot((x-cx)/rx,(y-cy)/ry)/.7);
+  const bgAt = (x,y,card) => {
+    let c = ground;
+    c = over(c, light, fall(x,y,1024,648,640,520,S.amb*.75));
+    c = over(c, light, fall(x,y,655,228,320,260,S.amb*.35));
+    c = over(c, light, fall(x,y,82,-36,560,460,S.amb));
+    if (card){ c = over(c, W, S.glass); c = over(c, light, fall(x,y,card.left-scr.left,card.top-scr.top,420,300,S.corner)); }
+    return c;
+  };
+  const worstUnder = sel => { let w = ground;
+    document.querySelectorAll('#screen '+sel).forEach(el=>{
+      const b = el.getBoundingClientRect(), g = el.closest('.glass'), card = g && g.getBoundingClientRect();
+      for (const [px,py] of [[b.left,b.top],[b.right,b.top],[b.left,b.bottom],[b.right,b.bottom],[(b.left+b.right)/2,(b.top+b.bottom)/2]]){
+        const c = bgAt(px-scr.left, py-scr.top, card); if (lum(c) > lum(w)) w = c; } });
+    return w; };
+  const bg1 = worstUnder('.value, .ringnum, .title'), bg2 = worstUnder('.label, .sup, .cap:not(.faint)');
+  const bg3 = worstUnder('.faint, .page, .status, .days span'), bgB = worstUnder('.bar');
+  const unlit = over(bgB, W, S.dim);
+  const rows = [
+    ['text-1 · numbers',     t1, bg1, 7,   'AAA, readable at 2.25 m'],
+    ['text-2 · labels',      t2, bg2, 7,   'labels must read at distance'],
+    ['text-3 · walk-closer', t3, bg3, 4.5, 'only read up close'],
+    ['lit mark vs unlit',    t1, unlit, 3,   'lit bar must pop off the track'],
+    ['unlit mark vs card',   unlit, bgB, 1.3, 'track still visible'],
+  ];
+  document.getElementById('ro').innerHTML =
+    '<tr><th>pair</th><th>fg</th><th>bg</th><th>ratio</th><th>need</th><th></th></tr>' +
+    rows.map(([n,f,b,need,why])=>{ const v=cr(f,b);
+      return `<tr><td>${n}</td><td><i class="sw" style="background:${hex(f)}"></i>${hex(f)}</td><td><i class="sw" style="background:${hex(b)}"></i>${hex(b)}</td>`+
+        `<td>${v.toFixed(2)}:1</td><td>${need}:1 — ${why}</td><td class="${v>=need?'pass':'fail'}">${v>=need?'pass':'FAIL'}</td></tr>`; }).join('');
+
+  document.getElementById('tokens').textContent =
+`/* Neutral system — step 1 */
+--ground:        ${hex(ground)};
+--light:         ${hex(light)};          /* ambient light colour */
+--haze-alpha:    ${S.amb};
+--glass-fill:    rgb(255 255 255 / ${S.glass});   /* ≈ ${hex(plainCard)} on ground */
+--glass-edge:    rgb(255 255 255 / ${S.edge});
+--glass-hl:      inset 0 1px 0 rgb(255 255 255 / ${S.hl});
+--glass-blur:    ${S.blur}px;
+--glass-glow:    ${S.corner};               /* corner glow alpha */
+--radius-card:   ${S.radius}px;
+--text-1:        ${hex(t1)};
+--text-2:        ${hex(t2)};
+--text-3:        ${hex(t3)};
+--mark-lit:      ${hex(t1)};
+--mark-unlit:    rgb(255 255 255 / ${S.dim});
+--grain:         ${S.grain};`;
+  window.TOKENS = document.getElementById('tokens').textContent;
+}
+function markCustom(){ document.querySelectorAll('#presets button').forEach(b=>b.classList.remove('on')); }
+document.querySelectorAll('#presets button').forEach(b=>b.onclick=()=>{
+  Object.assign(S, PRESETS[b.dataset.p]); markCustom(); b.classList.add('on'); apply(); });
+document.getElementById('bf').onchange = e => document.getElementById('screen').classList.toggle('nobf', !e.target.checked);
+apply();
+</script>
+</body>
+</html>

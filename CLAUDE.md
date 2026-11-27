@@ -26,6 +26,15 @@ not a preference. It keeps getting broken by well-meaning feature additions, so:
   10–12px `text-xs`/`text-[10px]` label sizes — from kiosk distance they're
   invisible. Axis dates use `axisDate()` from `utils.js` ("May 23", not the full
   ISO string), which is both shorter and readable.
+- **A redesign is specified in `design/` (v2, not yet implemented in `frontend/`).**
+  The screen is read from **2.25 m**, where the ~14px floor above is roughly 7×
+  too small (the biggest number today, 80px, is below the ISO legibility
+  minimum). Any restyle takes its sizes, colours and font from `design/`:
+  `design/README.md` (rules), `design/tokens.json` / `design/tokens.css`
+  (values), `design/legibility.md` (the maths). In short: numbers 104–208px,
+  labels 44–56px, nothing below 24px; one font, Outfit, self-hosted from
+  `design/fonts/outfit/` (never from Google Fonts — the kiosk must render
+  identically offline).
 - **Chart margins/axis widths must fit the 17px ticks.** Recharts `margin` must
   be **non-negative** and `YAxis width` wide enough for the largest label —
   negative left margins (the old space-saving trick) clip multi-digit y-labels,

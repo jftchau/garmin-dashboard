@@ -1,0 +1,70 @@
+<!-- @dsCard group="Data" height=1080 width=1024 subtitle="The one-number unit at its four sizes, on glass" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<style>
+  :root { color-scheme: dark; }
+  body {
+    margin:0; padding:32px 40px; width:1024px; box-sizing:border-box;
+    background-color: var(--ground, #090b10);
+    background-image:
+      radial-gradient(760px 600px at 82px -36px, var(--runner-a-haze, rgba(255,145,71,.18)), transparent 70%),
+      radial-gradient(620px 480px at 1000px 900px, var(--light-haze, rgba(215,221,234,.16)), transparent 70%);
+    font-family: var(--font-display, Outfit, system-ui, sans-serif);
+    color: var(--text-1, #f3f4f6);
+  }
+  .tag { font-size:13px; font-weight:500; letter-spacing:.08em; text-transform:uppercase; color:var(--text-3,#8f95a3); margin:0 0 10px 4px; }
+  .glass {
+    position:relative; overflow:hidden;
+    border-radius:var(--radius-card,28px);
+    background:var(--glass-fill, rgba(255,255,255,.05));
+    border:1px solid var(--glass-edge, rgba(255,255,255,.10));
+    box-shadow: var(--glass-inset, inset 0 1px 0 rgba(255,255,255,.14)), var(--glass-drop, 0 24px 48px -12px rgba(0,0,0,.55));
+    padding:var(--card-pad-y,28px) var(--card-pad-x,32px);
+    margin-bottom:30px;
+  }
+  .glass::before { content:""; position:absolute; inset:0; pointer-events:none; }
+  .a::before { background:radial-gradient(420px 300px at 0% 0%, var(--runner-a-glow, rgba(255,145,71,.14)), transparent 70%); }
+  .n::before { background:radial-gradient(360px 260px at 0% 0%, var(--light-glow, rgba(215,221,234,.10)), transparent 70%); }
+  .glass > * { position:relative; }
+  .tight { padding:var(--card-pad-tight-y,22px) var(--card-pad-tight-x,28px); margin:0; }
+  .who { display:flex; align-items:center; gap:14px; margin-bottom:22px; }
+  .dot { width:22px; height:22px; border-radius:50%; background:var(--runner-a,#ff9147); box-shadow:var(--mark-halo-a, 0 0 22px rgba(255,145,71,.6)); }
+  .label { font-size:52px; font-weight:700; line-height:1; letter-spacing:.08em; text-transform:uppercase; white-space:nowrap; }
+  .label.sm { margin-bottom:18px; }
+  .row { display:flex; align-items:flex-start; gap:var(--unit-gap,10px); }
+  .value { font-weight:600; line-height:.86; letter-spacing:-.045em; font-variant-numeric:tabular-nums; white-space:nowrap; }
+  .unit { font-size:56px; font-weight:600; line-height:1; color:var(--text-2,#c9ccd4); margin-top:6px; }
+  .cap { font-size:40px; font-weight:500; line-height:1; color:var(--text-2,#c9ccd4); margin-top:24px; font-variant-numeric:tabular-nums; }
+  .cap.faint { color:var(--text-3,#8f95a3); }
+  .grid { display:grid; grid-template-columns:1fr 1fr; gap:var(--card-gap,20px); }
+</style>
+</head>
+<body>
+
+<div class="tag">hero · 208 / unit 56 / label 52 — one per slide; the runner's light fills the room</div>
+<div class="glass a">
+  <div class="who"><i class="dot"></i><span class="label">Jeffrey</span></div>
+  <div class="row"><span class="value" style="font-size:208px">21.4</span><span class="unit">km</span></div>
+  <div class="cap">1:52:08 · 5:14 /km <span class="faint">· longest run</span></div>
+</div>
+
+<div class="tag">stat-lg · 128 — up to four numbers on a neutral slide (four-stat card padding)</div>
+<div class="grid" style="margin-bottom:30px">
+  <div class="glass n tight"><div class="label sm">Distance</div>
+    <div class="row"><span class="value" style="font-size:128px">168</span><span class="unit">km</span></div></div>
+  <div class="glass n tight"><div class="label sm">Time</div>
+    <div class="row"><span class="value" style="font-size:128px">14:52</span><span class="unit">h</span></div></div>
+</div>
+
+<div class="tag">stat-md · 104 — last resort; prefer splitting the slide</div>
+<div class="grid">
+  <div class="glass n tight"><div class="label sm">Pace</div>
+    <div class="row"><span class="value" style="font-size:104px">5:14</span><span class="unit">/km</span></div></div>
+  <div class="glass n tight"><div class="label sm">Cadence</div>
+    <div class="row"><span class="value" style="font-size:104px">168</span><span class="unit">spm</span></div></div>
+</div>
+
+</body>
+</html>

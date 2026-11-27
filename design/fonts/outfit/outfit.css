@@ -1,0 +1,12 @@
+/* Outfit, self-hosted for the offline Pi kiosk.
+   Source: Google Fonts (fonts.gstatic.com/s/outfit/v15), latin subset, variable 100–900.
+   Downloaded 2026-11-27 · 32,292 bytes · sha256 6c18d579fd87c3776be068b762cbc83fde3acb543d49eabd3ade842eb987e887
+   Licence: SIL Open Font License 1.1 — OFL.txt in this folder must travel with the font. */
+@font-face {
+  font-family: "Outfit";
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: block;   /* kiosk: never flash a fallback face — a swap would re-flow every layout */
+  src: url("Outfit-Variable-latin.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}

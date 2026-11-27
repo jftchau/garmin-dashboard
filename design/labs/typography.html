@@ -1,0 +1,269 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Step 3 · Typography lab — Pi Run Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<!-- Candidates: geometric / grotesk faces in the moodboard's family. All Google ones are OFL; Satoshi and General Sans are Fontshare (ITF Free Font License). -->
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400..800&family=Outfit:wght@400..800&family=Plus+Jakarta+Sans:wght@400..800&family=Manrope:wght@400..800&family=Sora:wght@400..800&family=Urbanist:wght@400..800&family=Figtree:wght@400..800&family=DM+Sans:opsz,wght@9..40,400..800&family=Lexend:wght@400..800&family=Onest:wght@400..800&family=Albert+Sans:wght@400..800&family=Red+Hat+Display:wght@400..800&family=JetBrains+Mono:wght@400..600&display=swap" rel="stylesheet">
+<link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700,900&display=swap" rel="stylesheet">
+<link href="https://api.fontshare.com/v2/css?f[]=general-sans@400,500,600,700&display=swap" rel="stylesheet">
+<style>
+/* ---- locked tokens (step 1 + 2) ---- */
+:root{
+  --ground:#090b10; --text-1:#f3f4f6; --text-2:#c9ccd4; --text-3:#8f95a3;
+  --a-rgb:255 145 71; --b-rgb:122 167 255;
+  --glass:.05; --edge:.10; --hl:.14; --radius:28px; --dim:.16;
+  /* ---- the experiment ---- */
+  --font:"Inter"; --num-w:600; --label-w:700; --num-track:-.045em; --label-track:.08em;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:#030304;color:#d8dce4;font-family:Inter,system-ui,sans-serif}
+body{min-width:1064px;padding:20px 20px 60px}
+
+.screen{position:relative;width:1024px;height:600px;overflow:hidden;background:var(--ground);isolation:isolate;outline:1px solid #1b1d22;
+  background-image:
+    radial-gradient(560px 460px at 82px -36px, rgb(var(--a-rgb) / .18), transparent 70%),
+    radial-gradient(320px 260px at 512px 300px, rgb(215 221 234 / .05), transparent 70%),
+    radial-gradient(640px 520px at 1024px 648px, rgb(var(--b-rgb) / .18), transparent 70%);}
+.ui{position:relative;z-index:1;height:100%;display:flex;flex-direction:column;font-family:var(--font),system-ui,sans-serif}
+.header{height:48px;flex:none;display:flex;align-items:center;gap:16px;padding:0 40px}
+.page{font:500 22px/1 "JetBrains Mono",monospace;color:var(--text-3);font-variant-numeric:tabular-nums}
+.title{font-size:44px;line-height:1;font-weight:var(--label-w);letter-spacing:-.015em;color:var(--text-1)}
+.status{margin-left:auto;font-size:22px;line-height:1;font-weight:500;color:var(--text-3)}
+.rule{height:3px;flex:none;margin:0 40px;border-radius:3px;background:rgb(255 255 255 / .08);overflow:hidden}
+.rule i{display:block;height:100%;width:5%;background:var(--text-1);border-radius:3px}
+.h2h{flex:1;min-height:0;display:grid;grid-template-columns:1fr 1fr;gap:20px;padding:18px 40px 28px}
+.glass{position:relative;min-height:0;border-radius:var(--radius);background:rgb(255 255 255 / var(--glass));
+  border:1px solid rgb(255 255 255 / var(--edge));
+  box-shadow:inset 0 1px 0 rgb(255 255 255 / var(--hl)), 0 24px 48px -12px rgb(0 0 0 / .55);
+  overflow:hidden;padding:28px 32px;display:flex;flex-direction:column;justify-content:space-between}
+.glass::before{content:"";position:absolute;inset:0;pointer-events:none}
+.ga::before{background:radial-gradient(420px 300px at 0% 0%, rgb(var(--a-rgb) / .14), transparent 70%)}
+.gb::before{background:radial-gradient(420px 300px at 100% 100%, rgb(var(--b-rgb) / .14), transparent 70%)}
+.ga{--rgb:var(--a-rgb)} .gb{--rgb:var(--b-rgb)}
+.glass>*{position:relative}
+.who{display:flex;align-items:center;gap:14px}
+.who .dot{width:22px;height:22px;border-radius:50%;background:rgb(var(--rgb));box-shadow:0 0 14px rgb(var(--rgb) / .7);flex:none}
+.label{font-size:40px;line-height:1;font-weight:var(--label-w);letter-spacing:var(--label-track);text-transform:uppercase;color:var(--text-1)}
+.valrow{display:flex;align-items:flex-start;gap:10px}
+.value{font-size:160px;line-height:.86;font-weight:var(--num-w);letter-spacing:var(--num-track);color:var(--text-1);font-variant-numeric:tabular-nums;white-space:nowrap}
+.sup{font-size:56px;line-height:1;font-weight:var(--num-w);color:var(--text-2);margin-top:6px}
+.track{height:20px;border-radius:999px;background:rgb(255 255 255 / var(--dim));overflow:hidden}
+.track i{display:block;height:100%;border-radius:999px;background:rgb(var(--rgb));box-shadow:0 0 22px rgb(var(--rgb) / .6)}
+.caprow{display:flex;justify-content:space-between;align-items:baseline;margin-top:16px}
+.cap{font-size:36px;line-height:1;font-weight:500;color:var(--text-2);font-variant-numeric:tabular-nums}
+.cap.faint{color:var(--text-3)}
+.fit-bad .valrow{outline:3px dashed #ff2d55;outline-offset:4px}
+
+/* ---- sofa view ---- */
+.sofa-wrap{width:1024px;margin-top:14px;display:flex;gap:20px;align-items:flex-start}
+.sofa-box{flex:none;border:1px solid #23262e;border-radius:10px;padding:12px;background:#0b0c0f}
+.sofa-clip{overflow:hidden;position:relative}
+.sofa-clip .screen{transform-origin:0 0;position:absolute;left:0;top:0}
+.sofa-text{font:500 12px/1.6 "JetBrains Mono",monospace;color:#8b93a1;max-width:520px}
+.sofa-text b{color:#e6e9ef;font-weight:600}
+.card-bar{height:10px;background:#e6e9ef;border-radius:2px;margin:6px 0 2px}
+
+/* ---- workbench ---- */
+.tools{width:1024px;margin:14px 0 0;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.tools .k{font:600 11px "JetBrains Mono",monospace;letter-spacing:.1em;text-transform:uppercase;color:#8b93a1;min-width:70px}
+button{font:500 13px Inter,sans-serif;color:#e6e9ef;background:#15171c;border:1px solid #2a2d35;border-radius:999px;padding:6px 13px;cursor:pointer}
+button:hover{border-color:#4a4f5a}
+button.on{background:#e6e9ef;color:#0b0c0f;border-color:#e6e9ef}
+.bench{width:1024px;margin-top:16px;display:grid;grid-template-columns:1fr 1fr;gap:16px;font-size:13px;color:#c9ced8}
+fieldset{border:1px solid #23262e;border-radius:12px;padding:10px 14px 8px;margin:0;min-width:0}
+legend{font:600 11px/1 "JetBrains Mono",monospace;letter-spacing:.1em;text-transform:uppercase;color:#8b93a1;padding:0 6px}
+.ctl{display:grid;grid-template-columns:130px 1fr 64px;align-items:center;gap:8px;margin:7px 0}
+.ctl output{font:500 12px "JetBrains Mono",monospace;text-align:right;color:#e6e9ef}
+input[type=range]{width:100%;accent-color:#e6e9ef}
+.full{grid-column:1 / -1}
+table{width:100%;border-collapse:collapse;font:500 12px "JetBrains Mono",monospace}
+td,th{padding:6px 8px;border-bottom:1px solid #1d2026;text-align:left;white-space:nowrap;vertical-align:middle}
+th{color:#8b93a1;font-weight:500}
+tr.row{cursor:pointer} tr.row:hover td{background:#111318} tr.sel td{background:#171a20}
+.pass{color:#7fdc9a}.fail{color:#ff6b81}.mid{color:#f5c26b}
+.digits{color:#f3f4f6;font-variant-numeric:tabular-nums;letter-spacing:.02em}
+.big{font-size:24px;line-height:1;letter-spacing:0}
+.fname{font-size:15px;color:#e6e9ef}
+</style>
+</head>
+<body>
+
+<div class="screen" id="slide">
+  <div class="ui">
+    <div class="header"><span class="page">01/22</span><span class="title">This week</span><span class="status">Synced 2h ago</span></div>
+    <div class="rule"><i></i></div>
+    <div class="h2h">
+      <div class="glass ga">
+        <div class="who"><i class="dot"></i><span class="label">Jeffrey</span></div>
+        <div class="valrow"><span class="value" data-v="a">32.4</span><span class="sup">km</span></div>
+        <div><div class="track"><i style="width:64%"></i></div>
+          <div class="caprow"><span class="cap">64% of 50</span><span class="cap faint">5 runs</span></div></div>
+      </div>
+      <div class="glass gb">
+        <div class="who"><i class="dot"></i><span class="label">Eugenia</span></div>
+        <div class="valrow"><span class="value" data-v="b">18.9</span><span class="sup">km</span></div>
+        <div><div class="track"><i style="width:47%"></i></div>
+          <div class="caprow"><span class="cap">47% of 40</span><span class="cap faint">3 runs</span></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="sofa-wrap">
+  <div class="sofa-box"><div class="sofa-clip" id="sofaClip"></div></div>
+  <div class="sofa-text">
+    <b>Sofa view.</b> The same slide shrunk to the angle the real 7″ panel fills from 2.25 m, as seen from where you sit now.
+    It is slightly pessimistic (your monitor's pixels are coarser than your eye at that angle), so if it reads here it reads on the Pi.
+    <br><br><b>Calibrate once:</b> drag "Screen px / inch" until this bar is the width of a bank card (85.6 mm):
+    <div class="card-bar" id="cardBar"></div>
+  </div>
+</div>
+
+<div class="tools" id="fontBtns"><span class="k">Typeface</span></div>
+<div class="tools" id="sampleBtns"><span class="k">Numbers</span></div>
+
+<div class="bench" id="bench"></div>
+
+<script>
+const FONTS = [
+  {f:'Inter',             why:'baseline · placeholder'},
+  {f:'Outfit',            why:'round geometric, refs 1/2 feel'},
+  {f:'Plus Jakarta Sans', why:'geometric, slightly condensed'},
+  {f:'Manrope',           why:'semi-condensed, techy'},
+  {f:'Sora',              why:'wide geometric'},
+  {f:'Urbanist',          why:'geometric, narrow digits'},
+  {f:'Figtree',           why:'current kit display face'},
+  {f:'DM Sans',           why:'low-contrast geometric'},
+  {f:'Lexend',            why:'designed for reading ease'},
+  {f:'Onest',             why:'grotesk, open apertures'},
+  {f:'Albert Sans',       why:'geometric grotesk'},
+  {f:'Red Hat Display',   why:'display grotesk'},
+  {f:'Satoshi',           why:'refs 2/7 feel (Fontshare)'},
+  {f:'General Sans',      why:'grotesk (Fontshare)'},
+];
+const SAMPLES = {
+  typical:   {a:'32.4', b:'18.9', note:'typical week'},
+  wide:      {a:'88.8', b:'48.0', note:'widest digits'},
+  confusable:{a:'71.1', b:'36.9', note:'1/7 · 3/8 · 6/9'},
+};
+const S = { font:'Inter', numW:600, labelW:700, numTrack:-0.045, labelTrack:0.08, sample:'typical', dist:60, ppi:96 };
+window.S = S;
+
+/* physical panel: 7", 1024x600 -> 0.1498 mm/px; read from 2250 mm */
+const PITCH=0.1498, READ=2250;
+const arcmin = px => 2*Math.atan((px*PITCH/2)/READ)*180/Math.PI*60;
+
+const root=document.documentElement.style;
+function apply(){
+  root.setProperty('--font', `"${S.font}"`);
+  root.setProperty('--num-w', S.numW); root.setProperty('--label-w', S.labelW);
+  root.setProperty('--num-track', S.numTrack+'em'); root.setProperty('--label-track', S.labelTrack+'em');
+  const smp=SAMPLES[S.sample];
+  document.querySelector('[data-v=a]').textContent=smp.a; document.querySelector('[data-v=b]').textContent=smp.b;
+  for (const k in inputs){ const {inp,out,fmt}=inputs[k]; inp.value=S[k]; out.textContent=fmt(S[k]); }
+  document.querySelectorAll('#fontBtns button').forEach(b=>b.classList.toggle('on', b.dataset.f===S.font));
+  document.querySelectorAll('#sampleBtns button').forEach(b=>b.classList.toggle('on', b.dataset.s===S.sample));
+  // fit check on the live slide
+  document.querySelectorAll('#slide .glass').forEach(g=>{
+    const vr=g.querySelector('.valrow'), inner=g.clientWidth-64;
+    g.classList.toggle('fit-bad', vr.scrollWidth>inner); });
+  sofa(); table();
+}
+
+/* ---------- sofa view ---------- */
+let sofaClone=null;
+function sofa(){
+  const mmWide = 1024*PITCH * (S.dist*10) / READ;      // width the panel subtends, projected to your screen distance
+  const px = mmWide * S.ppi / 25.4, k = px/1024;
+  const clip=document.getElementById('sofaClip');
+  if (!sofaClone){ sofaClone=document.getElementById('slide').cloneNode(true); sofaClone.id=''; clip.appendChild(sofaClone); }
+  else { sofaClone.replaceWith(sofaClone=document.getElementById('slide').cloneNode(true)); sofaClone.id=''; }
+  sofaClone.style.transform=`scale(${k})`;
+  clip.style.width=(1024*k)+'px'; clip.style.height=(600*k)+'px';
+  document.getElementById('cardBar').style.width=(85.6*S.ppi/25.4)+'px';
+  document.querySelectorAll('.sofa-digits').forEach(el=>el.style.fontSize=(160*k)+'px');
+}
+
+/* ---------- per-font measurements ---------- */
+const cv=document.createElement('canvas').getContext('2d');
+const probe=document.createElement('span');
+Object.assign(probe.style,{position:'absolute',left:'-9999px',top:'0',whiteSpace:'nowrap',fontVariantNumeric:'tabular-nums'});
+document.body.appendChild(probe);
+const loaded={};
+function widthOf(font,w,size,text,track){
+  probe.style.font=`${w} ${size}px "${font}", monospace`;   // NB: the font shorthand resets font-variant-numeric,
+  probe.style.fontVariantNumeric='tabular-nums';           // so tabular digits must be re-applied after it
+  probe.style.letterSpacing=track+'em'; probe.textContent=text;
+  return probe.getBoundingClientRect().width; }
+function metrics(font){
+  cv.font=`${S.numW} 100px "${font}"`;
+  const H=cv.measureText('H'), Z=cv.measureText('0');
+  const cap=H.actualBoundingBoxAscent/100, fig=Z.actualBoundingBoxAscent/100;
+  const one=widthOf(font,S.numW,160,'1111',0), zero=widthOf(font,S.numW,160,'0000',0);
+  const tnum=Math.abs(one-zero)<1;
+  // head-to-head fit: widest sample + 10px gap + unit, against the 398px card interior
+  const need=Math.max(...Object.values(SAMPLES).flatMap(s=>[s.a,s.b]).map(t=>widthOf(font,S.numW,160,t,S.numTrack)))
+             + 10 + widthOf(font,S.numW,56,'km',0);
+  const label=widthOf(font,S.labelW,40,'EUGENIA',S.labelTrack);
+  return {cap, fig, tnum, need, spare:398-need, label, am:arcmin(160*fig)};
+}
+function table(){
+  const t=document.getElementById('cmp'); if(!t) return;
+  const mmWide = 1024*PITCH*(S.dist*10)/READ, k=(mmWide*S.ppi/25.4)/1024;
+  const rows=FONTS.map(F=>{
+    if(!loaded[F.f]) return `<tr class="row" data-f="${F.f}"><td class="fname">${F.f}</td><td colspan="7" class="fail">not loaded</td></tr>`;
+    const m=metrics(F.f);
+    return `<tr class="row ${F.f===S.font?'sel':''}" data-f="${F.f}">
+      <td><div class="fname" style="font-family:'${F.f}';font-weight:${S.numW}">${F.f}</div><div style="color:#7d8594">${F.why}</div></td>
+      <td>${(m.fig*100).toFixed(0)}%</td>
+      <td class="${m.am>=20?'pass':m.am>=16?'mid':'fail'}">${m.am.toFixed(1)}′</td>
+      <td class="${m.tnum?'pass':'fail'}">${m.tnum?'yes':'no'}</td>
+      <td class="${m.spare>=24?'pass':m.spare>=0?'mid':'fail'}">${m.spare>=0?'+':''}${m.spare.toFixed(0)}px</td>
+      <td class="${m.label<=300?'pass':'mid'}">${m.label.toFixed(0)}px</td>
+      <td><span class="digits big" style="font-family:'${F.f}';font-weight:${S.numW}">1 7 3 8 6 9 0</span></td>
+      <td><span class="digits sofa-digits" style="font-family:'${F.f}';font-weight:${S.numW};font-size:${160*k}px">1 7 3 8 6 9 0</span></td>
+    </tr>`;});
+  t.innerHTML=`<tr><th>typeface</th><th>figure height</th><th>arcmin @160px</th><th>tabular</th><th>spare in h2h card</th><th>"EUGENIA" label</th><th>digits up close</th><th>digits from sofa</th></tr>`+rows.join('');
+  t.querySelectorAll('tr.row').forEach(r=>r.onclick=()=>{ if(loaded[r.dataset.f]){ S.font=r.dataset.f; apply(); } });
+}
+
+/* ---------- controls ---------- */
+const fb=document.getElementById('fontBtns');
+FONTS.forEach(F=>{ const b=document.createElement('button'); b.dataset.f=F.f; b.textContent=F.f; b.style.fontFamily=`'${F.f}'`;
+  b.onclick=()=>{ S.font=F.f; apply(); }; fb.appendChild(b); });
+const sb=document.getElementById('sampleBtns');
+for (const k in SAMPLES){ const b=document.createElement('button'); b.dataset.s=k; b.textContent=`${SAMPLES[k].a} / ${SAMPLES[k].b} · ${SAMPLES[k].note}`;
+  b.onclick=()=>{ S.sample=k; apply(); }; sb.appendChild(b); }
+
+const inputs={}, bench=document.getElementById('bench');
+function group(title,ctls){ const fs=document.createElement('fieldset'); fs.innerHTML=`<legend>${title}</legend>`;
+  for (const [k,lab,min,max,step,fmt] of ctls){ const row=document.createElement('div'); row.className='ctl';
+    row.innerHTML=`<span>${lab}</span><input type="range" min="${min}" max="${max}" step="${step}"><output></output>`;
+    const inp=row.querySelector('input'), out=row.querySelector('output');
+    inp.oninput=()=>{ S[k]=+inp.value; apply(); }; inputs[k]={inp,out,fmt}; fs.appendChild(row); }
+  bench.appendChild(fs); }
+group('Weight & spacing', [
+  ['numW','Number weight',400,800,10,v=>v],
+  ['labelW','Label weight',400,800,10,v=>v],
+  ['numTrack','Number tracking',-0.08,0.02,0.005,v=>v.toFixed(3)+'em'],
+  ['labelTrack','Label tracking',0,0.16,0.01,v=>v.toFixed(2)+'em'],
+]);
+group('Sofa view calibration', [
+  ['dist','You → this screen',35,100,1,v=>v+' cm'],
+  ['ppi','Screen px / inch',70,200,1,v=>v],
+]);
+const cm=document.createElement('fieldset'); cm.className='full';
+cm.innerHTML='<legend>All candidates at the current weight · click a row to put it on the slide</legend><table id="cmp"></table>'+
+  '<div style="margin-top:8px;font:500 11px/1.6 \'JetBrains Mono\',monospace;color:#7d8594">figure height = height of "0" as a share of font size · arcmin = that height at 160px seen from 2.25 m (≥16 minimum, ≥20 comfortable) · '+
+  'spare = room left in the head-to-head card for the widest test number + "km" (398px available) · tabular = all digits the same width, so numbers don\'t jiggle as they change</div>';
+bench.appendChild(cm);
+
+Promise.all(FONTS.map(F=>document.fonts.load(`700 40px "${F.f}"`).then(r=>{ loaded[F.f]=r.length>0; }).catch(()=>{ loaded[F.f]=false; })))
+  .then(()=>document.fonts.ready).then(apply);
+apply();
+</script>
+</body>
+</html>
