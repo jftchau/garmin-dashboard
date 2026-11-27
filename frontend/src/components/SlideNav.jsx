@@ -6,8 +6,11 @@
 // "where am I in the rotation" at a glance, and the filling segment doubles as
 // the dwell-time countdown. Segments stay clickable for desktop use.
 export default function SlideNav({ slides, index, onSelect, rotating, rotateMs, cycle }) {
+  // The 3px progress rule under the header (design: SlideFrame). Still one
+  // segment per slide so it stays clickable on a desktop; on the Pi it reads
+  // as a single rule filling over the dwell time.
   return (
-    <div className="flex items-center gap-1 px-5 sm:px-6 short:px-4 pb-3 short:pb-2">
+    <div className="h-[3px] shrink-0 flex items-stretch gap-1 mx-10">
       {slides.map((s, i) => {
         const isActive = i === index;
         const isPast = i < index;
@@ -18,9 +21,7 @@ export default function SlideNav({ slides, index, onSelect, rotating, rotateMs, 
             title={s.navLabel}
             aria-label={s.navLabel}
             aria-current={isActive ? "true" : undefined}
-            className={`h-1.5 short:h-1 flex-1 rounded-full overflow-hidden transition-colors ${
-              isPast ? "bg-slate-dim/60" : "bg-line"
-            }`}
+            className={`h-full flex-1 rounded-full overflow-hidden ${isPast ? "bg-unlit" : "bg-white/[0.08]"}`}
           >
             {isActive &&
               (rotating ? (

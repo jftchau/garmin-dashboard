@@ -5,14 +5,14 @@ import { RUNNER_COLORS, runnerName } from "../utils.js";
 export default function RunnerLegend({ users }) {
   if (!users || users.length === 0) return null;
   return (
-    <div className="flex items-center gap-3 font-mono text-xs">
+    <div className="flex items-center gap-4 t-meta">
       {users.slice(0, 2).map((u, i) => (
         <span key={u.id} className="inline-flex items-center gap-1.5">
           <span
-            className="w-2.5 h-2.5 rounded-full"
+            className="w-3.5 h-3.5 rounded-full"
             style={{ background: RUNNER_COLORS[i] }}
           />
-          <span className="text-chalk">{runnerName(users, i)}</span>
+          <span className="text-soft">{runnerName(users, i)}</span>
         </span>
       ))}
     </div>

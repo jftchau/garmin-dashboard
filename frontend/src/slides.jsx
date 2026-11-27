@@ -23,6 +23,10 @@ import { runnerName } from "./utils.js";
  *
  * `title` may be a function of `users` so per-runner slides can name the runner.
  * `navLabel` is the short form used for the position indicator's tooltip.
+ * `glass: true` marks slides already on the v2 design (design/); the header
+ * drops its runner legend for them, since their cards carry the identity.
+ * `light` ("both" | "a" | "b" | "neutral") overrides whose light fills the
+ * room; by default a per-runner slide takes that runner's, others both.
  */
 export const SLIDES = [
   {
@@ -30,6 +34,7 @@ export const SLIDES = [
     title: "This week",
     navLabel: "This week",
     Component: WeekTotalsSlide,
+    glass: true,
   },
   {
     id: "week-volume-a",
@@ -67,7 +72,7 @@ export const SLIDES = [
   },
   {
     id: "hr-zones",
-    title: "Heart rate zones · this week",
+    title: "HR zones · this week",
     navLabel: "HR zones",
     Component: HRZonesSlide,
   },
@@ -79,9 +84,10 @@ export const SLIDES = [
   },
   {
     id: "mileage-summary",
-    title: "Mileage summary",
+    title: "Last 3 months",
     navLabel: "Mileage summary",
     Component: MileageSummarySlide,
+    glass: true,
   },
   {
     id: "year-to-date",
@@ -106,14 +112,14 @@ export const SLIDES = [
   },
   {
     id: "records-short",
-    title: "Personal records · short",
+    title: "Records · short",
     navLabel: "Records 1K–10K",
     Component: RecordsSlide,
     props: { distances: ["1K", "5K", "10K"] },
   },
   {
     id: "records-long",
-    title: "Personal records · long",
+    title: "Records · long",
     navLabel: "Records half & full",
     Component: RecordsSlide,
     props: { distances: ["HALF", "MARATHON"] },
@@ -138,7 +144,7 @@ export const SLIDES = [
   },
   {
     id: "fitness-trends",
-    title: "Fitness & sleep · 30 days",
+    title: "Fitness & sleep",
     navLabel: "Fitness trends",
     Component: FitnessTrendsSlide,
   },
