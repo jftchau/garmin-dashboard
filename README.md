@@ -29,7 +29,7 @@ display-only** (no touch, keyboard, or mouse). That shapes the whole UI:
 - **Auto-rotating.** The app cycles through the slides in `src/slides.jsx` every
   14s hands-free (`ROTATE_MS` in `src/App.jsx`). A header ⏸/▶ button, or
   clicking the position bar, pauses it for desktop inspection.
-- **Numbered pages.** The header shows `NN/18`, so a viewer can say "page 7 needs
+- **Numbered pages.** The header shows `NN/23`, so a viewer can say "page 7 needs
   fixing" without knowing what the slide is called.
 - **No scrolling — every slide fits 1024×600.** The type scale is fixed px,
   sized for the Pi panel at 2.25 m; on a taller desktop window the cards and
@@ -81,28 +81,51 @@ failure.
 - Development happens on a Windows machine (see "Windows dev notes"). The Pi runs
   whatever is on `main`.
 
-### Slides (18 in rotation, 16 with one runner — each fits 1024×600)
+### Slides (23 in rotation — each fits 1024×600)
 
-| # | Slide | What it shows |
-|---|---|---|
-| 1 | **This week** | distance / time / pace / runs per runner at headline size, with the week-over-week change in volume |
-| 2–3 | **&lt;Runner&gt; · training week** (one each) | the week's km and its change on last week, over daily run km (latest run lit) with **last week's same weekday as a reference line**, plus that day's **strength and other-training hours** stacked on a right-hand axis |
-| 4 | **Latest runs** | each runner's most recent run at headline size (distance, pace, date and training effect), with the three before it as a short list |
-| 5 | **Training mix** | this week's training *hours* per runner, over 10 weeks split running / strength / other. Time is the one unit every activity type shares, so this shows a hot-weather swap from running to gym |
-| 6 | **Running conditions** | this month's average run temperature, the hottest run and this month's km; below, monthly temperature as bars (brighter = hotter) with each runner's **monthly km as lines** — so lighter summer mileage reads as heat, not slacking |
-| 7 | **Heart rate zones · this week** | each runner's easy share (zones 1–2) as the headline, with the zone split as a doughnut in shades of their own colour and a five-zone key |
-| 8 | **Weekly mileage** | each runner's latest week against their best, over the last 26 weeks as two lines |
-| 9 | **Mileage summary** | total / average per week / best week over the **last 3 months** |
-| 10 | **Year to date** | cumulative distance for both runners on one chart — a season-long "who's ahead" race, with current totals and the leader's gap |
-| 11–12 | **&lt;Runner&gt; · run frequency** (one each) | runs per week over 12 months, with run days, km and busiest weekday, above a 12-month heatmap (cells size themselves to fill the card; cross-training-only days get a neutral marker) |
-| 13–14 | **Personal records · short / long** | one card per runner: bests for 1K / 5K / 10K, then half and full marathon, each with its date and **Garmin's race prediction** |
-| 15 | **Running form** | cadence / stride length / ground contact / vertical oscillation averaged over recent runs, head-to-head. Each metric except stride shows Garmin's top-30% reference band and a good / high / low verdict (stride scales with height and pace, so it gets no band) |
-| 16 | **Today's readiness** | resting HR / HRV / sleep score / VO₂max per runner |
-| 17 | **Heart · 30 days** | resting HR and HRV: each runner's latest value over a 30-day line |
-| 18 | **Fitness & sleep · 30 days** | VO₂max (per-run estimate) and sleep hours: latest value over a 30-day line |
+Every slide leads with one number, sized to read from 2.25 m. Each is tagged by
+tier: **A** glanceable (a number and a comparison), **B** a number with a chart
+beneath it as evidence, **C** detail for whoever walks over. The order puts an
+A after every B or C, so something readable comes up at least every other
+slide (`design/dashboard-content.md`).
 
-With one runner configured, slides 3 and 12 (runner B's per-runner slides) are
-hidden via `requiresRunner` in `slides.jsx` rather than shown empty.
+| # | Slide | Tier | What it shows |
+|---|---|---|---|
+| 1 | **This week** | A | each runner's km, with the change on last week, plus runs / hours / pace |
+| 2 | **Weekly goal** | A | % of each runner's weekly km goal, with the bar and days left. Hidden until a goal is set (below) |
+| 3 | **Latest runs** | A | each runner's most recent run (distance, pace, date, training effect), with the three before it |
+| 4 | **Weekly streak** | A | weeks in a row with a run (Monday–Sunday), the last 12 weeks as dots, and the longest streak |
+| 5, 7 | **&lt;Runner&gt; · training week** (one each) | B | the week's km over daily bars (latest run lit), last week's same day as a reference line, and cross-training hours |
+| 6 | **This month** | A | each runner's km this month against last month by the same day, with runs and longest run |
+| 8 | **Year to date** | A | each runner's total and who's ahead, over cumulative lines |
+| 9, 11 | **&lt;Runner&gt; · training log** (one each) | B | runs this month, with one dot per day on a week grid sized by distance; cross-training as rings |
+| 10, 12 | **Records · short / long** | A | one card per runner: 1K / 5K / 10K, then half and full, with date and **Garmin's race prediction** |
+| 13 | **Weekly mileage** | B | each runner's latest week against their best, over 26 weeks of lines |
+| 14 | **Today's readiness** | A | resting HR / HRV / sleep score / VO₂max per runner |
+| 15 | **Training mix** | C | this week's training *hours*, over 10 weeks split running / strength / other — so a hot-weather swap from running to gym shows up |
+| 16 | **Resting HR · 30 days** | B | each runner's latest, against their 30-day average, with a sparkline |
+| 17 | **Run frequency · 12 months** | C | runs a week, run days, longest daily streak, busiest weekday |
+| 18 | **VO₂max · 30 days** | B | as resting HR, from the per-run estimate |
+| 19 | **Running form** | C | cadence / stride / ground contact / bounce, each against Garmin's top-30% band where one exists |
+| 20 | **Sleep · 30 days** | B | as resting HR, in hours |
+| 21 | **Running conditions** | C | this month's average run temperature, the hottest run, and monthly temperature bars against each runner's km |
+| 22 | **Last 3 months** | A | total km, km per week and best week |
+| 23 | **HR zones · this week** | C | each runner's easy share (zones 1–2), with the zone doughnut and key |
+
+With one runner configured, runner B's per-runner slides (7 and 11) are hidden
+via `requiresRunner` in `slides.jsx` rather than shown empty; slides with a
+`requires(users)` test (the weekly goal) hide the same way.
+
+**Setting a weekly goal.** The kiosk has no settings screen, so goals are set
+through the API, like names. On the Pi (or any machine that can reach it):
+
+```bash
+curl -X PATCH http://localhost:5000/api/users/1 -H 'Content-Type: application/json' -d '{"goal_distance_km": 40}'
+curl -X PATCH http://localhost:5000/api/users/2 -H 'Content-Type: application/json' -d '{"goal_distance_km": 30}'
+```
+
+`{"goal_distance_km": null}` clears a goal. The slide appears once either
+runner has one; a runner without one shows "No weekly goal set".
 
 The kiosk shows only these comparison views. The richer per-run detail
 (power/dynamics, splits, GPS map) and the sortable activity log were removed from
@@ -199,7 +222,7 @@ is read-only except `PATCH /api/users/<id>` and `POST /api/sync-now`.
 | Method | Path | Returns |
 |---|---|---|
 | GET | `/api/users` | list of users |
-| PATCH | `/api/users/<id>` | rename a user (`{"name": ...}`) |
+| PATCH | `/api/users/<id>` | rename a user and/or set their weekly goal (`{"name": ..., "goal_distance_km": 40}`; `null` clears the goal) |
 | GET | `/api/activities?limit=20&offset=0` | paginated activity list (runs + cross-training) |
 | GET | `/api/activity/<id>` | full detail incl. polyline + splits *(not used by the kiosk)* |
 | GET | `/api/this-week` | daily distances, totals, HR zones, runs, **last week's daily volume**, **per-day cross-training minutes** |

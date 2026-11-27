@@ -204,8 +204,8 @@ export const mockWeeklyInsights = Array.from({ length: 16 }, (_, i) => {
 });
 
 export const mockUsers = [
-  { id: 1, slot: 1, name: "User 1" },
-  { id: 2, slot: 2, name: "User 2" },
+  { id: 1, slot: 1, name: "User 1", goal_distance_km: 40 },
+  { id: 2, slot: 2, name: "User 2", goal_distance_km: 30 },
 ];
 
 export const mockRacePredictions = {

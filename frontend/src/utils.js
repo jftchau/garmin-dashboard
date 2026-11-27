@@ -29,6 +29,31 @@ export function formatDateShort(isoString) {
   return d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
 }
 
+// --- Local calendar dates ---------------------------------------------------
+// Garmin times are local, and so are the kiosk's weeks (Monday to Sunday, as
+// the backend's week_bounds()). Never use toISOString() for a day: it is UTC,
+// which is the previous day for the first eight hours of every day in UTC+8.
+
+// Date -> "2026-11-27", local.
+export const isoDay = (d) => d.toLocaleDateString("en-CA");
+
+// "2026-11-27" -> local midnight Date (new Date(str) would parse it as UTC).
+export function parseDay(iso) {
+  const [y, m, d] = iso.slice(0, 10).split("-").map(Number);
+  return new Date(y, m - 1, d);
+}
+
+// Local midnight of the Monday starting the week that contains `d`.
+export function mondayOf(d) {
+  const x = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  x.setDate(x.getDate() - ((x.getDay() + 6) % 7));
+  return x;
+}
+
+export const addDays = (d, n) => new Date(d.getFullYear(), d.getMonth(), d.getDate() + n);
+
+export const monthName = (d, month = "long") => d.toLocaleDateString(undefined, { month });
+
 // "+4.2" / "−4.2" (a true minus sign: a hyphen is too short to read as one at
 // distance, and it sits lower than the plus).
 export function signed(n) {

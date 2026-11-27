@@ -56,6 +56,13 @@ USER_METRICS_COLUMNS = {
 }
 
 
+# Columns added to users after multi-user shipped. The kiosk has no settings UI:
+# set these with PATCH /api/users/<id>.
+USERS_COLUMNS = {
+    "goal_distance_km": "REAL",
+}
+
+
 def _table_columns(conn, table):
     return [r["name"] for r in conn.execute(f"PRAGMA table_info({table})")]
 
@@ -132,6 +139,7 @@ def _migrate(conn):
 
     _add_missing_columns(conn, "activities", MIGRATION_COLUMNS)
     _add_missing_columns(conn, "user_metrics", USER_METRICS_COLUMNS)
+    _add_missing_columns(conn, "users", USERS_COLUMNS)
 
     # Every activity that predates the multi-sport change is a run (the fetcher
     # only stored running activities until now). Tag them so run-only queries,

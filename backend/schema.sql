@@ -5,6 +5,7 @@ CREATE TABLE IF NOT EXISTS users (
     slot INTEGER UNIQUE,               -- maps to .env credential slot (1, 2, ...)
     name TEXT NOT NULL,                -- editable display name
     garmin_email TEXT,
+    goal_distance_km REAL,             -- weekly running goal (Mon-Sun); NULL = none
     created_at TEXT DEFAULT (datetime('now'))
 );
 

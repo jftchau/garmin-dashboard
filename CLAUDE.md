@@ -55,7 +55,7 @@ not a preference. It keeps getting broken by well-meaning feature additions, so:
   `useOneUser()` when a head-to-head would halve the graphic. Runner colors are
   `RUNNER_COLORS` / `RUNNER_RGB` + `runnerName()` in `utils.js` (Runner A =
   Jeffrey, orange `#ff9147`; Runner B = Eugenia, blue `#7aa7ff`). Keep `RUNNER_RGB` in
-  sync with the hexes — the calendar heatmap ramps its own rgba() from it.
+  sync with the hexes — the HR-zone shades ramp their own rgba() from it.
 - **The app auto-rotates** through the slides in `slides.jsx` every `ROTATE_MS`
   (=14s) in `App.jsx`; the header ⏸/▶ button or clicking the position bar pauses
   it. Add a slide by appending to `SLIDES` — the nav and rotation pick it up.
@@ -70,8 +70,7 @@ not a preference. It keeps getting broken by well-meaning feature additions, so:
      light (room haze, card glow) and marks (bars, dots) only — numbers and
      names stay `--color-chalk`.
   2. **Emphasis — the same hue, different opacity.** More/less of the *same*
-     person never changes hue: last week's ghost bars, the calendar heatmap's
-     distance ramp and the heart-rate zones all step through
+     person never changes hue: the heart-rate zones step through
      `INTENSITY_STEPS` (`utils.js`) via `intensity(rgb, step)` / `zoneColor()`.
      HR zones are shades of that runner's own color, NOT five separate hues.
   3. **Neutrals — everything that isn't a person.** Told apart by lightness, not
@@ -140,10 +139,12 @@ npm run build          # prod build -> dist/
   (`GARMIN_EMAIL[_2]` / `GARMIN_PASSWORD[_2]`). Names live in `users.name`,
   seeded from `USER<n>_NAME`; the kiosk has no rename UI, so change one with
   `PATCH /api/users/<id>`. **Don't** overwrite a set name from env on sync.
+  The weekly goal (`users.goal_distance_km`, km per Monday–Sunday week) is set
+  the same way; the goal slide hides until a runner has one.
 - **DB migrations** run automatically in `db.py init_db()` → `_migrate()`
   (adds columns, rebuilds composite-PK tables). Safe to re-run.
-- **Two VO₂max numbers**: `activities.vo2max` = per-run (the "Fitness & sleep"
-  slide's trend line); `user_metrics.vo2max` = watch's Max-Metrics value (the
+- **Two VO₂max numbers**: `activities.vo2max` = per-run (the "VO₂max · 30 days"
+  slide); `user_metrics.vo2max` = watch's Max-Metrics value (the
   "Today's readiness" number, matches the device).
 - **Incremental fetch**: skips known `garmin_id`s and stops paging at the first
   already-synced activity. Use `--full` to force reprocessing.
@@ -151,7 +152,8 @@ npm run build          # prod build -> dist/
   (`activities.activity_type` = Garmin typeKey), but non-runs are lightweight —
   no splits/polyline detail calls. Every run-only stat filters on the `RUN_ONLY`
   predicate (`app.py`) / `LIKE '%running%'`. Non-runs surface in three places:
-  the Calendar heatmap (slate marker on run-less days), the weekly-volume slide
+  the training-log slides (a ring on run-less days, from `/api/calendar`'s
+  `cross_train`), the weekly-volume slide
   (per-day strength/other **hours** from `/api/this-week`) and the training-mix
   slide (`/api/training-mix`, weekly hours by bucket). `categorize_activity()`
   in `app.py` is the single place that maps a typeKey to run/strength/other —
@@ -209,7 +211,7 @@ merges on the GitHub website.
 ## Current state / next steps
 
 Both runners are populated and connected — **Jeffrey** (user 1) and **Eugenia**
-(user 2). The UI is the two-runner auto-rotating kiosk (18 slides; see the
+(user 2). The UI is the two-runner auto-rotating kiosk (23 slides; see the
 display-fit section above). **Deployed on the Pi** at
 `/home/jftchau/garmin-dashboard`, running as user `jftchau` (not `pi`), with the
 04:30 self-update and the hourly cron sync. See "Deploying to the Raspberry Pi"
