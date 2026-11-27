@@ -28,7 +28,7 @@ function useBox() {
 // steps the heart-rate doughnut uses, so "deeper = more" means one thing
 // everywhere. `rgb` is the runner's color as an "r,g,b" string.
 function intensityColor(km, rgb) {
-  if (!km || km <= 0) return "var(--color-surface-2)";
+  if (!km || km <= 0) return "rgb(255 255 255 / 0.06)";
   if (km < 4) return intensity(rgb, 1);
   if (km < 8) return intensity(rgb, 2);
   if (km < 14) return intensity(rgb, 3);
@@ -105,6 +105,10 @@ export default function CalendarHeatmap({ data, rgb = "245,165,36", cell = 10, g
         const iso = cursor.toISOString().slice(0, 10);
         col.push({ iso, inFuture: cursor > today });
         if (d === 0 && cursor.getMonth() !== lastMonth) {
+          // A month that starts within two weeks of the last label (the
+          // partial month at the left edge) would overprint it at 24px:
+          // keep the newer, full month.
+          if (labels.length && w - labels[labels.length - 1].week < 3) labels.pop();
           labels.push({ week: w, label: cursor.toLocaleDateString(undefined, { month: "short" }) });
           lastMonth = cursor.getMonth();
         }
@@ -124,11 +128,11 @@ export default function CalendarHeatmap({ data, rgb = "245,165,36", cell = 10, g
           at a fixed cell size the overflow-x-auto parent lets it scroll on a
           narrow screen. */}
       <div className={auto ? "flex-1 min-h-0 flex flex-col" : "w-fit"}>
-        <div className="relative h-5 mb-1 pl-1 shrink-0">
+        <div className="relative h-[28px] mb-2 shrink-0">
           {monthLabels.map((m) => (
             <span
               key={m.week}
-              className="absolute text-sm font-mono text-muted"
+              className="absolute t-meta text-muted whitespace-nowrap"
               style={{ left: `${m.week * step}px` }}
             >
               {m.label}
@@ -143,7 +147,7 @@ export default function CalendarHeatmap({ data, rgb = "245,165,36", cell = 10, g
                   key={day.iso}
                   onMouseEnter={showHover ? () => setHovered(day) : undefined}
                   onMouseLeave={showHover ? () => setHovered(null) : undefined}
-                  className="rounded-sm cursor-default"
+                  className="rounded-[3px] cursor-default"
                   style={{
                     width: cellW,
                     height: cellH,
@@ -158,11 +162,11 @@ export default function CalendarHeatmap({ data, rgb = "245,165,36", cell = 10, g
 
         {/* Legend: the distance→intensity ramp, right-aligned under the grid. */}
         <div
-          className="flex items-center justify-end gap-1.5 mt-2 text-sm font-mono text-muted shrink-0"
+          className="flex items-center justify-end gap-2 mt-3 t-meta text-muted shrink-0"
           style={{ width: auto ? "100%" : gridWidth }}
         >
           {hasCrossTrain && (
-            <div className="flex items-center gap-1.5 mr-auto">
+            <div className="flex items-center gap-2 mr-auto">
               <div
                 className="rounded-sm"
                 style={{ width: cellW, height: cellH, background: CROSS_TRAIN_FILL }}
@@ -182,7 +186,7 @@ export default function CalendarHeatmap({ data, rgb = "245,165,36", cell = 10, g
         </div>
 
         {showHover && (
-          <div className="mt-3 h-5 text-sm font-mono text-muted">
+          <div className="mt-3 h-6 t-meta text-muted">
             {hovered &&
               (hovered.inFuture
                 ? null

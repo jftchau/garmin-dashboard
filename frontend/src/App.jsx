@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState } from "react";
 import SlideNav from "./components/SlideNav.jsx";
 import RefreshButton from "./components/RefreshButton.jsx";
 import DataSourceBadge from "./components/DataSourceBadge.jsx";
-import RunnerLegend from "./components/RunnerLegend.jsx";
 import LastSyncBadge from "./components/LastSyncBadge.jsx";
 import { visibleSlides, slideTitle } from "./slides.jsx";
 import { fetchUsers } from "./api.js";
@@ -81,10 +80,6 @@ export default function App() {
         )}
         <h1 className="t-title truncate min-w-0">{slide ? slideTitle(slide, users) : "Run Dashboard"}</h1>
         <div className="ml-auto flex items-center gap-4 shrink-0">
-          {/* Restyled slides carry identity on their cards, and a per-runner
-              slide names its runner in the title; only the two-runner slides
-              still on the v1 layout need the header legend. */}
-          {slide && !slide.glass && runner == null && <RunnerLegend users={users} />}
           <LastSyncBadge />
           <DataSourceBadge />
           {/* Desktop-only controls: the Pi has no input, so they're hidden on

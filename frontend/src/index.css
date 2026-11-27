@@ -2,8 +2,8 @@
 
 /* Compact layout for short screens (e.g. the 1024×600 Raspberry Pi display).
    `short:` utilities only apply when the viewport is ≤700px tall, so the
-   desktop dev view is untouched while the Pi gets a denser, no-scroll layout.
-   Keep the max-height threshold in sync with useCompact() in useCompact.js. */
+   desktop dev view is untouched; today it only hides the desktop-only header
+   controls on the input-less Pi. */
 @custom-variant short (@media (max-height: 700px));
 
 /* ---------------------------------------------------------------------------
@@ -172,18 +172,6 @@ body {
 @keyframes tab-progress {
   from { transform: scaleX(0); }
   to { transform: scaleX(1); }
-}
-
-/* Legacy helpers for slides not yet restyled (PR 2). */
-.stat-mono {
-  font-family: var(--font-mono);
-  font-weight: 600;
-  letter-spacing: -0.02em;
-}
-
-.heading-display {
-  font-family: var(--font-display);
-  letter-spacing: -0.01em;
 }
 
 ::-webkit-scrollbar {

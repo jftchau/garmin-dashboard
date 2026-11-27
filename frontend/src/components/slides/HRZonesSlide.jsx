@@ -1,40 +1,55 @@
 import { fetchThisWeek } from "../../api.js";
 import { useTwoUsers } from "../../useTwoUsers.js";
-import Slide, { Loading, RunnerTag } from "../Slide.jsx";
+import { GlassSlide, GlassCard, RunnerHead, GlassStat, Loading } from "../glass.jsx";
 import HRZoneDoughnut from "../HRZoneDoughnut.jsx";
-import { formatDuration, RUNNER_RGB } from "../../utils.js";
+import { RUNNER_RGB } from "../../utils.js";
 
-const totalSecs = (zones) =>
-  Object.values(zones || {}).reduce((s, v) => s + v, 0);
+// "45 min" / "3.3 h": "44:40" reads as a pace on this dashboard, and a big
+// week as "12 h 30 min" would overflow the card at caption size.
+function hoursMins(secs) {
+  const m = Math.round(secs / 60);
+  return m < 60 ? `${m} min` : `${(m / 60).toFixed(1)} h`;
+}
 
+const totalSecs = (zones) => Object.values(zones || {}).reduce((s, v) => s + v, 0);
+
+// Share of the week's heart-rate time spent easy (zones 1–2): the one number
+// that says whether the week was built on easy running.
+function easyShare(zones) {
+  const total = totalSecs(zones);
+  if (!total) return null;
+  return Math.round((((zones["1"] || 0) + (zones["2"] || 0)) / total) * 100);
+}
+
+/**
+ * Heart-rate zones this week, head-to-head. The headline is the easy share;
+ * the doughnut and its five-row key are the walk-closer detail.
+ */
 export default function HRZonesSlide({ users }) {
   const weeks = useTwoUsers(fetchThisWeek, users);
-
   if (!weeks[0] && !weeks[1]) return <Loading what="heart rate zones" />;
 
+  const shown = (users || []).slice(0, 2);
+
   return (
-    <Slide>
-      <div className="flex-1 min-h-0 grid grid-cols-2 gap-4 short:gap-3">
-        {(users || []).slice(0, 2).map((u, i) => {
-          const secs = totalSecs(weeks[i]?.heart_rate_zone_seconds);
-          return (
-            <div
-              key={u.id}
-              className="bg-surface border border-line rounded-xl p-4 short:p-3 flex flex-col min-h-0"
-            >
-              <div className="flex items-baseline justify-between mb-1 shrink-0">
-                <RunnerTag users={users} i={i} size="lg" />
-                <span className="stat-mono text-xl short:text-lg text-muted">
-                  {secs ? formatDuration(secs) : "—"}
-                </span>
-              </div>
-              <div className="flex-1 min-h-0">
-                <HRZoneDoughnut zoneSeconds={weeks[i]?.heart_rate_zone_seconds} rgb={RUNNER_RGB[i]} height="100%" />
+    <GlassSlide cols={shown.length || 1}>
+      {shown.map((u, i) => {
+        const zones = weeks[i]?.heart_rate_zone_seconds || {};
+        const secs = totalSecs(zones);
+        const easy = easyShare(zones);
+        return (
+          <GlassCard key={u.id} runner={i}>
+            <RunnerHead users={users} i={i} />
+            <div>
+              <GlassStat value={easy ?? "—"} unit={easy != null ? "%" : null} size="lg" />
+              <div className="t-caption text-soft mt-4 whitespace-nowrap">
+                {secs ? `easy, of ${hoursMins(secs)}` : "no heart rate yet"}
               </div>
             </div>
-          );
-        })}
-      </div>
-    </Slide>
+            <HRZoneDoughnut zoneSeconds={zones} rgb={RUNNER_RGB[i]} />
+          </GlassCard>
+        );
+      })}
+    </GlassSlide>
   );
 }

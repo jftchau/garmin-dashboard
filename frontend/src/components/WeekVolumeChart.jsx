@@ -1,67 +1,41 @@
+import { ComposedChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import {
-  ComposedChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-} from "recharts";
+  chartMargin,
+  xAxisProps,
+  yAxisProps,
+  gridProps,
+  tooltipProps,
+  yAxisWidth,
+  niceTicks,
+  MARK_UNLIT,
+  STRENGTH,
+  OTHER,
+} from "./chart.jsx";
 
-const axisTick = { fill: "var(--color-muted)", fontSize: 17, fontFamily: "var(--font-mono)" };
-const tooltipStyle = {
-  background: "var(--color-surface-2)",
-  border: "1px solid var(--color-line)",
-  borderRadius: 6,
-  fontFamily: "var(--font-mono)",
-  fontSize: 14,
-};
+const dayTick = (iso) => new Date(`${iso}T00:00:00`).toLocaleDateString(undefined, { weekday: "short" });
 
-// Cross-training colors. Deliberately NOT the runner colors: on this chart the
-// runner is already identified by the slide title, so the palette is free to
-// encode activity type instead.
-// Cross-training is not a person, so it is neutral: two greys told apart by
-// lightness rather than two more hues competing with the runner's color.
-const STRENGTH_COLOR = "var(--color-slate)";
-const OTHER_COLOR = "var(--color-slate-dim)";
+const REF = "rgb(255 255 255 / 0.55)";
 
-const dayTick = (iso) =>
-  new Date(`${iso}T00:00:00`).toLocaleDateString(undefined, { weekday: "short" });
-
-// Round a max up to a readable axis ceiling (0 -> 1 so an empty week still
-// renders a sane grid rather than collapsing to a single line).
-function niceMax(v) {
-  if (!v || v <= 0) return 1;
-  const step = v <= 5 ? 1 : v <= 20 ? 5 : v <= 60 ? 10 : 20;
-  return Math.ceil(v / step) * step;
-}
-
-// This week's run bar, drawn with last week's same-weekday volume as a wider,
-// faint slab behind it. Recharts groups sibling <Bar>s side by side, so the
-// comparison is painted inside this one bar's shape to get a true overlay.
-function RunBar(props) {
-  const { x, y, width, height, background, fill, payload, kmMax } = props;
+// This week's run bar, with last week's same weekday as a bright hairline at
+// its height: a reference to beat rather than a second bar competing for the
+// eye. Only the latest run is lit; the rest of the week is unlit (design
+// rule 4). Recharts groups sibling <Bar>s side by side, so the reference is
+// drawn inside this one bar's shape to sit on top of it.
+function RunBar({ x, y, width, height, background, payload, kmMax, color }) {
   const prev = payload?.prevKm || 0;
-  const ghostH = background && kmMax > 0 ? (prev / kmMax) * background.height : 0;
-  const ghostW = width * 1.5;
-
+  const refY = background && kmMax > 0 ? background.y + background.height - (prev / kmMax) * background.height : null;
+  const refW = width * 1.4;
   return (
     <g>
-      {ghostH > 0 && (
-        <rect
-          x={x - (ghostW - width) / 2}
-          y={background.y + background.height - ghostH}
-          width={ghostW}
-          height={ghostH}
-          fill={fill}
-          opacity={0.18}
-          rx={3}
-        />
+      {height > 0 && <rect x={x} y={y} width={width} height={height} rx={6} fill={payload.lit ? color : MARK_UNLIT} />}
+      {prev > 0 && refY != null && (
+        <rect x={x - (refW - width) / 2} y={refY - 2} width={refW} height={4} rx={2} fill={REF} />
       )}
-      {height > 0 && <rect x={x} y={y} width={width} height={height} fill={fill} rx={3} />}
     </g>
   );
 }
+
+const hrs = (h) => (h >= 1 ? `${h.toFixed(1)} h` : `${Math.round(h * 60)} min`);
 
 function WeekTooltip({ active, payload, label }) {
   if (!active || !payload?.length) return null;
@@ -69,15 +43,14 @@ function WeekTooltip({ active, payload, label }) {
   const rows = [
     ["This week", `${d.km ?? 0} km`],
     ["Last week", `${d.prevKm ?? 0} km`],
-    d.strengthH ? ["Strength", `${hrs(d.strengthH)}`] : null,
-    d.otherH ? ["Other", `${hrs(d.otherH)}`] : null,
+    d.strengthH ? ["Strength", hrs(d.strengthH)] : null,
+    d.otherH ? ["Other", hrs(d.otherH)] : null,
   ].filter(Boolean);
-
   return (
-    <div style={tooltipStyle} className="px-3 py-2">
+    <div style={tooltipProps.contentStyle} className="px-4 py-3">
       <div className="text-muted mb-1">{dayTick(label)}</div>
       {rows.map(([k, v]) => (
-        <div key={k} className="flex gap-4 justify-between">
+        <div key={k} className="flex gap-6 justify-between">
           <span className="text-muted">{k}</span>
           <span>{v}</span>
         </div>
@@ -86,27 +59,21 @@ function WeekTooltip({ active, payload, label }) {
   );
 }
 
-const hrs = (h) => (h >= 1 ? `${h.toFixed(1)} h` : `${Math.round(h * 60)} min`);
-
 /**
- * One runner's training week: run distance (left axis, km) with last week's
- * volume ghosted behind, plus stacked strength / other cross-training hours on
- * the right axis.
+ * One runner's training week: run km per day (left axis) against last week's
+ * same day, plus stacked strength / other cross-training hours (right axis).
  *
- * Two axes because the units genuinely differ — km is still the headline
- * running metric, but through summer the non-running load is what actually
- * explains a light mileage week, so it has to be visible on the same chart.
- *
- * `week` is an /api/this-week payload. The chart fills its parent, which must
- * therefore have a definite height (see Slide/Panel).
+ * Two axes because the units genuinely differ: km is the running headline,
+ * but through summer the non-running load is what explains a light week.
+ * `week` is an /api/this-week payload; the chart fills its parent.
  */
 export default function WeekVolumeChart({ week, color }) {
   const daily = week?.daily_distance_km || [];
   const prev = week?.prev_daily_distance_km || [];
   const cross = week?.daily_cross_training_min || [];
 
-  // Zip by weekday index: both series are ordered Mon→Sun, so index i is the
-  // same weekday in each week (matching dates would never line up).
+  // Zip by weekday index: both series are Mon→Sun, so index i is the same
+  // weekday in each week (matching dates would never line up).
   const todayStr = new Date().toLocaleDateString("en-CA");
   const data = daily.map((d, i) => {
     const future = d.date > todayStr;
@@ -119,91 +86,78 @@ export default function WeekVolumeChart({ week, color }) {
       otherH: future ? null : +((c.other_min || 0) / 60).toFixed(2),
     };
   });
+  // The one lit mark: the most recent day with a run.
+  for (let i = data.length - 1; i >= 0; i--) {
+    if (data[i].km > 0) {
+      data[i].lit = true;
+      break;
+    }
+  }
 
-  const kmMax = niceMax(Math.max(0, ...data.map((d) => Math.max(d.km || 0, d.prevKm || 0))));
-  const hourMax = niceMax(Math.max(0, ...data.map((d) => (d.strengthH || 0) + (d.otherH || 0))));
+  const km = niceTicks(0, Math.max(1, ...data.map((d) => Math.max(d.km || 0, d.prevKm || 0))), 3);
+  const hr = niceTicks(0, Math.max(1, ...data.map((d) => (d.strengthH || 0) + (d.otherH || 0))), 3);
+  const hTick = (v) => `${v}h`;
 
   return (
     <div className="h-full flex flex-col">
       <div className="flex-1 min-h-0">
-      <ResponsiveContainer width="100%" height="100%">
-        <ComposedChart data={data} margin={{ top: 8, right: 8, left: 0, bottom: 0 }} barGap={6}>
-          <CartesianGrid strokeDasharray="3 3" stroke="var(--color-line)" vertical={false} />
-          <XAxis
-            dataKey="date"
-            tick={axisTick}
-            tickFormatter={dayTick}
-            interval={0}
-            axisLine={{ stroke: "var(--color-line)" }}
-            tickLine={false}
-          />
-          <YAxis
-            yAxisId="km"
-            domain={[0, kmMax]}
-            tick={axisTick}
-            axisLine={false}
-            tickLine={false}
-            width={40}
-            allowDecimals={false}
-          />
-          <YAxis
-            yAxisId="hours"
-            orientation="right"
-            domain={[0, hourMax]}
-            tick={axisTick}
-            axisLine={false}
-            tickLine={false}
-            width={44}
-          />
-          <Tooltip content={<WeekTooltip />} cursor={{ fill: "var(--color-line)", opacity: 0.3 }} />
-          <Bar
-            yAxisId="km"
-            dataKey="km"
-            fill={color}
-            background={{ fill: "transparent" }}
-            shape={(p) => <RunBar {...p} kmMax={kmMax} />}
-            isAnimationActive={false}
-          />
-          <Bar
-            yAxisId="hours"
-            dataKey="strengthH"
-            stackId="cross"
-            fill={STRENGTH_COLOR}
-            maxBarSize={26}
-            isAnimationActive={false}
-          />
-          <Bar
-            yAxisId="hours"
-            dataKey="otherH"
-            stackId="cross"
-            fill={OTHER_COLOR}
-            maxBarSize={26}
-            radius={[3, 3, 0, 0]}
-            isAnimationActive={false}
-          />
-        </ComposedChart>
-      </ResponsiveContainer>
+        <ResponsiveContainer width="100%" height="100%">
+          <ComposedChart data={data} margin={chartMargin} barGap={10} barCategoryGap="22%">
+            <CartesianGrid {...gridProps} yAxisId="km" />
+            <XAxis dataKey="date" {...xAxisProps} tickFormatter={dayTick} interval={0} />
+            <YAxis yAxisId="km" {...yAxisProps} domain={km.domain} ticks={km.ticks} width={yAxisWidth(km.ticks)} />
+            <YAxis
+              yAxisId="hours"
+              orientation="right"
+              {...yAxisProps}
+              domain={hr.domain}
+              ticks={hr.ticks}
+              tickFormatter={hTick}
+              width={yAxisWidth(hr.ticks.map(hTick))}
+            />
+            <Tooltip content={<WeekTooltip />} cursor={tooltipProps.cursor} />
+            <Bar
+              yAxisId="km"
+              dataKey="km"
+              background={{ fill: "transparent" }}
+              shape={(p) => <RunBar {...p} kmMax={km.domain[1]} color={color} />}
+              isAnimationActive={false}
+            />
+            <Bar yAxisId="hours" dataKey="strengthH" stackId="cross" fill={STRENGTH} maxBarSize={22} isAnimationActive={false} />
+            <Bar
+              yAxisId="hours"
+              dataKey="otherH"
+              stackId="cross"
+              fill={OTHER}
+              maxBarSize={22}
+              radius={[6, 6, 0, 0]}
+              isAnimationActive={false}
+            />
+          </ComposedChart>
+        </ResponsiveContainer>
       </div>
 
-      {/* Hand-rolled legend: the ghost bars aren't a real Recharts series, and a
-          bigger, plain-language key reads better at distance than the default. */}
-      <div className="shrink-0 flex flex-wrap items-center gap-x-5 gap-y-1 mt-2 short:mt-1 font-mono text-sm short:text-sm">
-        <Key color={color} label="This week · km" />
-        <Key color={color} label="Last week · km" opacity={0.28} wide />
-        <Key color={STRENGTH_COLOR} label="Strength · h" />
-        <Key color={OTHER_COLOR} label="Other training · h" />
+      {/* Hand-rolled key: the reference line isn't a real series, and plain
+          words read better than Recharts' legend. */}
+      <div className="shrink-0 flex items-center gap-x-7 mt-3 t-meta text-muted">
+        <Key fill={color} label="latest run" />
+        <Key fill={MARK_UNLIT} label="km" />
+        <Key line label="last week" />
+        <Key fill={STRENGTH} label="strength h" />
+        <Key fill={OTHER} label="other h" />
       </div>
     </div>
   );
 }
 
-function Key({ color, label, opacity = 1, wide = false }) {
+export function Key({ fill, label, line = false }) {
   return (
-    <span className="flex items-center gap-1.5 text-muted">
-      <span
-        className="rounded-sm"
-        style={{ background: color, opacity, width: wide ? 16 : 9, height: 11 }}
-      />
+    <span className="flex items-center gap-[10px] whitespace-nowrap">
+      {line ? (
+        <span className="w-[22px] h-[4px] rounded-full" style={{ background: REF }} />
+      ) : (
+        <span className="w-[16px] h-[16px] rounded-[4px]" style={{ background: fill }} />
+      )}
       {label}
     </span>
   );
