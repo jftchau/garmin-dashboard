@@ -111,6 +111,44 @@ export function endDot(lastIndex, color, glow) {
   };
 }
 
+/**
+ * One runner's trend with no axes: the line, a faint dot where the window
+ * starts and the runner's lit dot where it ends. Beneath a headline number,
+ * the shape is all a sparkline has to say; `rows` are { date, v }.
+ */
+export function Sparkline({ rows, i, pad = 1 }) {
+  const vals = rows.map((r) => r.v).filter((v) => v != null);
+  if (vals.length < 2) return null;
+  const lo = Math.min(...vals) - pad;
+  const hi = Math.max(...vals) + pad;
+  const last = lastIndexOf(rows, "v");
+  const first = rows.findIndex((r) => r.v != null);
+  const color = RUNNER_COLORS[i];
+  return (
+    <ResponsiveContainer width="100%" height="100%">
+      <LineChart data={rows} margin={{ top: 16, right: 16, left: 16, bottom: 16 }}>
+        <YAxis hide domain={[lo, hi]} />
+        <Line
+          type="monotone"
+          dataKey="v"
+          stroke={color}
+          strokeWidth={4}
+          dot={({ cx, cy, index }) =>
+            index === first ? (
+              <circle key="start" cx={cx} cy={cy} r={6} fill="rgb(255 255 255 / 0.35)" />
+            ) : (
+              endDot(last, color, glowRgba(i))({ cx, cy, index })
+            )
+          }
+          activeDot={false}
+          connectNulls
+          isAnimationActive={false}
+        />
+      </LineChart>
+    </ResponsiveContainer>
+  );
+}
+
 // Index of the last row where `key` has a value (the line's live end).
 export const lastIndexOf = (rows, key) => {
   for (let i = rows.length - 1; i >= 0; i--) if (rows[i][key] != null) return i;

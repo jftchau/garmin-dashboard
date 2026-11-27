@@ -70,6 +70,12 @@ roughly every 12 seconds.
 | 21 | Conditions | C | Temperature and its effect on pace | Exists |
 | 22 | HR zones | C | Minutes per zone, this week | Exists, needs headline |
 
+**Built (27 Nov 2026, PR 3):** every row except #11 *Weekly load*, which
+still needs a "usual range" for HR-zone load and is left for later. #16 / #18
+/ #20 are single-metric slides; the HRV trend was dropped (last night's HRV is
+on Readiness). "Last 3 months" was kept as an extra tier-A slide before HR
+zones, so the rotation is 23 slides.
+
 Twenty-two slides at 14s is a 5-minute cycle. If that feels long, cut Tier C to
 the four that earn it and drop to 18.
 

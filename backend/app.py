@@ -117,23 +117,44 @@ def resolve_user_id(conn):
 def list_users():
     with get_conn() as conn:
         rows = conn.execute(
-            "SELECT id, slot, name, garmin_email FROM users ORDER BY slot, id"
+            "SELECT id, slot, name, garmin_email, goal_distance_km FROM users ORDER BY slot, id"
         ).fetchall()
     return jsonify([dict(r) for r in rows])
 
 
 @app.route("/api/users/<int:user_id>", methods=["PATCH"])
 def update_user(user_id):
+    """Rename a user and/or set their weekly goal. Body: {"name": "..."},
+    {"goal_distance_km": 40} or both; a null goal clears it (the goal slide
+    then hides for that runner). The kiosk has no settings UI, so this is how
+    both are changed."""
     data = request.get_json(silent=True) or {}
-    name = (data.get("name") or "").strip()
-    if not name:
-        return jsonify({"error": "name required"}), 400
+    updates = {}
+    if "name" in data:
+        name = (data.get("name") or "").strip()
+        if not name:
+            return jsonify({"error": "name must not be empty"}), 400
+        updates["name"] = name
+    if "goal_distance_km" in data:
+        goal = data["goal_distance_km"]
+        if goal is not None:
+            if isinstance(goal, bool) or not isinstance(goal, (int, float)) or not 0 < goal < 1000:
+                return jsonify({"error": "goal_distance_km must be a number of km between 0 and 1000, or null"}), 400
+            goal = round(float(goal), 1)
+        updates["goal_distance_km"] = goal
+    if not updates:
+        return jsonify({"error": "send name and/or goal_distance_km"}), 400
+
+    sets = ", ".join(f"{col} = ?" for col in updates)  # keys are from the fixed set above
     with get_conn() as conn:
-        cur = conn.execute("UPDATE users SET name = ? WHERE id = ?", (name, user_id))
+        cur = conn.execute(f"UPDATE users SET {sets} WHERE id = ?", (*updates.values(), user_id))
         conn.commit()
-    if cur.rowcount == 0:
-        return jsonify({"error": "not found"}), 404
-    return jsonify({"id": user_id, "name": name})
+        if cur.rowcount == 0:
+            return jsonify({"error": "not found"}), 404
+        row = conn.execute(
+            "SELECT id, slot, name, goal_distance_km FROM users WHERE id = ?", (user_id,)
+        ).fetchone()
+    return jsonify(dict(row))
 
 
 @app.route("/api/activities")

@@ -17,8 +17,9 @@ const SHORT_LABEL = { "1K": "1K", "5K": "5K", "10K": "10K", HALF: "Half", MARATH
 
 // One distance in a runner's card. Short distances ("22:47") are narrow enough
 // to put the name beside the time at stat-md, three to a card; long ones
-// ("1:45:20") need the card's full width, so the name goes above and the time
-// takes stat-lg, two to a card.
+// ("1:45:20") need the card's full width, so the name goes above. A time with
+// hours is 406px at stat-lg — 10px more than the card — so it takes stat-md;
+// a sub-hour time (rare at these distances) keeps stat-lg.
 function RecordRow({ label, rec, predicted, wide }) {
   const time = rec?.best_time_sec ? formatDuration(rec.best_time_sec) : "—";
   const meta = [rec?.achieved_at ? formatDateShort(rec.achieved_at) : null, predicted != null ? `pred ${formatDuration(predicted)}` : null]
@@ -32,7 +33,7 @@ function RecordRow({ label, rec, predicted, wide }) {
           <span className="t-caption text-soft">{label}</span>
           <span className="t-meta text-muted whitespace-nowrap">{meta}</span>
         </div>
-        <div className="t-stat-lg mt-3">{time}</div>
+        <div className={`${time.split(":").length > 2 ? "t-stat-md" : "t-stat-lg"} mt-3`}>{time}</div>
       </div>
     );
   }
@@ -63,7 +64,7 @@ function RecordRow({ label, rec, predicted, wide }) {
 /**
  * Personal bests, head-to-head: one card per runner, one row per distance.
  * The five distances are split across two slides (`distances`) so each time
- * can be large: 1K/5K/10K at stat-md, half and full at stat-lg.
+ * can be large: 104px, or 128px where the card is wide enough.
  */
 export default function RecordsSlide({ users, distances }) {
   const [recA, recB] = useTwoUsers(fetchPersonalRecords, users);
