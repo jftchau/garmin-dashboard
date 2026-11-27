@@ -1,0 +1,66 @@
+<!-- @dsCard group="Data" height=560 width=1024 subtitle="Weekly goal: one lit mark on an unlit track" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<style>
+  :root { color-scheme: dark; }
+  body {
+    margin:0; padding:32px 40px; width:1024px; box-sizing:border-box;
+    background-color: var(--ground, #090b10);
+    background-image:
+      radial-gradient(560px 460px at 82px -36px, var(--runner-a-haze, rgba(255,145,71,.18)), transparent 70%),
+      radial-gradient(640px 520px at 1024px 600px, var(--runner-b-haze, rgba(122,167,255,.18)), transparent 70%);
+    font-family: var(--font-display, Outfit, system-ui, sans-serif);
+    color: var(--text-1, #f3f4f6);
+  }
+  .tag { font-size:13px; font-weight:500; letter-spacing:.08em; text-transform:uppercase; color:var(--text-3,#8f95a3); margin:0 0 10px 4px; }
+  .grid { display:grid; grid-template-columns:1fr 1fr; gap:var(--card-gap,20px); }
+  .glass {
+    position:relative; overflow:hidden; height:430px; box-sizing:border-box;
+    border-radius:var(--radius-card,28px);
+    background:var(--glass-fill, rgba(255,255,255,.05));
+    border:1px solid var(--glass-edge, rgba(255,255,255,.10));
+    box-shadow: var(--glass-inset, inset 0 1px 0 rgba(255,255,255,.14)), var(--glass-drop, 0 24px 48px -12px rgba(0,0,0,.55));
+    padding:var(--card-pad-y,28px) var(--card-pad-x,32px);
+    display:flex; flex-direction:column; justify-content:space-between;
+  }
+  .glass::before { content:""; position:absolute; inset:0; pointer-events:none; }
+  .a::before { background:radial-gradient(420px 300px at 0% 0%, var(--runner-a-glow, rgba(255,145,71,.14)), transparent 70%); }
+  .b::before { background:radial-gradient(420px 300px at 100% 100%, var(--runner-b-glow, rgba(122,167,255,.14)), transparent 70%); }
+  .glass > * { position:relative; }
+  .a { --c: var(--runner-a, #ff9147); --halo: var(--mark-halo-a, 0 0 22px rgba(255,145,71,.6)); }
+  .b { --c: var(--runner-b, #7aa7ff); --halo: var(--mark-halo-b, 0 0 22px rgba(122,167,255,.6)); }
+  .who { display:flex; align-items:center; gap:14px; }
+  .dot { width:22px; height:22px; border-radius:50%; background:var(--c); box-shadow:var(--halo); }
+  .label { font-size:52px; font-weight:700; line-height:1; letter-spacing:.08em; text-transform:uppercase; }
+  .row { display:flex; align-items:flex-start; gap:var(--unit-gap,10px); }
+  .value { font-size:160px; font-weight:600; line-height:.86; letter-spacing:-.045em; font-variant-numeric:tabular-nums; }
+  .unit { font-size:56px; font-weight:600; line-height:1; color:var(--text-2,#c9ccd4); margin-top:6px; }
+  .track { position:relative; height:var(--bar-h,20px); border-radius:999px; background:var(--mark-unlit, rgba(255,255,255,.16)); }
+  .fill { height:100%; border-radius:999px; background:var(--c); box-shadow:var(--halo); }
+  /* the 100% marker: dashed = "target, not data" */
+  .marker { position:absolute; top:-10px; bottom:-10px; width:0; border-left:4px dashed var(--text-1,#f3f4f6); }
+  .caprow { display:flex; justify-content:space-between; align-items:baseline; margin-top:var(--caption-gap,16px); }
+  .cap { font-size:40px; font-weight:500; line-height:1; color:var(--text-2,#c9ccd4); font-variant-numeric:tabular-nums; }
+  .cap.faint { color:var(--text-3,#8f95a3); }
+</style>
+</head>
+<body>
+<div class="tag">under target · and over: the fill caps at the track's end, the dashed marker holds 100%</div>
+<div class="grid">
+  <div class="glass a">
+    <div class="who"><i class="dot"></i><span class="label">Jeffrey</span></div>
+    <div class="row"><span class="value">64</span><span class="unit">%</span></div>
+    <div><div class="track"><div class="fill" style="width:64%"></div></div>
+      <div class="caprow"><span class="cap">32 of 50 km</span><span class="cap faint">3 days left</span></div></div>
+  </div>
+  <div class="glass b">
+    <div class="who"><i class="dot"></i><span class="label">Eugenia</span></div>
+    <div class="row"><span class="value">102</span><span class="unit">%</span></div>
+    <div><div class="track"><div class="fill" style="width:100%"></div><span class="marker" style="left:98%"></span></div>
+      <div class="caprow"><span class="cap">41 of 40 km</span><span class="cap faint">goal met</span></div></div>
+  </div>
+</div>
+</body>
+</html>

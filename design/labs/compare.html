@@ -1,0 +1,326 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Step 3b · Top three typefaces — Pi Run Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300..900&family=Red+Hat+Display:wght@300..900&family=Figtree:wght@300..900&family=Inter:wght@400..700&family=JetBrains+Mono:wght@400..600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ground:#090b10; --text-1:#f3f4f6; --text-2:#c9ccd4; --text-3:#8f95a3;
+  --a-rgb:255 145 71; --b-rgb:122 167 255;
+  --glass:.05; --edge:.10; --hl:.14; --radius:28px; --dim:.16;
+  --num-w:600; --label-w:700; --num-track:-.045em; --label-track:.08em;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:#030304;color:#d8dce4;font-family:Inter,system-ui,sans-serif}
+body{min-width:1064px;padding:0 20px 60px}
+h2{font:600 11px/1 "JetBrains Mono",monospace;letter-spacing:.12em;text-transform:uppercase;color:#8b93a1;margin:34px 0 12px}
+.note{font:500 12px/1.6 "JetBrains Mono",monospace;color:#7d8594;max-width:1024px;margin:8px 0 0}
+.note b{color:#e6e9ef;font-weight:600}
+
+/* ---- sticky controls ---- */
+.bar{position:sticky;top:0;z-index:10;background:#030304ee;backdrop-filter:blur(8px);padding:12px 0 10px;border-bottom:1px solid #16181d;
+  display:flex;flex-wrap:wrap;gap:8px 18px;align-items:center;width:1024px}
+.grp{display:flex;align-items:center;gap:6px}
+.k{font:600 11px "JetBrains Mono",monospace;letter-spacing:.1em;text-transform:uppercase;color:#8b93a1;margin-right:2px}
+button{font:500 13px Inter,sans-serif;color:#e6e9ef;background:#15171c;border:1px solid #2a2d35;border-radius:999px;padding:5px 12px;cursor:pointer}
+button:hover{border-color:#4a4f5a}
+button.on{background:#e6e9ef;color:#0b0c0f;border-color:#e6e9ef}
+.rng{display:flex;align-items:center;gap:6px;font:500 12px "JetBrains Mono",monospace;color:#e6e9ef}
+.rng input{width:110px;accent-color:#e6e9ef}
+.rng output{min-width:62px}
+
+/* ---- slide (same as the lab) ---- */
+.screen{position:relative;width:1024px;height:600px;overflow:hidden;background:var(--ground);isolation:isolate;outline:1px solid #1b1d22;
+  background-image:
+    radial-gradient(560px 460px at 82px -36px, rgb(var(--a-rgb) / .18), transparent 70%),
+    radial-gradient(320px 260px at 512px 300px, rgb(215 221 234 / .05), transparent 70%),
+    radial-gradient(640px 520px at 1024px 648px, rgb(var(--b-rgb) / .18), transparent 70%);}
+.ui{position:relative;z-index:1;height:100%;display:flex;flex-direction:column;font-family:var(--font),system-ui,sans-serif}
+.header{height:48px;flex:none;display:flex;align-items:center;gap:16px;padding:0 40px}
+.page{font:500 22px/1 "JetBrains Mono",monospace;color:var(--text-3);font-variant-numeric:tabular-nums}
+.title{font-size:44px;line-height:1;font-weight:var(--label-w);letter-spacing:-.015em;color:var(--text-1)}
+.status{margin-left:auto;font-size:22px;line-height:1;font-weight:500;color:var(--text-3)}
+.rule{height:3px;flex:none;margin:0 40px;border-radius:3px;background:rgb(255 255 255 / .08);overflow:hidden}
+.rule i{display:block;height:100%;width:5%;background:var(--text-1);border-radius:3px}
+.h2h{flex:1;min-height:0;display:grid;grid-template-columns:1fr 1fr;gap:20px;padding:18px 40px 28px}
+.glass{position:relative;min-height:0;border-radius:var(--radius);background:rgb(255 255 255 / var(--glass));
+  border:1px solid rgb(255 255 255 / var(--edge));
+  box-shadow:inset 0 1px 0 rgb(255 255 255 / var(--hl)), 0 24px 48px -12px rgb(0 0 0 / .55);
+  overflow:hidden;padding:28px 32px;display:flex;flex-direction:column;justify-content:space-between}
+.glass::before{content:"";position:absolute;inset:0;pointer-events:none}
+.ga::before{background:radial-gradient(420px 300px at 0% 0%, rgb(var(--a-rgb) / .14), transparent 70%)}
+.gb::before{background:radial-gradient(420px 300px at 100% 100%, rgb(var(--b-rgb) / .14), transparent 70%)}
+.ga{--rgb:var(--a-rgb)} .gb{--rgb:var(--b-rgb)}
+.glass>*{position:relative}
+.who{display:flex;align-items:center;gap:14px}
+.who .dot{width:22px;height:22px;border-radius:50%;background:rgb(var(--rgb));box-shadow:0 0 14px rgb(var(--rgb) / .7);flex:none}
+.label{font-size:40px;line-height:1;font-weight:var(--label-w);letter-spacing:var(--label-track);text-transform:uppercase;color:var(--text-1)}
+.valrow{display:flex;align-items:flex-start;gap:10px}
+.value{font-size:160px;line-height:.86;font-weight:var(--num-w);letter-spacing:var(--num-track);color:var(--text-1);font-variant-numeric:tabular-nums;white-space:nowrap}
+.sup{font-size:56px;line-height:1;font-weight:var(--num-w);color:var(--text-2);margin-top:6px;white-space:nowrap}
+.track{height:20px;border-radius:999px;background:rgb(255 255 255 / var(--dim));overflow:hidden}
+.track i{display:block;height:100%;border-radius:999px;background:rgb(var(--rgb));box-shadow:0 0 22px rgb(var(--rgb) / .6)}
+.caprow{display:flex;justify-content:space-between;align-items:baseline;margin-top:16px}
+.cap{font-size:36px;line-height:1;font-weight:500;color:var(--text-2);font-variant-numeric:tabular-nums}
+.cap.faint{color:var(--text-3)}
+.fit-bad .valrow{outline:3px dashed #ff2d55;outline-offset:4px}
+
+/* ---- sofa strip ---- */
+.strip{display:flex;gap:16px;width:1024px}
+.sofa-card{flex:1;border:1px solid #23262e;border-radius:12px;padding:14px;background:#0b0c0f;display:flex;flex-direction:column;align-items:center;gap:10px}
+.sofa-card .nm{font-size:20px;color:#e6e9ef}
+.sofa-clip{overflow:hidden;position:relative}
+.sofa-clip .screen{transform-origin:0 0;position:absolute;left:0;top:0}
+.card-bar{height:10px;background:#e6e9ef;border-radius:2px;margin:6px 0 2px}
+
+/* ---- tables & glyphs ---- */
+table{width:1024px;border-collapse:collapse;font:500 11px "JetBrains Mono",monospace}
+td,th{padding:7px 6px;border-bottom:1px solid #1d2026;text-align:left;white-space:nowrap;vertical-align:middle}
+th{color:#8b93a1;font-weight:500}
+.pass{color:#7fdc9a}.fail{color:#ff6b81}.mid{color:#f5c26b}
+.fname{font-size:18px;color:#e6e9ef}
+.best{outline:1px solid #7fdc9a55;outline-offset:-3px;border-radius:4px}
+.sheet{width:1024px;border:1px solid #1d2026;border-radius:12px;overflow:hidden}
+.sheet-row{display:grid;grid-template-columns:170px 1fr;align-items:center;border-bottom:1px solid #1d2026;background:var(--ground)}
+.sheet-row:last-child{border-bottom:0}
+.sheet-row .nm{padding:0 16px;font:500 12px/1.5 "JetBrains Mono",monospace;color:#8b93a1}
+.sheet-row .nm b{display:block;font:500 18px Inter;color:#e6e9ef}
+.glyphs{font-size:76px;line-height:1.15;color:var(--text-1);font-variant-numeric:tabular-nums;letter-spacing:.06em;padding:6px 0;white-space:nowrap}
+.glyphs .u{font-size:46px;color:var(--text-2);letter-spacing:0}
+.blurs{display:flex;gap:4px;padding:10px 0;align-items:flex-end}
+.blurs canvas{width:auto;height:84px;image-rendering:auto}
+.blurs .sep{width:14px}
+.slide-head{display:flex;align-items:baseline;gap:14px;margin:30px 0 10px}
+.slide-head b{font:600 22px Inter;color:#e6e9ef}
+.slide-head span{font:500 12px "JetBrains Mono",monospace;color:#7d8594}
+</style>
+</head>
+<body>
+
+<div class="bar">
+  <div class="grp" id="sampleBtns"><span class="k">Numbers</span></div>
+  <label class="rng"><span class="k">Weight</span><input id="w" type="range" min="400" max="800" step="10"><output id="wo"></output></label>
+  <label class="rng"><span class="k">Tracking</span><input id="t" type="range" min="-0.08" max="0.02" step="0.005"><output id="to"></output></label>
+  <label class="rng"><span class="k">Eyesight blur</span><input id="bl" type="range" min="0.3" max="1.5" step="0.05"><output id="blo"></output></label>
+</div>
+
+<h2>1 · From the sofa — the three side by side</h2>
+<div class="strip" id="strip"></div>
+<p class="note"><b>Calibrate once:</b> hold a bank card to this bar and drag until it matches (85.6 mm).
+  <span class="rng" style="display:inline-flex;margin-left:8px"><input id="ppi" type="range" min="70" max="200" step="1"><output id="ppio"></output></span>
+  <span class="rng" style="display:inline-flex;margin-left:8px">you → this screen <input id="dist" type="range" min="35" max="100" step="1"><output id="disto"></output></span>
+  <span class="card-bar" id="cardBar" style="display:block"></span>
+  Each slide is shrunk to the angle the real 7″ panel fills from 2.25 m. It is slightly pessimistic, so if it reads here it reads on the Pi.</p>
+
+<h2>2 · Measured</h2>
+<table id="cmp"></table>
+<p class="note">
+  <b>room</b> = space left in a head-to-head card (396px inside the padding) for the widest distance (88.8 km) or pace (5:38 /km) at 160px ·
+  <b>digit height</b> = height of "0" at 160px seen from 2.25 m (≥20′ comfortable) ·
+  <b>decimal point</b> = size of the "." at 160px from 2.25 m; if it vanishes, 32.4 reads as 324 ·
+  <b>look-alike pairs</b> = how much two digits overlap once shrunk to 2.25 m and softened by the eyesight blur (lower is better; it's a proxy for squinting, not an eye test). The worst pair per typeface is shown first.</p>
+
+<h2>3 · What the eye gets from 2.25 m</h2>
+<div class="sheet" id="blurSheet"></div>
+<p class="note">Each digit at 160px, reduced so one pixel here is one arcminute of your view, then softened by the eyesight blur and enlarged again so you can see it. The look-alike pairs are grouped: 3 8 · 6 8 9 · 5 6 · 1 7 · 0 8.</p>
+
+<h2>4 · Up close — all the digits</h2>
+<div class="sheet" id="glyphSheet"></div>
+
+<div id="slides"></div>
+
+<script>
+const FONTS = [
+  {f:'Outfit',          why:'round geometric · refs 1 / 2 / 6'},
+  {f:'Red Hat Display', why:'display grotesk · straight-tailed 6 / 9'},
+  {f:'Figtree',         why:'friendly geometric · current kit face'},
+];
+const SAMPLES = {
+  typical:   {a:'32.4', b:'18.9', u:'km',  note:'typical week'},
+  wide:      {a:'88.8', b:'48.0', u:'km',  note:'widest'},
+  confusable:{a:'71.1', b:'36.9', u:'km',  note:'look-alikes'},
+  pace:      {a:'4:52', b:'5:38', u:'/km', note:'pace'},
+};
+const PAIRS = [['3','8'],['6','8'],['8','9'],['5','6'],['1','7'],['0','8']];
+const store = JSON.parse(localStorage.getItem('pi-type-compare')||'{}');
+const S = Object.assign({ numW:600, numTrack:-0.045, sample:'confusable', dist:60, ppi:96, blur:0.75 }, store);
+window.S=S;
+
+const PITCH=0.1498, READ=2250;
+const arcmin = px => 2*Math.atan((px*PITCH/2)/READ)*180/Math.PI*60;
+const ARC_PER_PX = arcmin(1);
+const INNER = 396;                            // head-to-head card: 462px − 2px border − 64px padding                 // ≈0.229′ per Pi pixel at 2.25 m
+
+/* ---------- build the three slides ---------- */
+const slidesEl=document.getElementById('slides');
+FONTS.forEach((F,i)=>{
+  slidesEl.insertAdjacentHTML('beforeend',`
+  <div class="slide-head"><b style="font-family:'${F.f}'">${F.f}</b><span>${F.why}</span></div>
+  <div class="screen" data-i="${i}" style="--font:'${F.f}'">
+    <div class="ui">
+      <div class="header"><span class="page">01/22</span><span class="title">This week</span><span class="status">Synced 2h ago</span></div>
+      <div class="rule"><i></i></div>
+      <div class="h2h">
+        <div class="glass ga">
+          <div class="who"><i class="dot"></i><span class="label">Jeffrey</span></div>
+          <div class="valrow"><span class="value" data-v="a"></span><span class="sup" data-u></span></div>
+          <div><div class="track"><i style="width:64%"></i></div>
+            <div class="caprow"><span class="cap">64% of 50</span><span class="cap faint">5 runs</span></div></div>
+        </div>
+        <div class="glass gb">
+          <div class="who"><i class="dot"></i><span class="label">Eugenia</span></div>
+          <div class="valrow"><span class="value" data-v="b"></span><span class="sup" data-u></span></div>
+          <div><div class="track"><i style="width:47%"></i></div>
+            <div class="caprow"><span class="cap">47% of 40</span><span class="cap faint">3 runs</span></div></div>
+        </div>
+      </div>
+    </div>
+  </div>`);
+});
+const strip=document.getElementById('strip');
+FONTS.forEach((F,i)=>strip.insertAdjacentHTML('beforeend',
+  `<div class="sofa-card"><div class="nm" style="font-family:'${F.f}'">${F.f}</div><div class="sofa-clip" data-i="${i}"></div></div>`));
+
+/* ---------- measuring helpers ---------- */
+const probe=document.createElement('span');
+Object.assign(probe.style,{position:'absolute',left:'-9999px',top:'0',whiteSpace:'nowrap'});
+document.body.appendChild(probe);
+function widthOf(font,w,size,text,track){
+  probe.style.font=`${w} ${size}px "${font}", monospace`;   // font shorthand resets font-variant-numeric —
+  probe.style.fontVariantNumeric='tabular-nums';           // re-apply tabular digits after it
+  probe.style.letterSpacing=track+'em'; probe.textContent=text;
+  return probe.getBoundingClientRect().width; }
+
+/* render one character at 160px into a canvas; returns {big, B} */
+function bigGlyph(font,ch){
+  const B=200, c=document.createElement('canvas'); c.width=B; c.height=B;
+  const g=c.getContext('2d'); g.fillStyle='#000'; g.fillRect(0,0,B,B);
+  g.fillStyle='#fff'; g.font=`${S.numW} 160px "${font}"`; g.textAlign='center'; g.textBaseline='alphabetic';
+  g.fillText(ch,B/2,170); return c; }
+
+/* reduce to 1px = 1 arcmin, then blur by the eyesight sigma (arcmin) */
+function eyeGlyph(font,ch){
+  const big=bigGlyph(font,ch), n=Math.round(200*ARC_PER_PX);
+  // two-step reduction so the downscale averages properly
+  const mid=document.createElement('canvas'); mid.width=n*4; mid.height=n*4;
+  const m=mid.getContext('2d'); m.imageSmoothingQuality='high'; m.drawImage(big,0,0,n*4,n*4);
+  const sm=document.createElement('canvas'); sm.width=n; sm.height=n;
+  const s=sm.getContext('2d'); s.imageSmoothingQuality='high'; s.drawImage(mid,0,0,n,n);
+  const out=document.createElement('canvas'); out.width=n; out.height=n;
+  const o=out.getContext('2d'); o.fillStyle='#000'; o.fillRect(0,0,n,n);
+  o.filter=`blur(${S.blur}px)`; o.drawImage(sm,0,0);
+  const d=o.getImageData(0,0,n,n).data, v=new Float32Array(n*n);
+  for(let i=0;i<n*n;i++) v[i]=d[i*4]/255;
+  return {canvas:out, v}; }
+
+/* overlap = Pearson correlation of the two blurred images (1 = identical) */
+function overlap(a,b){
+  let ma=0,mb=0; const N=a.length; for(let i=0;i<N;i++){ma+=a[i];mb+=b[i];} ma/=N; mb/=N;
+  let sab=0,saa=0,sbb=0; for(let i=0;i<N;i++){const x=a[i]-ma,y=b[i]-mb; sab+=x*y; saa+=x*x; sbb+=y*y;}
+  return sab/Math.sqrt(saa*sbb); }
+
+/* height of the full stop's dot at 160px, scanning the rendered glyph */
+function dotHeight(font){
+  const c=bigGlyph(font,'.'), g=c.getContext('2d'), d=g.getImageData(0,0,200,200).data;
+  let top=-1,bot=-1;
+  for(let y=0;y<200;y++){ let on=false; for(let x=0;x<200;x++) if(d[(y*200+x)*4]>127){on=true;break;}
+    if(on){ if(top<0) top=y; bot=y; } }
+  return top<0?0:bot-top+1; }
+
+function figHeight(font){
+  const c=bigGlyph(font,'0'), d=c.getContext('2d').getImageData(0,0,200,200).data;
+  let top=-1,bot=-1;
+  for(let y=0;y<200;y++){ let on=false; for(let x=0;x<200;x++) if(d[(y*200+x)*4]>127){on=true;break;}
+    if(on){ if(top<0) top=y; bot=y; } }
+  return bot-top+1; }
+
+function measure(F){
+  const all=Object.values(SAMPLES);
+  const needOf=s=>Math.max(widthOf(F.f,S.numW,160,s.a,S.numTrack),widthOf(F.f,S.numW,160,s.b,S.numTrack))+10+widthOf(F.f,S.numW,56,s.u,0);
+  const km=Math.max(...all.filter(s=>s.u==='km').map(needOf)), pace=needOf(SAMPLES.pace);
+  const eyes={}; for(const ch of '0123456789') eyes[ch]=eyeGlyph(F.f,ch);
+  const named=PAIRS.map(([x,y])=>({p:x+'/'+y, o:overlap(eyes[x].v,eyes[y].v)}));
+  let worst={o:-1}; const digs='0123456789';
+  for(let i=0;i<10;i++) for(let j=i+1;j<10;j++){ const o=overlap(eyes[digs[i]].v,eyes[digs[j]].v); if(o>worst.o) worst={p:digs[i]+'/'+digs[j],o}; }
+  const avg=named.reduce((s,x)=>s+x.o,0)/named.length;
+  return { spare:INNER-km, paceSpare:INNER-pace, fig:arcmin(figHeight(F.f)), dot:arcmin(dotHeight(F.f)), named, worst, avg, eyes,
+           one:widthOf(F.f,S.numW,160,'1111',0), zero:widthOf(F.f,S.numW,160,'0000',0) };
+}
+
+/* ---------- render ---------- */
+const root=document.documentElement.style;
+function render(){
+  localStorage.setItem('pi-type-compare',JSON.stringify(S));
+  root.setProperty('--num-w',S.numW); root.setProperty('--num-track',S.numTrack+'em');
+  const smp=SAMPLES[S.sample];
+  document.querySelectorAll('[data-v=a]').forEach(e=>e.textContent=smp.a);
+  document.querySelectorAll('[data-v=b]').forEach(e=>e.textContent=smp.b);
+  document.querySelectorAll('[data-u]').forEach(e=>e.textContent=smp.u);
+  document.querySelectorAll('#sampleBtns button').forEach(b=>b.classList.toggle('on',b.dataset.s===S.sample));
+  for(const [id,k,fmt] of [['w','numW',v=>v],['t','numTrack',v=>v.toFixed(3)+'em'],['bl','blur',v=>v.toFixed(2)+'′'],['ppi','ppi',v=>v+' ppi'],['dist','dist',v=>v+' cm']]){
+    document.getElementById(id).value=S[k]; document.getElementById(id+'o').textContent=fmt(S[k]); }
+  document.querySelectorAll('#slides .glass').forEach(g=>{          // number + 10px gap + unit vs the card's padded interior
+    const need=g.querySelector('.value').getBoundingClientRect().width+10+g.querySelector('.sup').getBoundingClientRect().width;
+    g.classList.toggle('fit-bad', need>g.clientWidth-64+0.5); });
+
+  // sofa strip
+  const k=((1024*PITCH*(S.dist*10)/READ)*S.ppi/25.4)/1024;
+  document.querySelectorAll('.sofa-clip').forEach(clip=>{
+    clip.innerHTML=''; const c=document.querySelector(`#slides .screen[data-i="${clip.dataset.i}"]`).cloneNode(true);
+    c.style.transform=`scale(${k})`; clip.appendChild(c);
+    clip.style.width=(1024*k)+'px'; clip.style.height=(600*k)+'px'; });
+  document.getElementById('cardBar').style.width=(85.6*S.ppi/25.4)+'px';
+
+  // measurements
+  const M=FONTS.map(measure);
+  const bestOf=(key,dir)=>{ const vals=M.map(m=>key(m)); const b=dir>0?Math.max(...vals):Math.min(...vals); return vals.map(v=>Math.abs(v-b)<1e-9); };
+  const bSpare=bestOf(m=>m.spare,1), bDot=bestOf(m=>m.dot,1), bWorst=bestOf(m=>m.worst.o,-1), bAvg=bestOf(m=>m.avg,-1);
+  const pct=o=>(o*100).toFixed(0)+'%';
+  const oc=o=>o>=0.93?'fail':o>=0.88?'mid':'pass';
+  document.getElementById('cmp').innerHTML=
+    `<tr><th>typeface</th><th>room · km</th><th>room · pace</th><th>digit height</th><th>decimal point</th><th>worst look-alike</th><th>average of named pairs</th>${PAIRS.map(p=>`<th>${p.join('/')}</th>`).join('')}<th>tabular</th></tr>`+
+    M.map((m,i)=>`<tr>
+      <td class="fname" style="font-family:'${FONTS[i].f}'">${FONTS[i].f}</td>
+      <td class="${m.spare>=0?'pass':'fail'} ${bSpare[i]?'best':''}">${m.spare>=0?'+':''}${m.spare.toFixed(0)}px</td>
+      <td class="${m.paceSpare>=0?'pass':'fail'}">${m.paceSpare>=0?'+':''}${m.paceSpare.toFixed(0)}px</td>
+      <td class="${m.fig>=20?'pass':'mid'}">${m.fig.toFixed(1)}′</td>
+      <td class="${bDot[i]?'best':''}">${m.dot.toFixed(1)}′</td>
+      <td class="${oc(m.worst.o)} ${bWorst[i]?'best':''}">${m.worst.p} · ${pct(m.worst.o)}</td>
+      <td class="${oc(m.avg)} ${bAvg[i]?'best':''}">${pct(m.avg)}</td>
+      ${m.named.map(n=>`<td class="${oc(n.o)}">${pct(n.o)}</td>`).join('')}
+      <td class="${Math.abs(m.one-m.zero)<1?'pass':'fail'}">${Math.abs(m.one-m.zero)<1?'yes':'no'}</td></tr>`).join('');
+  window.M=M;
+
+  // blurred sheet
+  const groups=[['3','8'],['6','8','9'],['5','6'],['1','7'],['0','8']];
+  const bs=document.getElementById('blurSheet'); bs.innerHTML='';
+  M.forEach((m,i)=>{
+    const row=document.createElement('div'); row.className='sheet-row';
+    row.innerHTML=`<div class="nm"><b style="font-family:'${FONTS[i].f}'">${FONTS[i].f}</b>worst ${m.worst.p} · ${pct(m.worst.o)}</div><div class="blurs"></div>`;
+    const box=row.querySelector('.blurs');
+    groups.forEach((g,gi)=>{ if(gi) box.insertAdjacentHTML('beforeend','<i class="sep"></i>');
+      g.forEach(ch=>{ const src=m.eyes[ch].canvas, c=document.createElement('canvas'); c.width=src.width; c.height=src.height;
+        c.getContext('2d').drawImage(src,0,0); box.appendChild(c); }); });
+    bs.appendChild(row); });
+
+  // glyph sheet
+  document.getElementById('glyphSheet').innerHTML=FONTS.map(F=>
+    `<div class="sheet-row"><div class="nm"><b style="font-family:'${F.f}'">${F.f}</b>${F.why}</div>
+     <div class="glyphs" style="font-family:'${F.f}';font-weight:${S.numW}">0123456789<span class="u"> 4:52 · 32.4</span></div></div>`).join('');
+}
+
+/* ---------- controls ---------- */
+const sb=document.getElementById('sampleBtns');
+for(const k in SAMPLES){ const b=document.createElement('button'); b.dataset.s=k; b.textContent=`${SAMPLES[k].a} / ${SAMPLES[k].b}`; b.title=SAMPLES[k].note;
+  b.onclick=()=>{S.sample=k;render();}; sb.appendChild(b); }
+for(const [id,k] of [['w','numW'],['t','numTrack'],['bl','blur'],['ppi','ppi'],['dist','dist']])
+  document.getElementById(id).oninput=e=>{ S[k]=+e.target.value; render(); };
+
+Promise.all(FONTS.flatMap(F=>[400,500,600,700,800].map(w=>document.fonts.load(`${w} 160px "${F.f}"`))))
+  .then(()=>document.fonts.ready).then(render);
+</script>
+</body>
+</html>

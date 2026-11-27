@@ -1,0 +1,66 @@
+<!-- @dsCard height=300 -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<style>
+  :root { color-scheme: dark; }
+  html, body { margin:0; padding:0; background: var(--ground, #090b10); }
+  svg { display:block; }
+  .ground  { fill: var(--ground, #090b10); }
+  .glass   { fill: var(--glass-fill, rgba(255,255,255,.05)); stroke: var(--glass-edge, rgba(255,255,255,.10)); stroke-width:1; rx:28px; }
+  .a       { fill: var(--runner-a, #ff9147); }
+  .b       { fill: var(--runner-b, #7aa7ff); }
+  .unlit   { fill: var(--mark-unlit, rgba(255,255,255,.16)); }
+  .haze-a  { stop-color: var(--runner-a, #ff9147); }
+  .haze-b  { stop-color: var(--runner-b, #7aa7ff); }
+  .name    { font-family: var(--font-display, Outfit, system-ui, sans-serif); font-weight:600; font-size:72px; letter-spacing:-0.02em; fill: var(--text-1, #f3f4f6); }
+  .tagline { font-family: var(--font-display, Outfit, system-ui, sans-serif); font-weight:500; font-size:14px; letter-spacing:0.04em; fill: var(--text-3, #8f95a3); }
+</style>
+</head>
+<body>
+<!--
+  blocks:      two glass slabs (glass-fill + glass-edge, rx = radius-card 28px), 220x252 and 220x252, card-gap 20 apart —
+               the head-to-head pair; the runner hues enter as their light sources (runner-a-haze, runner-b-haze, fading at haze-fade 70%).
+  arrangement: the two cards stand side by side right of x = 480, Jeffrey's light from the top-left corner, Eugenia's from the bottom-right,
+               exactly as on the slide; the right card bleeds off the edge.
+  pattern:     goal-bar pills (radius-pill, bar-h 20): one lit mark per card in the runner's colour on a mark-unlit track — the rule
+               "one lit mark per chart" is the system's most specific claim, so the pattern is that rule drawn.
+  scales:      card-gap 20, radius-card 28, bar-h 20, radius-pill = 10 (half of 20), runner-dot 22.
+-->
+<svg width="960" height="300" viewBox="0 0 960 300" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Pi Run Dashboard">
+  <defs>
+    <radialGradient id="ha" cx="500" cy="0" r="300" gradientUnits="userSpaceOnUse">
+      <stop offset="0" class="haze-a" stop-opacity=".30"/><stop offset=".7" class="haze-a" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="hb" cx="960" cy="300" r="320" gradientUnits="userSpaceOnUse">
+      <stop offset="0" class="haze-b" stop-opacity=".30"/><stop offset=".7" class="haze-b" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect class="ground" x="0" y="0" width="960" height="300"/>
+  <rect x="480" y="0" width="480" height="300" fill="url(#ha)"/>
+  <rect x="480" y="0" width="480" height="300" fill="url(#hb)"/>
+
+  <!-- the head-to-head pair -->
+  <rect class="glass" x="500" y="24" width="220" height="252"/>
+  <rect class="glass" x="740" y="24" width="240" height="252"/>
+
+  <!-- runner dots -->
+  <circle class="a" cx="534" cy="62" r="11"/>
+  <circle class="b" cx="774" cy="62" r="11"/>
+
+  <!-- goal bars: one lit mark on each unlit track -->
+  <rect class="unlit" x="524" y="200" width="172" height="20" rx="10"/>
+  <rect class="a"     x="524" y="200" width="110" height="20" rx="10"/>
+  <rect class="unlit" x="764" y="200" width="196" height="20" rx="10"/>
+  <rect class="b"     x="764" y="200" width="81"  height="20" rx="10"/>
+
+  <rect class="unlit" x="524" y="236" width="120" height="12" rx="6"/>
+  <rect class="unlit" x="764" y="236" width="140" height="12" rx="6"/>
+
+  <text class="name" x="48" y="168">Pi Run</text>
+  <text class="name" x="48" y="236">Dashboard</text>
+  <text class="tagline" x="48" y="266">Two runners, one wall, read from across the room.</text>
+</svg>
+</body>
+</html>

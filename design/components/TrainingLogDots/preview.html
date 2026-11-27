@@ -1,0 +1,84 @@
+<!-- @dsCard group="Data" height=520 width=1024 subtitle="One dot per activity, sized by distance; the one lit dot is the latest run" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<style>
+  :root { color-scheme: dark; }
+  body {
+    margin:0; padding:32px 40px; width:1024px; box-sizing:border-box;
+    background-color: var(--ground, #090b10);
+    background-image: radial-gradient(760px 600px at 82px -36px, var(--runner-a-haze, rgba(255,145,71,.18)), transparent 70%);
+    font-family: var(--font-display, Outfit, system-ui, sans-serif);
+    color: var(--text-1, #f3f4f6);
+  }
+  .glass {
+    position:relative; overflow:hidden;
+    border-radius:var(--radius-card,28px);
+    background:var(--glass-fill, rgba(255,255,255,.05));
+    border:1px solid var(--glass-edge, rgba(255,255,255,.10));
+    box-shadow: var(--glass-inset, inset 0 1px 0 rgba(255,255,255,.14)), var(--glass-drop, 0 24px 48px -12px rgba(0,0,0,.55));
+    padding:var(--card-pad-y,28px) var(--card-pad-x,32px);
+    display:grid; grid-template-columns:300px 1fr; gap:32px; align-items:center;
+  }
+  .glass::before { content:""; position:absolute; inset:0; pointer-events:none;
+    background:radial-gradient(420px 300px at 0% 0%, var(--runner-a-glow, rgba(255,145,71,.14)), transparent 70%); }
+  .glass > * { position:relative; }
+  .label { font-size:52px; font-weight:700; line-height:1; letter-spacing:.08em; text-transform:uppercase; margin-bottom:18px; }
+  .value { font-size:208px; font-weight:600; line-height:.86; letter-spacing:-.045em; font-variant-numeric:tabular-nums; }
+  .cap { font-size:40px; font-weight:500; line-height:1.1; color:var(--text-2,#c9ccd4); margin-top:22px; }
+  .grid { display:grid; grid-template-columns:repeat(7, 76px); grid-auto-rows:76px; justify-content:end; }
+  .wd { font-size:24px; font-weight:500; color:var(--text-3,#8f95a3); display:flex; align-items:flex-end; justify-content:center; padding-bottom:8px; height:auto; }
+  .cell { display:flex; align-items:center; justify-content:center; }
+  .run  { border-radius:50%; background:var(--mark-unlit, rgba(255,255,255,.16)); }
+  .lit  { background:var(--runner-a,#ff9147); box-shadow:var(--mark-halo-a, 0 0 22px rgba(255,145,71,.6)); }
+  .xt   { width:22px; height:22px; border-radius:50%; border:3px solid var(--text-3,#8f95a3); box-sizing:border-box; }
+  .rest { width:10px; height:10px; border-radius:50%; background:var(--mark-unlit, rgba(255,255,255,.16)); opacity:.5; }
+  .legend { display:flex; gap:28px; margin-top:22px; font-size:24px; font-weight:500; color:var(--text-3,#8f95a3); align-items:center; justify-content:flex-end; }
+  .legend span { display:flex; align-items:center; gap:10px; }
+</style>
+</head>
+<body>
+<div class="glass">
+  <div>
+    <div class="label">Runs</div>
+    <div class="value">11</div>
+    <div class="cap">in November</div>
+  </div>
+  <div>
+    <div class="grid">
+      <span class="wd">M</span><span class="wd">T</span><span class="wd">W</span><span class="wd">T</span><span class="wd">F</span><span class="wd">S</span><span class="wd">S</span>
+
+      <span class="cell"><i class="run" style="width:28px;height:28px"></i></span>
+      <span class="cell"><i class="rest"></i></span>
+      <span class="cell"><i class="run" style="width:40px;height:40px"></i></span>
+      <span class="cell"><i class="xt"></i></span>
+      <span class="cell"><i class="rest"></i></span>
+      <span class="cell"><i class="run" style="width:58px;height:58px"></i></span>
+      <span class="cell"><i class="rest"></i></span>
+
+      <span class="cell"><i class="run" style="width:32px;height:32px"></i></span>
+      <span class="cell"><i class="xt"></i></span>
+      <span class="cell"><i class="rest"></i></span>
+      <span class="cell"><i class="run" style="width:46px;height:46px"></i></span>
+      <span class="cell"><i class="rest"></i></span>
+      <span class="cell"><i class="run" style="width:64px;height:64px"></i></span>
+      <span class="cell"><i class="xt"></i></span>
+
+      <span class="cell"><i class="rest"></i></span>
+      <span class="cell"><i class="run" style="width:36px;height:36px"></i></span>
+      <span class="cell"><i class="xt"></i></span>
+      <span class="cell"><i class="rest"></i></span>
+      <span class="cell"><i class="run" style="width:30px;height:30px"></i></span>
+      <span class="cell"><i class="run lit" style="width:52px;height:52px"></i></span>
+      <span class="cell"></span>
+    </div>
+    <div class="legend">
+      <span><i class="run" style="width:24px;height:24px;display:inline-block"></i>run, area ∝ km</span>
+      <span><i class="run lit" style="width:24px;height:24px;display:inline-block"></i>latest</span>
+      <span><i class="xt" style="display:inline-block"></i>cross-training</span>
+    </div>
+  </div>
+</div>
+</body>
+</html>
