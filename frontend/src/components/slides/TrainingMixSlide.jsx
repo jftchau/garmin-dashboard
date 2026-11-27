@@ -1,148 +1,115 @@
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-} from "recharts";
+import { BarChart, Bar, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { fetchTrainingMix } from "../../api.js";
 import { useTwoUsers } from "../../useTwoUsers.js";
-import Slide, { Loading, RunnerTag } from "../Slide.jsx";
-import { RUNNER_COLORS } from "../../utils.js";
+import { GlassSlide, GlassCard, LabelStat, Empty, Loading } from "../glass.jsx";
+import { chartMargin, xAxisProps, yAxisProps, gridProps, tooltipProps, yAxisWidth, niceTicks, MARK_UNLIT, STRENGTH, OTHER } from "../chart.jsx";
+import { Key } from "../WeekVolumeChart.jsx";
+import { RUNNER_COLORS, runnerName } from "../../utils.js";
 
 const WEEKS = 10;
-
-const axisTick = { fill: "var(--color-muted)", fontSize: 17, fontFamily: "var(--font-mono)" };
-
-// Activity-type palette, shared with WeekVolumeChart so the greys mean the same
-// thing on every slide: light = strength, dim = other. Running takes the
-// runner's own color (each chart here is one runner), same as every other
-// slide — so the legend's running swatch shows both runner colors.
-const RUN_BUCKET = { key: "run_hours", label: "Running" };
-const CROSS_BUCKETS = [
-  { key: "strength_hours", label: "Strength", color: "var(--color-slate)" },
-  { key: "other_hours", label: "Other", color: "var(--color-slate-dim)" },
-];
-const bucketsFor = (runnerColor) => [{ ...RUN_BUCKET, color: runnerColor }, ...CROSS_BUCKETS];
 
 const weekTick = (iso) =>
   new Date(`${iso}T00:00:00`).toLocaleDateString(undefined, { month: "numeric", day: "numeric" });
 
-const hrs = (h) => `${(+h).toFixed(1)} h`;
+const h1 = (v) => (+v || 0).toFixed(1);
 
-function MixTooltip({ active, payload, label, buckets }) {
+function MixTooltip({ active, payload, label }) {
   if (!active || !payload?.length) return null;
   const d = payload[0].payload;
-  const total = buckets.reduce((s, b) => s + (d[b.key] || 0), 0);
+  const rows = [
+    ["Running", d.run_hours],
+    ["Strength", d.strength_hours],
+    ["Other", d.other_hours],
+  ];
   return (
-    <div className="px-3 py-2 rounded-md border border-line bg-surface-2 font-mono text-sm">
+    <div style={tooltipProps.contentStyle} className="px-4 py-3">
       <div className="text-muted mb-1">week of {weekTick(label)}</div>
-      {buckets.map((b) => (
-        <div key={b.key} className="flex justify-between gap-4">
-          <span style={{ color: b.color }}>{b.label}</span>
-          <span>{hrs(d[b.key] || 0)}</span>
+      {rows.map(([k, v]) => (
+        <div key={k} className="flex justify-between gap-6">
+          <span className="text-muted">{k}</span>
+          <span>{h1(v)} h</span>
         </div>
       ))}
-      <div className="flex justify-between gap-4 border-t border-line mt-1 pt-1">
-        <span className="text-muted">Total</span>
-        <span>{hrs(total)}</span>
-      </div>
     </div>
   );
 }
 
-function MixChart({ data, height, runnerColor }) {
-  const buckets = bucketsFor(runnerColor);
-  if (!data?.length) {
-    return (
-      <div className="flex items-center justify-center text-muted font-mono text-base" style={{ height }}>
-        No data
-      </div>
-    );
-  }
+// Ten weeks of stacked hours. Running sits at the bottom of each stack and is
+// lit only for this week (design rule 4); past weeks' running is unlit, and
+// cross-training keeps its two warm greys.
+function MixChart({ data, color }) {
+  if (!data?.length) return <Empty />;
+  const y = niceTicks(0, Math.max(1, ...data.map((d) => (d.run_hours || 0) + (d.strength_hours || 0) + (d.other_hours || 0))), 2);
+  const last = data.length - 1;
+  const hTick = (v) => `${v}h`;
   return (
-    <ResponsiveContainer width="100%" height={height}>
-      <BarChart data={data} margin={{ top: 6, right: 28, left: 0, bottom: 0 }}>
-        <CartesianGrid strokeDasharray="3 3" stroke="var(--color-line)" vertical={false} />
-        <XAxis
-          dataKey="week_start"
-          tick={axisTick}
-          tickFormatter={weekTick}
-          interval={0}
-          axisLine={{ stroke: "var(--color-line)" }}
-          tickLine={false}
-        />
-        <YAxis tick={axisTick} axisLine={false} tickLine={false} width={40} />
-        <Tooltip content={<MixTooltip buckets={buckets} />} cursor={{ fill: "var(--color-line)", opacity: 0.3 }} />
-        {buckets.map((b, i) => (
-          <Bar
-            key={b.key}
-            dataKey={b.key}
-            stackId="mix"
-            fill={b.color}
-            radius={i === buckets.length - 1 ? [3, 3, 0, 0] : undefined}
-            isAnimationActive={false}
-          />
-        ))}
+    <ResponsiveContainer width="100%" height="100%">
+      <BarChart data={data} margin={chartMargin} barCategoryGap="24%">
+        <CartesianGrid {...gridProps} />
+        <XAxis dataKey="week_start" {...xAxisProps} tickFormatter={weekTick} interval={1} />
+        <YAxis {...yAxisProps} domain={y.domain} ticks={y.ticks} tickFormatter={hTick} width={yAxisWidth(y.ticks.map(hTick))} />
+        <Tooltip content={<MixTooltip />} cursor={tooltipProps.cursor} />
+        <Bar dataKey="run_hours" stackId="mix" isAnimationActive={false}>
+          {data.map((d, i) => (
+            <Cell key={d.week_start} fill={i === last ? color : MARK_UNLIT} />
+          ))}
+        </Bar>
+        <Bar dataKey="strength_hours" stackId="mix" fill={STRENGTH} isAnimationActive={false} />
+        <Bar dataKey="other_hours" stackId="mix" fill={OTHER} radius={[6, 6, 0, 0]} isAnimationActive={false} />
       </BarChart>
     </ResponsiveContainer>
   );
 }
 
 /**
- * Weekly training HOURS split running / strength / other, for both runners.
+ * Weekly training HOURS split running / strength / other, per runner.
  *
  * Everything else on the dashboard is measured in km, which quietly implies
  * running is the only training that counts. Through summer that's misleading —
  * mileage drops while gym and other work picks up — so this slide switches to
- * time, the one unit every activity type shares.
+ * time, the one unit every activity type shares. The headline is this week's
+ * total hours; the ten-week stacks are the evidence.
+ *
+ * Runners are stacked, not side by side: ten weekly bars need the full width.
  */
 export default function TrainingMixSlide({ users }) {
   const [mixA, mixB] = useTwoUsers((uid) => fetchTrainingMix(WEEKS, uid), users);
-
   if (!mixA && !mixB) return <Loading what="training mix" />;
 
   const mixes = [mixA, mixB];
+  const shown = (users || []).slice(0, 2);
 
   return (
-    <Slide className="space-y-2">
-      <div className="shrink-0 flex flex-wrap items-center gap-x-5 gap-y-1 font-mono text-base">
-        <span className="text-muted uppercase tracking-widest">Hours per week · last {WEEKS} weeks</span>
-        <span className="flex items-center gap-1.5 text-muted">
-          {/* Split swatch: running is drawn in whichever runner's chart it is. */}
-          <span
-            className="w-4 h-3 rounded-sm"
-            style={{ background: `linear-gradient(90deg, ${RUNNER_COLORS[0]} 50%, ${RUNNER_COLORS[1]} 50%)` }}
-          />
-          {RUN_BUCKET.label}
+    <GlassSlide className="grid-rows-[1fr_1fr_auto] gap-y-4!">
+      {shown.map((u, i) => {
+        const data = mixes[i] || [];
+        const w = data[data.length - 1] || {};
+        const total = (w.run_hours || 0) + (w.strength_hours || 0) + (w.other_hours || 0);
+        return (
+          <GlassCard key={u.id} runner={i} tight className="flex-row! justify-start! items-center gap-8">
+            <div className="w-[250px] shrink-0">
+              <LabelStat
+                dot={i}
+                label={`${runnerName(users, i)} · this week, h`}
+                value={h1(total)}
+                note={`${h1(w.run_hours)} run · ${h1((w.strength_hours || 0) + (w.other_hours || 0))} other`}
+              />
+            </div>
+            <div className="flex-1 min-w-0 h-full">
+              <MixChart data={data} color={RUNNER_COLORS[i]} />
+            </div>
+          </GlassCard>
+        );
+      })}
+      <div className="flex items-center justify-end gap-x-7 t-meta text-muted">
+        <span className="flex items-center gap-[10px]">
+          <span className="w-[16px] h-[16px] rounded-[4px]" style={{ background: `linear-gradient(90deg, ${RUNNER_COLORS[0]} 50%, ${RUNNER_COLORS[1]} 50%)` }} />
+          running this week
         </span>
-        {CROSS_BUCKETS.map((b) => (
-          <span key={b.key} className="flex items-center gap-1.5 text-muted">
-            <span className="w-3 h-3 rounded-sm" style={{ background: b.color }} />
-            {b.label}
-          </span>
-        ))}
+        <Key fill={MARK_UNLIT} label="running" />
+        <Key fill={STRENGTH} label="strength" />
+        <Key fill={OTHER} label="other" />
       </div>
-
-      {/* Runners stacked, not side by side: 10 weekly bars need the full 1024px
-          to stay readable at distance — halving the width crams the labels. */}
-      <div className="flex-1 min-h-0 grid grid-rows-2 gap-4 short:gap-3">
-        {(users || []).slice(0, 2).map((u, i) => (
-          <div
-            key={u.id}
-            className="bg-surface border border-line rounded-xl p-4 short:p-2 flex flex-col min-h-0"
-          >
-            <div className="mb-1 shrink-0">
-              <RunnerTag users={users} i={i} />
-            </div>
-            <div className="flex-1 min-h-0">
-              <MixChart data={mixes[i]} height="100%" runnerColor={RUNNER_COLORS[i]} />
-            </div>
-          </div>
-        ))}
-      </div>
-    </Slide>
+    </GlassSlide>
   );
 }

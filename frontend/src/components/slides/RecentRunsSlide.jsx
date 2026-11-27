@@ -1,19 +1,20 @@
 import { useEffect, useState } from "react";
 import { fetchActivities } from "../../api.js";
-import Slide, { Loading, RunnerTag } from "../Slide.jsx";
-import { formatDistanceKm, formatPace, RUNNER_COLORS, trainingEffect } from "../../utils.js";
+import { GlassSlide, GlassCard, RunnerHead, GlassStat, Loading } from "../glass.jsx";
+import { formatPace, trainingEffect } from "../../utils.js";
 
-// "Sat 16 Aug" — the run's identity on this slide. The activity name used to
-// lead each row, but every run is logged from the same place and came back
-// "Jing'an Running", so it was a column of identical text that pushed the
-// numbers small and wrapped unevenly. The date is what actually differs.
+// "Sat 16 Aug" — a run's identity on this slide. Every run is logged from the
+// same place and comes back "Jing'an Running", so the date is what differs.
 function runDate(iso) {
   if (!iso) return "—";
   const d = new Date(iso);
   return d.toLocaleDateString(undefined, { weekday: "short", day: "numeric", month: "short" });
 }
 
-const N = 5; // runs per runner — enough to fill the column at a readable row size
+const km = (meters) => (meters == null ? "—" : (meters / 1000).toFixed(1));
+const pace = (s) => formatPace(s).replace(" /km", "");
+
+const N = 4; // the latest run, plus three before it
 
 // Fetch the most recent runs for both runners. fetchActivities returns all
 // activity types; we filter to runs so cross-training doesn't crowd the list.
@@ -44,67 +45,50 @@ function useRecentRuns(users) {
   return runs;
 }
 
-function RunRow({ a, color }) {
-  const te = trainingEffect(a.training_effect_label);
-  return (
-    <div className="flex items-baseline justify-between gap-3 py-3 short:py-2.5 border-b border-line/50 last:border-0">
-      <div className="min-w-0">
-        <div className="font-mono text-xl short:text-lg text-chalk whitespace-nowrap">{runDate(a.start_time)}</div>
-        {te && (
-          <div className="font-mono text-base short:text-sm" style={{ color: te.color }}>
-            {te.text}
-          </div>
-        )}
-      </div>
-      <div className="flex items-baseline gap-5 short:gap-4 shrink-0">
-        <span className="stat-mono text-4xl short:text-3xl" style={{ color }}>
-          {formatDistanceKm(a.distance)}
-          <span className="text-base text-muted ml-1">km</span>
-        </span>
-        <span className="stat-mono text-3xl short:text-2xl text-chalk w-[5ch] text-right">
-          {formatPace(a.pace).replace(" /km", "")}
-        </span>
-      </div>
-    </div>
-  );
-}
-
 /**
- * The last few runs for each runner, side by side. The kiosk dropped the full
- * activity log (nothing to click on a display), but "what did we run lately" is
- * exactly what a wall display should answer — so this shows it as a few large
- * rows rather than a dense scrollable table.
+ * Latest runs, head-to-head. The most recent run is the headline (its
+ * distance at stat-lg, pace beneath); the three before it are a walk-closer
+ * list. Five equal rows per runner used to force every number down to ~30px.
  */
 export default function RecentRunsSlide({ users }) {
   const runs = useRecentRuns(users);
-
   if (!runs[0] && !runs[1]) return <Loading what="recent runs" />;
 
+  const shown = (users || []).slice(0, 2);
+
   return (
-    <Slide>
-      <div className="flex-1 min-h-0 grid grid-cols-2 gap-4 short:gap-3">
-        {(users || []).slice(0, 2).map((u, i) => {
-          const color = RUNNER_COLORS[i];
-          const list = runs[i];
-          return (
-            <div key={u.id} className="bg-surface border border-line rounded-xl p-4 short:p-3 flex flex-col min-h-0">
-              <div className="mb-2 short:mb-1 shrink-0 flex items-baseline justify-between gap-2">
-                <RunnerTag users={users} i={i} size="lg" />
-                {/* Units are stated once per column instead of on every row —
-                    the pace column carries no suffix of its own. */}
-                <span className="font-mono text-sm text-muted uppercase tracking-widest">km · pace /km</span>
+    <GlassSlide cols={shown.length || 1}>
+      {shown.map((u, i) => {
+        const [latest, ...older] = runs[i] || [];
+        const te = latest ? trainingEffect(latest.training_effect_label) : null;
+        return (
+          <GlassCard key={u.id} runner={i}>
+            <RunnerHead users={users} i={i} />
+            {latest ? (
+              <div>
+                <div className="t-meta text-muted whitespace-nowrap mb-4">
+                  {runDate(latest.start_time)}
+                  {te && ` · ${te.text}`}
+                </div>
+                <GlassStat value={km(latest.distance)} unit="km" size="lg" />
+                <div className="t-caption text-soft mt-4 whitespace-nowrap">{pace(latest.pace)} /km</div>
               </div>
-              <div className="flex-1 min-h-0 flex flex-col justify-center">
-                {list && list.length ? (
-                  list.map((a) => <RunRow key={a.id} a={a} color={color} />)
-                ) : (
-                  <p className="font-mono text-base text-muted">No recent runs</p>
-                )}
-              </div>
+            ) : (
+              <p className="t-caption text-muted">No recent runs</p>
+            )}
+            <div className="flex flex-col gap-3">
+              {older.map((a) => (
+                <div key={a.id} className="flex items-baseline gap-4 whitespace-nowrap">
+                  <span className="t-meta text-muted w-[132px] shrink-0">{runDate(a.start_time)}</span>
+                  <span className="t-caption text-soft">{km(a.distance)}</span>
+                  <span className="t-meta text-muted">km</span>
+                  <span className="t-caption text-soft ml-auto">{pace(a.pace)}</span>
+                </div>
+              ))}
             </div>
-          );
-        })}
-      </div>
-    </Slide>
+          </GlassCard>
+        );
+      })}
+    </GlassSlide>
   );
 }

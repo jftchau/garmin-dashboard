@@ -261,7 +261,8 @@ utility class, and `fonts/` is copied into the app with `OFL.txt` beside it.
   using removed v1 tokens (`ink`, `chalk`, `muted`, `surface`, `olive`, the old
   `intensity-1…5`).
 - **Recharts cannot read CSS.** Axis `fontSize` and chart heights are numeric
-  props; the `axis` style is 28px, and margins and `YAxis width` must grow to
-  match or labels clip (they already clip today: "49.2" renders as "9.2").
+  props, so `frontend/src/components/chart.jsx` carries the `axis` style (28px)
+  as numbers, with a 20px top margin and a `YAxis width` measured from each
+  chart's own labels. v1 used a fixed width and clipped "49.2" to "9.2".
 - **Still to verify on the Pi:** colours and grain on the real panel, whether
   backdrop blur is worth its cost, and reading distance for the walk-closer tier.

@@ -31,10 +31,9 @@ display-only** (no touch, keyboard, or mouse). That shapes the whole UI:
   clicking the position bar, pauses it for desktop inspection.
 - **Numbered pages.** The header shows `NN/18`, so a viewer can say "page 7 needs
   fixing" without knowing what the slide is called.
-- **No scrolling — every slide fits 1024×600.** A height-gated compact mode
-  (`@custom-variant short (@media (max-height:700px))` in `index.css` + the
-  `useCompact()` hook at the same threshold) shrinks padding/spacing on short
-  screens only; the desktop dev view (≥701px tall) is left roomy.
+- **No scrolling — every slide fits 1024×600.** The type scale is fixed px,
+  sized for the Pi panel at 2.25 m; on a taller desktop window the cards and
+  charts simply grow into the extra height.
 
 > **Contributors / AI agents:** keeping every slide within the 600px budget is a
 > hard requirement. After any UI change, verify at 1024×600 that the page does
@@ -87,20 +86,20 @@ failure.
 | # | Slide | What it shows |
 |---|---|---|
 | 1 | **This week** | distance / time / pace / runs per runner at headline size, with the week-over-week change in volume |
-| 2–3 | **&lt;Runner&gt; · training week** (one each) | daily run km with **last week's same-weekday volume ghosted behind it**, plus that day's **strength and other-training hours** stacked on a right-hand axis (two axes because km and hours are different units) |
-| 4 | **Latest runs** | each runner's last five runs as large rows: date, distance, pace, training-effect badge. Activity names were dropped — every run came back with the same location name |
-| 5 | **Training mix** | weekly training *hours* split running / strength / other over 10 weeks, per runner. Time is the one unit every activity type shares, so this shows a hot-weather swap from running to gym |
-| 6 | **Running conditions** | monthly average run temperature as bars ramped cool→hot, each runner's **monthly km as lines** on a right-hand axis, and the season's hottest run — so lighter summer mileage reads as heat, not slacking |
-| 7 | **Heart rate zones · this week** | each runner's zone split as a doughnut in shades of their own colour, with a fixed five-zone legend so both doughnuts stay the same size |
-| 8 | **Weekly mileage** | the last 26 weeks, both runners overlaid on one line chart |
+| 2–3 | **&lt;Runner&gt; · training week** (one each) | the week's km and its change on last week, over daily run km (latest run lit) with **last week's same weekday as a reference line**, plus that day's **strength and other-training hours** stacked on a right-hand axis |
+| 4 | **Latest runs** | each runner's most recent run at headline size (distance, pace, date and training effect), with the three before it as a short list |
+| 5 | **Training mix** | this week's training *hours* per runner, over 10 weeks split running / strength / other. Time is the one unit every activity type shares, so this shows a hot-weather swap from running to gym |
+| 6 | **Running conditions** | this month's average run temperature, the hottest run and this month's km; below, monthly temperature as bars (brighter = hotter) with each runner's **monthly km as lines** — so lighter summer mileage reads as heat, not slacking |
+| 7 | **Heart rate zones · this week** | each runner's easy share (zones 1–2) as the headline, with the zone split as a doughnut in shades of their own colour and a five-zone key |
+| 8 | **Weekly mileage** | each runner's latest week against their best, over the last 26 weeks as two lines |
 | 9 | **Mileage summary** | total / average per week / best week over the **last 3 months** |
 | 10 | **Year to date** | cumulative distance for both runners on one chart — a season-long "who's ahead" race, with current totals and the leader's gap |
-| 11–12 | **&lt;Runner&gt; · run frequency** (one each) | 12-month heatmap (cells size themselves to fill the card; cross-training-only days get a neutral marker), plus runs/week, current and longest streak, longest layoff, busiest weekday |
-| 13–14 | **Personal records · short / long** | bests for 1K / 5K / 10K, then half and marathon, each against **Garmin's race prediction** |
-| 15 | **Running form** | cadence / stride length / ground contact / vertical oscillation averaged over recent runs, head-to-head. Each metric except stride shows Garmin's top-30% reference band and an in-range / above / below verdict (stride scales with height and pace, so it gets no band) |
+| 11–12 | **&lt;Runner&gt; · run frequency** (one each) | runs per week over 12 months, with run days, km and busiest weekday, above a 12-month heatmap (cells size themselves to fill the card; cross-training-only days get a neutral marker) |
+| 13–14 | **Personal records · short / long** | one card per runner: bests for 1K / 5K / 10K, then half and full marathon, each with its date and **Garmin's race prediction** |
+| 15 | **Running form** | cadence / stride length / ground contact / vertical oscillation averaged over recent runs, head-to-head. Each metric except stride shows Garmin's top-30% reference band and a good / high / low verdict (stride scales with height and pace, so it gets no band) |
 | 16 | **Today's readiness** | resting HR / HRV / sleep score / VO₂max per runner |
-| 17 | **Heart · 30 days** | resting HR and HRV trends, both runners overlaid |
-| 18 | **Fitness & sleep · 30 days** | VO₂max (per-run estimate) and sleep hours |
+| 17 | **Heart · 30 days** | resting HR and HRV: each runner's latest value over a 30-day line |
+| 18 | **Fitness & sleep · 30 days** | VO₂max (per-run estimate) and sleep hours: latest value over a 30-day line |
 
 With one runner configured, slides 3 and 12 (runner B's per-runner slides) are
 hidden via `requiresRunner` in `slides.jsx` rather than shown empty.
@@ -131,9 +130,8 @@ frontend/
     slides.jsx          # the running order (SLIDES) + titles; adding a slide = one entry
     api.js              # fetch wrappers (?user=), mock fallback, live-vs-mock tracking
     utils.js            # formatters, runner colours/names, axisDate(), INTENSITY_STEPS
-    index.css           # Tailwind v4 @theme: the four-layer palette + `short:` variant
+    index.css           # Tailwind v4 @theme (v2 palette), Outfit, room/glass, .t-* type scale
     useTwoUsers.js      # useTwoUsers() / useOneUser(): same fetch for each runner
-    useCompact.js       # matchMedia twin of `short:`, for charts' numeric height props
     useDataSource.js    # "live" vs "demo" state behind the header badge
     useVersionCheck.js  # polls dist/version.json; reloads the kiosk after a deploy
     mock/mockData.js    # mock API responses for UI-only dev
@@ -142,11 +140,12 @@ frontend/
                         #   TrainingMix, Conditions, HRZones, Mileage (trend + summary),
                         #   YearToDate, Frequency, Records, RunningForm,
                         #   Body (readiness + heart / fitness trends)
-      Slide.jsx         # shared furniture: Slide, Panel, BigStat, RunnerTag, Loading
+      glass.jsx         # v2 building blocks: GlassSlide, GlassCard, GlassStat, LabelStat…
+      chart.jsx         # Recharts styling: 28px axes, niceTicks, yAxisWidth, TwoLineChart
       SlideNav.jsx      # segmented position / progress bar
-      WeekVolumeChart.jsx, WeeklyMileageChart.jsx, HRZoneDoughnut.jsx,
+      WeekVolumeChart.jsx, HRZoneDoughnut.jsx,
       CalendarHeatmap.jsx, CalendarStats.jsx     # charts shared by slides
-      RunnerLegend.jsx, LastSyncBadge.jsx, DataSourceBadge.jsx,
+      LastSyncBadge.jsx, DataSourceBadge.jsx,
       RefreshButton.jsx                          # header furniture
   vite.config.js        # dev server + /api proxy — pinned to IPv4 127.0.0.1
 deploy/                 # Pi-only scripts and templates (see the deploy table below)

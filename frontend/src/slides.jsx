@@ -23,8 +23,8 @@ import { runnerName } from "./utils.js";
  *
  * `title` may be a function of `users` so per-runner slides can name the runner.
  * `navLabel` is the short form used for the position indicator's tooltip.
- * `glass: true` marks slides already on the v2 design (design/); the header
- * drops its runner legend for them, since their cards carry the identity.
+ * Runner identity lives on the slides themselves (a lit card, or a runner's
+ * dot beside their number), so the header carries no legend.
  * `light` ("both" | "a" | "b" | "neutral") overrides whose light fills the
  * room; by default a per-runner slide takes that runner's, others both.
  */
@@ -34,7 +34,6 @@ export const SLIDES = [
     title: "This week",
     navLabel: "This week",
     Component: WeekTotalsSlide,
-    glass: true,
   },
   {
     id: "week-volume-a",
@@ -87,7 +86,6 @@ export const SLIDES = [
     title: "Last 3 months",
     navLabel: "Mileage summary",
     Component: MileageSummarySlide,
-    glass: true,
   },
   {
     id: "year-to-date",

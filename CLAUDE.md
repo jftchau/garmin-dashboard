@@ -20,40 +20,35 @@ not a preference. It keeps getting broken by well-meaning feature additions, so:
   as large as the budget allows — do NOT pack four panels onto a screen. If a
   slide is getting crowded, split it into two slides; there is no cost to adding
   slides, and that is the standing fix for "too small to read".
-- **Text has a readability floor — nothing below ~14px.** Metric labels are 16px
-  (`text-base`, via `BigStat`), chart axis ticks are `fontSize: 17`, panel titles
-  ~18px, subtitles/legends 14px. The dense calendar-heatmap micro-labels (weekday
-  letters, month names) are the only exception at 12px. Do NOT reintroduce the old
-  10–12px `text-xs`/`text-[10px]` label sizes — from kiosk distance they're
-  invisible. Axis dates use `axisDate()` from `utils.js` ("May 23", not the full
-  ISO string), which is both shorter and readable.
-- **A redesign is specified in `design/` (v2, being rolled out slide by slide).**
-  Done so far: tokens, self-hosted Outfit, the room/glass/grain frame, header and
-  progress rule, and the two head-to-head number slides ("This week", "Last 3
-  months"), built from `components/glass.jsx` and the `.t-*` type classes in
-  `index.css`. Slides marked `glass: true` in `slides.jsx` are on v2; the rest
-  still use `Slide.jsx`'s v1 layout until they are restyled.
-  The screen is read from **2.25 m**, where the ~14px floor above is roughly 7×
-  too small (the biggest number today, 80px, is below the ISO legibility
-  minimum). Any restyle takes its sizes, colours and font from `design/`:
-  `design/README.md` (rules), `design/tokens.json` / `design/tokens.css`
-  (values), `design/legibility.md` (the maths). In short: numbers 104–208px,
-  labels 44–56px, nothing below 24px; one font, Outfit, self-hosted from
-  `design/fonts/outfit/` (never from Google Fonts — the kiosk must render
-  identically offline).
-- **Chart margins/axis widths must fit the 17px ticks.** Recharts `margin` must
-  be **non-negative** and `YAxis width` wide enough for the largest label —
-  negative left margins (the old space-saving trick) clip multi-digit y-labels,
-  and a too-small right margin clips the last x-label. Working values: `margin`
-  `{ right: ~28–32, left: 0 }` for date x-axes, `YAxis width` ~44–48 for 3-digit
-  values. Put `allowDecimals={false}` on integer axes (e.g. km) so an empty week
-  doesn't render clipping fractional ticks like "0.25".
+- **Every slide is on the v2 "dark glass" design in `design/`.** The screen is
+  read from **2.25 m**: numbers 104–208px, labels 44–56px, **nothing below
+  24px**; one font, Outfit, self-hosted (never from Google Fonts — the kiosk
+  must render identically offline). Sizes, colours and rules come from
+  `design/README.md` (rules), `design/tokens.json` / `tokens.css` (values) and
+  `design/legibility.md` (the maths). Build slides from `components/glass.jsx`
+  (`GlassSlide`, `GlassCard`, `RunnerHead`, `GlassStat`, `LabelStat`,
+  `MiniStats`, `CardTitle`, `AlertChip`) and the `.t-*` type classes in
+  `index.css` — never Tailwind `text-sm`/`text-lg` sizes. Every slide leads
+  with a number ≥ 104px; a chart is the evidence beneath it.
+- **Widths are tight; measure, don't guess.** A head-to-head card is 396px
+  inside; a half-card cell 186px. Three digits fit `stat-xl` there; `GlassStat`
+  steps a size down past `stepAt` digits rather than overflow. After a layout
+  change, test the widest plausible values (a 4-digit total, a 10K over an
+  hour), not just today's data.
+- **Charts use `components/chart.jsx`.** 28px axis ticks (`xAxisProps`,
+  `yAxisProps`), `chartMargin` (top 20, or the top tick clips),
+  `niceTicks()` for 3–4 round steps, and `yAxisWidth()` to size every
+  `YAxis` from its own labels — a fixed width clipped "49.2" to "9.2" in v1.
+  One lit mark per chart (the latest run, this week): everything else is
+  `MARK_UNLIT`; cross-training is `STRENGTH` / `OTHER` (warm greys). Two-runner
+  lines use `TwoLineChart`, lit at their live end. Axis dates use `axisDate()`.
 - **Every slide shows a page number** (`NN/total`) at the top-left of the header,
   from the slide's index in `slides.jsx`. It's there so a viewer can say "page 7
   is wrong" — keep slide order stable-ish, or expect the numbers to shift.
 - **Slides fill the screen via flexbox, not pixel heights.** The app root is
-  `h-screen flex flex-col`; `Slide` is `flex-1 min-h-0 flex flex-col`; the chart
-  card is `<Panel grow>` (or `flex-1 min-h-0`) and charts take `height="100%"`.
+  `h-screen flex flex-col`; `GlassSlide` is `flex-1 min-h-0` (a grid); a chart
+  sits in a `flex-1 min-h-0` box inside its `GlassCard` and takes
+  `height="100%"`.
   Don't reintroduce fixed `height={220}` chart props — they leave dead space.
 - **Both runners are shown head-to-head** — there is NO user switcher (nothing to
   click on the Pi). Slides fetch both users with `useTwoUsers()`, or one with
@@ -94,12 +89,11 @@ not a preference. It keeps getting broken by well-meaning feature additions, so:
   **Tailwind v4 fails silently here:** a class naming a colour that isn't in
   `@theme` (e.g. a leftover `text-zone4`) just generates no CSS — no build error.
   After touching the palette, grep for classes using removed tokens.
-- **Height-gated compact mode**: `@custom-variant short (@media (max-height:700px))`
-  in `index.css` plus the `useCompact()` hook (`useCompact.js`) at the SAME 700px
-  threshold — keep them in sync. Use `short:` utilities for denser padding/
-  spacing/smaller charts on the Pi; Recharts need a numeric pixel height from
-  `useCompact()` (CSS can't reach them). Desktop (≥701px tall) is intentionally
-  left roomy — don't "fix" the extra whitespace there.
+- **Fixed px, sized for the Pi.** The v2 type scale and spacing are fixed px
+  for the 1024×600 panel; there is no compact mode to keep in sync. The
+  `short:` variant (`max-height: 700px` in `index.css`) survives only to hide
+  the desktop-only header controls on the Pi. On a taller desktop window cards
+  and charts grow into the extra height — that's expected.
 
 **Adding a feature?** Prefer a NEW slide over cramming it onto an existing one,
 then re-verify no-scroll at 1024×600 for both runners. Worked example: the

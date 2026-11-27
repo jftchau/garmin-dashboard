@@ -1,8 +1,7 @@
 import { fetchThisWeek } from "../../api.js";
 import { useTwoUsers } from "../../useTwoUsers.js";
-import { Loading } from "../Slide.jsx";
-import { GlassSlide, GlassCard, RunnerHead, GlassStat, MiniStats } from "../glass.jsx";
-import { formatPace } from "../../utils.js";
+import { GlassSlide, GlassCard, RunnerHead, GlassStat, MiniStats, Loading } from "../glass.jsx";
+import { formatPace, signed } from "../../utils.js";
 
 // Week totals run to hours, and H:MM:SS is more precision than a weekly total
 // deserves — so hours:minutes.
@@ -18,7 +17,7 @@ function hoursMinutes(sec) {
 function deltaText(week) {
   if (!week || week.prev_total_distance_km == null) return null;
   const diff = +(week.total_distance_km - week.prev_total_distance_km).toFixed(1);
-  return `${diff >= 0 ? "+" : ""}${diff} vs last week`;
+  return `${signed(diff)} vs last week`;
 }
 
 // Head-to-head, v2 glass: one number per runner (distance, at stat-xl), with

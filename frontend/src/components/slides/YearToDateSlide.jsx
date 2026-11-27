@@ -1,26 +1,9 @@
 import { useMemo } from "react";
-import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-} from "recharts";
 import { fetchWeeklyMileage } from "../../api.js";
 import { useTwoUsers } from "../../useTwoUsers.js";
-import Slide, { BigStat, Loading, Panel } from "../Slide.jsx";
-import { RUNNER_COLORS, runnerName, axisDate } from "../../utils.js";
-
-const axisTick = { fill: "var(--color-muted)", fontSize: 17, fontFamily: "var(--font-mono)" };
-const tooltipStyle = {
-  background: "var(--color-surface-2)",
-  border: "1px solid var(--color-line)",
-  borderRadius: 6,
-  fontFamily: "var(--font-mono)",
-  fontSize: 14,
-};
+import { GlassSlide, GlassCard, LabelStat, CardTitle, Loading } from "../glass.jsx";
+import { TwoLineChart } from "../chart.jsx";
+import { runnerName, axisDate } from "../../utils.js";
 
 const YEAR = new Date().getFullYear();
 
@@ -39,8 +22,9 @@ function cumulative(weekly) {
 
 /**
  * Year-to-date cumulative distance, both runners on one chart — a season-long
- * "who's ahead" race. Reads well from across the room: two lines climbing, and
- * whoever's higher is winning. Derived from /weekly-mileage (no new endpoint).
+ * "who's ahead" race. Each runner's total is the headline; the two climbing
+ * lines are the evidence, and whoever's higher is winning. Derived from
+ * /weekly-mileage (no new endpoint).
  */
 export default function YearToDateSlide({ users }) {
   const [weeklyA, weeklyB] = useTwoUsers(fetchWeeklyMileage, users);
@@ -68,41 +52,34 @@ export default function YearToDateSlide({ users }) {
 
   if (!weeklyA && !weeklyB) return <Loading what="year to date" />;
 
-  const leader = totals[0] === totals[1] ? null : totals[0] > totals[1] ? 0 : 1;
+  const shown = (users || []).slice(0, 2);
+  const leader = shown.length < 2 || totals[0] === totals[1] ? null : totals[0] > totals[1] ? 0 : 1;
   const gap = Math.abs(totals[0] - totals[1]);
 
-  const series = [
-    { key: "a", color: RUNNER_COLORS[0] },
-    { key: "b", color: RUNNER_COLORS[1] },
-  ];
-
   return (
-    <Slide className="space-y-3 short:space-y-2">
-      <div className="grid grid-cols-3 gap-4 short:gap-3 shrink-0">
-        <BigStat label={`${runnerName(users, 0)} · ${YEAR}`} value={totals[0]} unit="km" color={RUNNER_COLORS[0]} />
-        <BigStat label={`${runnerName(users, 1)} · ${YEAR}`} value={totals[1]} unit="km" color={RUNNER_COLORS[1]} />
-        <BigStat
-          label={leader == null ? "Dead heat" : "Leader"}
-          value={leader == null ? "—" : runnerName(users, leader)}
-          unit={leader == null ? "" : `+${gap} km`}
-          color={leader == null ? "var(--color-muted)" : RUNNER_COLORS[leader]}
-          size="md"
-        />
-      </div>
-
-      <Panel grow title={`Cumulative distance · ${YEAR}`}>
-        <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={data} margin={{ top: 8, right: 32, left: 0, bottom: 0 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="var(--color-line)" vertical={false} />
-            <XAxis dataKey="week_start" tick={axisTick} tickFormatter={axisDate} tickLine={false} axisLine={{ stroke: "var(--color-line)" }} minTickGap={44} />
-            <YAxis tick={axisTick} axisLine={false} tickLine={false} width={48} />
-            <Tooltip contentStyle={tooltipStyle} labelStyle={{ color: "var(--color-muted)" }} labelFormatter={axisDate} formatter={(v, n) => [`${v} km`, n === "a" ? runnerName(users, 0) : runnerName(users, 1)]} />
-            {series.map((s) => (
-              <Line key={s.key} type="monotone" dataKey={s.key} stroke={s.color} strokeWidth={3.5} dot={false} isAnimationActive={false} />
-            ))}
-          </LineChart>
-        </ResponsiveContainer>
-      </Panel>
-    </Slide>
+    <GlassSlide>
+      <GlassCard>
+        <div className="grid grid-cols-2 gap-8 shrink-0">
+          {shown.map((u, i) => (
+            <LabelStat
+              key={u.id}
+              dot={i}
+              label={`${runnerName(users, i)} · km in ${YEAR}`}
+              value={totals[i]}
+              size="lg"
+              stepAt={5}
+              note={leader === i ? `ahead by ${gap} km` : leader == null && shown.length > 1 ? "dead heat" : " "}
+              noteColor="var(--color-soft)"
+            />
+          ))}
+        </div>
+        <div className="flex-1 min-h-0 mt-6 flex flex-col gap-2">
+          <CardTitle>cumulative km</CardTitle>
+          <div className="flex-1 min-h-0">
+            <TwoLineChart data={data} xKey="week_start" xFormat={axisDate} zero minTickGap={70} tipFormat={(v) => `${v} km`} />
+          </div>
+        </div>
+      </GlassCard>
+    </GlassSlide>
   );
 }

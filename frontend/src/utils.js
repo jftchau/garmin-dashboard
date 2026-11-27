@@ -29,6 +29,13 @@ export function formatDateShort(isoString) {
   return d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
 }
 
+// "+4.2" / "−4.2" (a true minus sign: a hyphen is too short to read as one at
+// distance, and it sits lower than the plus).
+export function signed(n) {
+  if (n == null || isNaN(n)) return "—";
+  return n > 0 ? `+${n}` : n < 0 ? `−${Math.abs(n)}` : "±0";
+}
+
 export function formatDayLabel(isoString) {
   const d = new Date(isoString);
   return d.toLocaleDateString(undefined, { weekday: "short" });

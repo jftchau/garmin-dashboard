@@ -1,5 +1,3 @@
-import { useMemo } from "react";
-
 const MS_DAY = 86400000;
 const WEEKDAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
@@ -15,9 +13,9 @@ const mondayIdx = (date) => (date.getDay() + 6) % 7;
 
 const dayDiff = (a, b) => Math.round((a - b) / MS_DAY);
 
-// Derive the frequency stats surfaced on the Calendar tab from the run-day list
+// Frequency stats for the run-frequency slide, derived from the run-day list
 // the /calendar endpoint returns ([{ date, distance_km }], run days only).
-function calendarStats(data) {
+export function calendarStats(data) {
   const runDays = (data || [])
     .filter((d) => d.distance_km > 0)
     .map((d) => d.date)
@@ -74,55 +72,4 @@ function calendarStats(data) {
     byWeekday,
     peakCount,
   };
-}
-
-function Stat({ label, value, unit, color }) {
-  return (
-    <div className="whitespace-nowrap">
-      <div className="font-mono text-sm uppercase tracking-wide text-muted">{label}</div>
-      <div className="stat-mono text-2xl short:text-xl leading-tight" style={{ color }}>
-        {value}
-        {unit && <span className="text-sm text-muted ml-0.5">{unit}</span>}
-      </div>
-    </div>
-  );
-}
-
-// Frequency stats + a Mon-Sun weekday-distribution sparkline for one runner,
-// computed entirely from the /calendar run-day list. Laid out as ONE compact
-// horizontal strip (not a stacked grid) so both runners still fit the 1024x600
-// Pi screen with no scroll — see CLAUDE.md "Raspberry Pi display fit".
-export default function CalendarStats({ data, color, rgb }) {
-  const stats = useMemo(() => calendarStats(data), [data]);
-  if (!stats) return null;
-
-  return (
-    <div className="mt-3 short:mt-2 flex flex-wrap items-end gap-x-6 gap-y-2">
-      <Stat label="Runs / week" value={stats.perWeek.toFixed(1)} color={color} />
-      <Stat label="Current streak" value={stats.currentStreak} unit="d" color={color} />
-      <Stat label="Longest streak" value={stats.longestStreak} unit="d" color={color} />
-      <Stat label="Longest layoff" value={stats.longestGap} unit="d" color={color} />
-      <Stat label="Busiest day" value={stats.topWeekday} color={color} />
-
-      <div className="ml-auto">
-        <div className="font-mono text-sm uppercase tracking-wide text-muted mb-1">By weekday</div>
-        <div className="flex items-end gap-1 h-9 short:h-7">
-          {stats.byWeekday.map((count, i) => (
-            <div key={i} className="flex flex-col items-center justify-end h-full gap-0.5 w-5 short:w-4">
-              <div
-                className="w-full rounded-sm"
-                style={{
-                  height: `${stats.peakCount ? (count / stats.peakCount) * 100 : 0}%`,
-                  minHeight: count > 0 ? 3 : 0,
-                  background: `rgb(${rgb})`,
-                }}
-                title={`${WEEKDAYS[i]}: ${count} runs`}
-              />
-              <span className="font-mono text-sm text-muted">{WEEKDAYS[i][0]}</span>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
 }

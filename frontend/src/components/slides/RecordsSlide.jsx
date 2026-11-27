@@ -1,7 +1,7 @@
 import { fetchPersonalRecords, fetchRacePredictions } from "../../api.js";
 import { useTwoUsers } from "../../useTwoUsers.js";
-import Slide, { Loading } from "../Slide.jsx";
-import { formatDuration, formatDateShort, RUNNER_COLORS, runnerName } from "../../utils.js";
+import { GlassSlide, GlassCard, RunnerHead, Loading } from "../glass.jsx";
+import { formatDuration, formatDateShort } from "../../utils.js";
 
 // Our PR distance keys mapped to the race-prediction fields.
 const PREDICTION_KEY = {
@@ -11,12 +11,59 @@ const PREDICTION_KEY = {
   MARATHON: "time_marathon",
 };
 
+// Short names: the distance sits beside or above a 104–128px time, so it has
+// to stay narrow.
+const SHORT_LABEL = { "1K": "1K", "5K": "5K", "10K": "10K", HALF: "Half", MARATHON: "Full" };
+
+// One distance in a runner's card. Short distances ("22:47") are narrow enough
+// to put the name beside the time at stat-md, three to a card; long ones
+// ("1:45:20") need the card's full width, so the name goes above and the time
+// takes stat-lg, two to a card.
+function RecordRow({ label, rec, predicted, wide }) {
+  const time = rec?.best_time_sec ? formatDuration(rec.best_time_sec) : "—";
+  const meta = [rec?.achieved_at ? formatDateShort(rec.achieved_at) : null, predicted != null ? `pred ${formatDuration(predicted)}` : null]
+    .filter(Boolean)
+    .join(" · ");
+
+  if (wide) {
+    return (
+      <div>
+        <div className="flex items-baseline justify-between gap-4">
+          <span className="t-caption text-soft">{label}</span>
+          <span className="t-meta text-muted whitespace-nowrap">{meta}</span>
+        </div>
+        <div className="t-stat-lg mt-3">{time}</div>
+      </div>
+    );
+  }
+  // A short distance run in over an hour ("1:02:15") is too wide to share the
+  // row with its name, so the name joins the meta line beneath instead.
+  if (time.split(":").length > 2) {
+    return (
+      <div className="text-right">
+        <div className="t-stat-md">{time}</div>
+        <div className="t-meta text-muted whitespace-nowrap mt-2">
+          <span className="text-soft">{label}</span>
+          {meta && ` · ${meta}`}
+        </div>
+      </div>
+    );
+  }
+  return (
+    <div className="flex items-center justify-between gap-4">
+      <span className="t-caption text-soft">{label}</span>
+      <div className="text-right">
+        <div className="t-stat-md">{time}</div>
+        <div className="t-meta text-muted whitespace-nowrap mt-2">{meta || " "}</div>
+      </div>
+    </div>
+  );
+}
+
 /**
- * Personal bests for a subset of distances.
- *
- * The five distances used to share one slide, which forced small tiles. Split
- * across two slides (`distances` prop) each tile gets roughly double the width,
- * so the times are legible from across the room.
+ * Personal bests, head-to-head: one card per runner, one row per distance.
+ * The five distances are split across two slides (`distances`) so each time
+ * can be large: 1K/5K/10K at stat-md, half and full at stat-lg.
  */
 export default function RecordsSlide({ users, distances }) {
   const [recA, recB] = useTwoUsers(fetchPersonalRecords, users);
@@ -26,63 +73,30 @@ export default function RecordsSlide({ users, distances }) {
 
   const byDist = [recA, recB].map((rec) => Object.fromEntries((rec || []).map((r) => [r.distance_name, r])));
   const preds = [predA, predB];
-  const template = (recA || recB).filter((r) => distances.includes(r.distance_name));
+  const shown = (users || []).slice(0, 2);
+  const wide = distances.length <= 2;
 
   return (
-    <Slide>
-      <div
-        className={`flex-1 min-h-0 grid gap-4 short:gap-3 ${
-          template.length > 2 ? "grid-cols-3" : "grid-cols-2"
-        }`}
-      >
-        {template.map((t) => {
-          const dist = t.distance_name;
-          const predKey = PREDICTION_KEY[dist];
-          return (
-            <div
-              key={dist}
-              // justify-evenly, not justify-center: these cards are two thirds
-              // of the screen tall, and centring the content left a band of
-              // empty card above and below it.
-              className="bg-surface border border-line rounded-xl p-5 short:p-3 text-center flex flex-col justify-evenly min-h-0"
-            >
-              <div className="heading-display text-3xl short:text-2xl uppercase tracking-widest text-muted">
-                {t.label}
-              </div>
-              <div className="space-y-4 short:space-y-3">
-                {(users || []).slice(0, 2).map((u, i) => {
-                  const r = byDist[i][dist];
-                  const predicted = predKey && preds[i] ? preds[i][predKey] : null;
-                  return (
-                    <div key={u.id} className={i === 1 ? "pt-4 short:pt-3 border-t border-line/60" : ""}>
-                      <div
-                        className="font-mono text-lg short:text-base uppercase tracking-widest mb-1"
-                        style={{ color: RUNNER_COLORS[i] }}
-                      >
-                        {runnerName(users, i)}
-                      </div>
-                      <div
-                        // Two distances per slide leave enough width for the
-                        // marathon's seven characters at the larger step.
-                        className={`stat-mono leading-none ${
-                          template.length > 2 ? "text-7xl short:text-6xl" : "text-8xl short:text-7xl"
-                        }`}
-                        style={{ color: RUNNER_COLORS[i] }}
-                      >
-                        {r?.best_time_sec ? formatDuration(r.best_time_sec) : "—"}
-                      </div>
-                      <div className="text-muted text-base font-mono mt-1.5">
-                        {r?.achieved_at ? formatDateShort(r.achieved_at) : "—"}
-                        {predicted != null && <span> · pred {formatDuration(predicted)}</span>}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          );
-        })}
-      </div>
-    </Slide>
+    <GlassSlide cols={shown.length || 1}>
+      {shown.map((u, i) => (
+        <GlassCard key={u.id} runner={i}>
+          <RunnerHead users={users} i={i} />
+          <div className={`flex flex-col ${wide ? "gap-7" : "gap-[14px]"}`}>
+            {distances.map((dist) => {
+              const pk = PREDICTION_KEY[dist];
+              return (
+                <RecordRow
+                  key={dist}
+                  label={SHORT_LABEL[dist] || dist}
+                  rec={byDist[i][dist]}
+                  predicted={pk && preds[i] ? preds[i][pk] : null}
+                  wide={wide}
+                />
+              );
+            })}
+          </div>
+        </GlassCard>
+      ))}
+    </GlassSlide>
   );
 }

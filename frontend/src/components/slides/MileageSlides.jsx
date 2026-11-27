@@ -1,10 +1,9 @@
 import { useMemo } from "react";
 import { fetchWeeklyMileage } from "../../api.js";
 import { useTwoUsers } from "../../useTwoUsers.js";
-import Slide, { Loading, Panel } from "../Slide.jsx";
-import { GlassSlide, GlassCard, RunnerHead, GlassStat, MiniStats } from "../glass.jsx";
-import WeeklyMileageChart from "../WeeklyMileageChart.jsx";
-import { RUNNER_COLORS, runnerName, axisDate } from "../../utils.js";
+import { GlassSlide, GlassCard, RunnerHead, GlassStat, MiniStats, LabelStat, CardTitle, Loading } from "../glass.jsx";
+import { TwoLineChart } from "../chart.jsx";
+import { runnerName, axisDate } from "../../utils.js";
 
 const WEEKS = 26; // trend slide: half a year of weekly points reads as a shape
 
@@ -38,22 +37,43 @@ function useMerged(users) {
   return [merged, weeklyA, weeklyB];
 }
 
-const series = (users) => [
-  { dataKey: "a", color: RUNNER_COLORS[0], name: runnerName(users, 0) },
-  { dataKey: "b", color: RUNNER_COLORS[1], name: runnerName(users, 1) },
-];
-
+// Tier B: each runner's latest week is the headline, measured against their
+// best week in the window; the 26-week lines are the evidence.
 export function MileageTrendSlide({ users }) {
   const [merged] = useMerged(users);
-
   if (!merged.length) return <Loading what="weekly mileage" />;
 
+  const rows = merged.slice(-WEEKS);
+  const shown = (users || []).slice(0, 2);
+
   return (
-    <Slide>
-      <Panel grow title={`Kilometres per week · last ${WEEKS} weeks`}>
-        <WeeklyMileageChart data={merged.slice(-WEEKS)} series={series(users)} height="100%" tickFormatter={axisDate} />
-      </Panel>
-    </Slide>
+    <GlassSlide>
+      <GlassCard>
+        <div className="grid grid-cols-2 gap-8 shrink-0">
+          {shown.map((u, i) => {
+            const key = i === 0 ? "a" : "b";
+            const vals = rows.map((r) => r[key]).filter((v) => v != null);
+            const latest = vals.length ? vals[vals.length - 1] : null;
+            const best = vals.length ? Math.max(...vals) : null;
+            return (
+              <LabelStat
+                key={u.id}
+                dot={i}
+                label={`${runnerName(users, i)} · this week, km`}
+                value={latest != null ? latest.toFixed(1) : "—"}
+                note={best != null ? `best ${best.toFixed(1)} in ${WEEKS} weeks` : " "}
+              />
+            );
+          })}
+        </div>
+        <div className="flex-1 min-h-0 mt-6 flex flex-col gap-2">
+          <CardTitle>km per week</CardTitle>
+          <div className="flex-1 min-h-0">
+            <TwoLineChart data={rows} xKey="week_start" xFormat={axisDate} zero tipFormat={(v) => `${v} km`} />
+          </div>
+        </div>
+      </GlassCard>
+    </GlassSlide>
   );
 }
 

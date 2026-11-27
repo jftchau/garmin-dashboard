@@ -41,22 +41,56 @@ export function RunnerHead({ users, i }) {
   );
 }
 
-const glowRgba = (i) => (i === 0 ? "rgb(255 145 71 / 0.6)" : "rgb(122 167 255 / 0.6)");
+// A runner's halo colour, for dots and the lit end of a line.
+export const glowRgba = (i) => (i === 0 ? "rgb(255 145 71 / 0.6)" : "rgb(122 167 255 / 0.6)");
+
+// Just the dot: the legend on a neutral card where both runners share a chart.
+export function RunnerDot({ i, size = 18 }) {
+  return (
+    <span
+      className="rounded-full shrink-0 inline-block"
+      style={{ width: size, height: size, background: RUNNER_COLORS[i], boxShadow: `0 0 ${size}px ${glowRgba(i)}` }}
+    />
+  );
+}
 
 // A number with its unit beside it, top-aligned. Numbers are always text-1,
 // whoever they belong to (orange text on glass is only ~5.6:1).
 //
 // A head-to-head card (396px inside) fits three digits plus "km" at stat-xl
-// (88.8 km leaves 7px). A fourth digit (1088, 100.0) steps down to stat-lg
-// rather than overflow.
-export function GlassStat({ value, unit, size = "xl" }) {
+// (88.8 km leaves 7px). A value with `stepAt` or more digits steps down one
+// size rather than overflow; for xl that's four (1088, 100.0).
+const SIZES = ["hero", "xl", "lg", "md"];
+const SIZE_CLASS = { hero: "t-hero", xl: "t-stat-xl", lg: "t-stat-lg", md: "t-stat-md" };
+
+export function GlassStat({ value, unit, size = "xl", stepAt }) {
   const digits = String(value ?? "").replace(/[^0-9]/g, "").length;
-  const step = size === "xl" && digits >= 4 ? "lg" : size;
-  const cls = { hero: "t-hero", xl: "t-stat-xl", lg: "t-stat-lg", md: "t-stat-md" }[step];
+  const limit = stepAt ?? (size === "xl" ? 4 : Infinity);
+  const step = digits >= limit ? SIZES[Math.min(SIZES.indexOf(size) + 1, SIZES.length - 1)] : size;
   return (
     <div className="flex items-start gap-[10px] min-w-0">
-      <span className={cls}>{value ?? "—"}</span>
+      <span className={SIZE_CLASS[step]}>{value ?? "—"}</span>
       {unit && <span className="t-unit mt-[6px]">{unit}</span>}
+    </div>
+  );
+}
+
+// A figure with its name above it, for grids where a unit beside the number
+// won't fit: the unit joins the name ("Resting HR · bpm"). `dot` puts a
+// runner's dot before the name; `note` is a walk-closer line beneath.
+export function LabelStat({ label, value, size = "md", stepAt, dot, note, noteColor }) {
+  return (
+    <div className="min-w-0">
+      <div className="t-meta text-muted whitespace-nowrap flex items-center gap-[10px] mb-3">
+        {dot != null && <RunnerDot i={dot} size={14} />}
+        {label}
+      </div>
+      <GlassStat value={value} size={size} stepAt={stepAt} />
+      {note != null && (
+        <div className="t-meta whitespace-nowrap mt-3" style={{ color: noteColor || "var(--color-muted)" }}>
+          {note}
+        </div>
+      )}
     </div>
   );
 }
@@ -72,6 +106,35 @@ export function MiniStats({ items }) {
           <div className="t-meta text-muted mt-2 whitespace-nowrap">{it.label}</div>
         </div>
       ))}
+    </div>
+  );
+}
+
+export function Loading({ what = "data" }) {
+  return <p className="t-caption text-muted px-10 pt-6">Loading {what}…</p>;
+}
+
+// Empty state inside a card or chart area.
+export function Empty({ children = "No data yet" }) {
+  return <div className="h-full flex items-center justify-center t-caption text-muted">{children}</div>;
+}
+
+// The one alert hue (design rule 5): a chip with a word, never bare colour.
+export function AlertChip({ children }) {
+  return (
+    <span className="t-meta inline-flex items-center whitespace-nowrap rounded-full px-3 py-1.5 bg-ember/20 border border-ember text-chalk font-semibold">
+      {children}
+    </span>
+  );
+}
+
+// A card's own heading, for neutral cards that hold a chart: what is plotted
+// and in what unit. Walk-closer tier; the slide title says what the slide is.
+export function CardTitle({ children, right }) {
+  return (
+    <div className="flex items-baseline justify-between gap-4 shrink-0">
+      <div className="t-caption text-soft whitespace-nowrap">{children}</div>
+      {right && <div className="t-meta text-muted whitespace-nowrap">{right}</div>}
     </div>
   );
 }

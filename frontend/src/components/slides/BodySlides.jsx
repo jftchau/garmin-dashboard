@@ -1,36 +1,18 @@
-import {
-  ResponsiveContainer,
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  Tooltip,
-  CartesianGrid,
-} from "recharts";
 import { fetchVo2maxTrend, fetchWellnessTrend, fetchCurrentStatus } from "../../api.js";
 import { useTwoUsers } from "../../useTwoUsers.js";
-import Slide, { BigStat, Loading, RunnerTag } from "../Slide.jsx";
-import { RUNNER_COLORS, axisDate } from "../../utils.js";
+import { GlassSlide, GlassCard, RunnerHead, LabelStat, CardTitle, Empty, Loading } from "../glass.jsx";
+import { TwoLineChart } from "../chart.jsx";
+import { axisDate, runnerName } from "../../utils.js";
 
 // Window for the two trend slides. 90 days squeezed a quarter of a year into
-// 480px, so day-to-day movement turned into noise; a month of points is what
-// this display can actually resolve.
+// the card, so day-to-day movement turned into noise; a month of points is
+// what this display can actually resolve.
 const TREND_DAYS = 30;
 
 const sinceCutoff = () => {
   const d = new Date();
   d.setDate(d.getDate() - TREND_DAYS);
   return d.toISOString().slice(0, 10);
-};
-
-const axisTick = { fill: "var(--color-muted)", fontSize: 17, fontFamily: "var(--font-mono)" };
-
-const tooltipStyle = {
-  background: "var(--color-surface-2)",
-  border: "1px solid var(--color-line)",
-  borderRadius: 6,
-  fontFamily: "var(--font-mono)",
-  fontSize: 14,
 };
 
 // Union two runners' time series into one row per date: { date, a, b }.
@@ -46,55 +28,45 @@ function mergeByDate(arrA, arrB, key, map = (v) => v) {
   return [...m.values()].sort((x, y) => (x.date < y.date ? -1 : 1));
 }
 
+const latestOf = (rows, key) => {
+  for (let i = rows.length - 1; i >= 0; i--) if (rows[i][key] != null) return rows[i][key];
+  return null;
+};
+
 const round = (v) => (v != null ? Math.round(v) : null);
 
-function TrendChart({ data, height, pad, fmt }) {
-  if (!data?.length) {
-    return (
-      <div className="flex items-center justify-center text-muted font-mono text-base" style={{ height }}>
-        No data
-      </div>
-    );
-  }
+// One metric: each runner's latest value as the headline (their dot doubles as
+// the chart's legend), the 30-day lines beneath as evidence.
+function TrendCard({ users, title, note, data, pad, fmt, digits = 0 }) {
+  const shown = (users || []).slice(0, 2);
   return (
-    <ResponsiveContainer width="100%" height={height}>
-      <LineChart data={data} margin={{ top: 6, right: 32, left: 0, bottom: 0 }}>
-        <CartesianGrid strokeDasharray="3 3" stroke="var(--color-line)" vertical={false} />
-        <XAxis dataKey="date" tick={axisTick} tickFormatter={axisDate} axisLine={{ stroke: "var(--color-line)" }} tickLine={false} minTickGap={44} />
-        <YAxis tick={axisTick} axisLine={false} tickLine={false} width={44} domain={[`dataMin - ${pad}`, `dataMax + ${pad}`]} />
-        <Tooltip contentStyle={tooltipStyle} labelStyle={{ color: "var(--color-muted)" }} formatter={(v, n) => [fmt(v), n]} />
-        <Line type="monotone" dataKey="a" name="A" stroke={RUNNER_COLORS[0]} strokeWidth={3} dot={false} connectNulls activeDot={{ r: 5 }} isAnimationActive={false} />
-        <Line type="monotone" dataKey="b" name="B" stroke={RUNNER_COLORS[1]} strokeWidth={3} dot={false} connectNulls activeDot={{ r: 5 }} isAnimationActive={false} />
-      </LineChart>
-    </ResponsiveContainer>
+    <GlassCard>
+      <CardTitle right={note}>{title}</CardTitle>
+      <div className="grid grid-cols-2 gap-6 mt-5 shrink-0">
+        {shown.map((u, i) => {
+          const v = latestOf(data, i === 0 ? "a" : "b");
+          return <LabelStat key={u.id} dot={i} label={runnerName(users, i)} value={v != null ? v.toFixed(digits) : "—"} />;
+        })}
+      </div>
+      <div className="flex-1 min-h-0 mt-5">
+        {data.length ? (
+          <TwoLineChart data={data} xKey="date" xFormat={axisDate} yPad={pad} minTickGap={70} tipFormat={fmt} />
+        ) : (
+          <Empty />
+        )}
+      </div>
+    </GlassCard>
   );
 }
 
-function TrendPanel({ title, subtitle, children }) {
+// Two metrics side by side, each on its own neutral card.
+function TrendPairSlide({ users, cards }) {
   return (
-    <div className="bg-surface border border-line rounded-xl p-4 short:p-3 flex flex-col min-h-0">
-      <div className="flex items-baseline justify-between mb-2 short:mb-1 gap-3 shrink-0">
-        <h3 className="heading-display text-lg short:text-base uppercase tracking-wide text-muted">{title}</h3>
-        <p className="text-muted text-sm font-mono">{subtitle}</p>
-      </div>
-      <div className="flex-1 min-h-0">{children}</div>
-    </div>
-  );
-}
-
-// Two trends side by side. Splitting the old 2x2 grid of tiny charts across two
-// slides doubles each chart's height — the lines are now readable at distance.
-function TrendPairSlide({ panels }) {
-  return (
-    <Slide>
-      <div className="flex-1 min-h-0 grid grid-cols-2 gap-4 short:gap-3">
-        {panels.map((p) => (
-          <TrendPanel key={p.title} title={p.title} subtitle={p.subtitle}>
-            <TrendChart data={p.data} height="100%" pad={p.pad} fmt={p.fmt} />
-          </TrendPanel>
-        ))}
-      </div>
-    </Slide>
+    <GlassSlide cols={2}>
+      {cards.map((c) => (
+        <TrendCard key={c.title} users={users} {...c} />
+      ))}
+    </GlassSlide>
   );
 }
 
@@ -104,17 +76,17 @@ export function HeartTrendsSlide({ users }) {
 
   return (
     <TrendPairSlide
-      panels={[
+      users={users}
+      cards={[
         {
-          title: "Resting heart rate",
-          subtitle: "bpm · lower is fitter",
+          title: "Resting HR · bpm",
           data: mergeByDate(wellA, wellB, "resting_hr"),
           pad: 2,
           fmt: (v) => `${v} bpm`,
         },
         {
-          title: "HRV (weekly avg)",
-          subtitle: "ms · higher & stable is better",
+          title: "HRV · ms",
+          note: "weekly avg",
           data: mergeByDate(wellA, wellB, "hrv_weekly_avg"),
           pad: 4,
           fmt: (v) => `${v} ms`,
@@ -136,19 +108,23 @@ export function FitnessTrendsSlide({ users }) {
 
   return (
     <TrendPairSlide
-      panels={[
+      users={users}
+      cards={[
         {
           title: "VO₂max",
-          subtitle: "per-run estimate",
+          note: "per-run estimate",
           data: mergeByDate(recent(vo2A?.trend), recent(vo2B?.trend), "vo2max"),
           pad: 1,
+          // Whole numbers, as the watch shows it ("48.2" also overflows a
+          // half-card cell at stat-md).
           fmt: (v) => v,
         },
         {
-          title: "Sleep",
-          subtitle: "hours per night",
+          title: "Sleep · hours",
+          note: "per night",
           data: mergeByDate(wellA, wellB, "sleep_seconds", (s) => +(s / 3600).toFixed(1)),
           pad: 1,
+          digits: 1,
           fmt: (v) => `${v} h`,
         },
       ]}
@@ -156,6 +132,11 @@ export function FitnessTrendsSlide({ users }) {
   );
 }
 
+/**
+ * Today's readiness, head-to-head: four numbers per runner in a 2x2 grid.
+ * Two digits fit stat-lg in a half-width cell; a three-digit value (HRV can
+ * pass 100) steps down to stat-md rather than overflow.
+ */
 export function StatusSlide({ users }) {
   const [statA, statB] = useTwoUsers(fetchCurrentStatus, users);
   const [vo2A, vo2B] = useTwoUsers(fetchVo2maxTrend, users);
@@ -164,28 +145,25 @@ export function StatusSlide({ users }) {
 
   const stats = [statA, statB];
   const vo2 = [vo2A, vo2B];
+  const shown = (users || []).slice(0, 2);
 
   return (
-    <Slide className="space-y-3 short:space-y-2">
-      {(users || []).slice(0, 2).map((u, i) => {
+    <GlassSlide cols={shown.length || 1}>
+      {shown.map((u, i) => {
         const s = stats[i];
-        const color = RUNNER_COLORS[i];
+        const cell = (label, value) => <LabelStat label={label} value={value} size="lg" stepAt={3} />;
         return (
-          <div key={u.id} className="bg-surface border border-line rounded-xl p-5 short:p-3 flex-1 min-h-0 flex flex-col justify-center">
-            <div className="mb-3 short:mb-2">
-              <RunnerTag users={users} i={i} size="xl" />
+          <GlassCard key={u.id} runner={i}>
+            <RunnerHead users={users} i={i} />
+            <div className="grid grid-cols-2 gap-x-6 gap-y-7">
+              {cell("Resting HR · bpm", s?.resting_hr)}
+              {cell("HRV · ms", s?.hrv_last_night)}
+              {cell("Sleep score", s?.sleep_score)}
+              {cell("VO₂max", round(vo2[i]?.current))}
             </div>
-            {/* Four two-digit numbers in a full-width card — they can carry the
-                same headline size as the "this week" slide. */}
-            <div className="grid grid-cols-4 gap-4 short:gap-3">
-              <BigStat label="Resting HR" value={s?.resting_hr} unit="bpm" color={color} size="hero" />
-              <BigStat label="HRV" value={s?.hrv_last_night} unit="ms" color={color} size="hero" />
-              <BigStat label="Sleep score" value={s?.sleep_score} color={color} size="hero" />
-              <BigStat label="VO₂max" value={round(vo2[i]?.current)} color={color} size="hero" />
-            </div>
-          </div>
+          </GlassCard>
         );
       })}
-    </Slide>
+    </GlassSlide>
   );
 }
