@@ -88,6 +88,14 @@ sources from the corners, with glass cards standing in it.
 - **Glass cards**: `glass-fill` (white at 5%), a 1px `glass-edge` hairline, a
   `glass-inset` top highlight, the `glass-drop` shadow, `radius-card` 28px, and a
   corner glow inside the card in the slide's light colour.
+- **A runner's card is lit from outside, not inside.** The first values (haze
+  0.18, card glow 0.14, a white hairline) vanished on the Pi's 6-bit panel,
+  whose blacks are grey. So the haze is 0.42, and the card adds a 2px lit edge
+  (`runner-*-edge`, brightest at its outer corner) and a halo round the outside
+  (`runner-*-halo`). Its fill sits on `runner-card-dim`, so the brighter room
+  doesn't show through behind the captions: `text-3` in the lit corner measures
+  the same as before. The knobs are the `--haze`, `--glow`, `--edge`, `--halo`
+  and `--dim` variables at the top of `index.css`; tune them on the panel.
 - **Grain**: a soft-light noise layer at `grain` 4% over everything. Dark
   gradients band on a 6-bit panel; grain dithers them away.
 - **Backdrop blur is optional.** Over a haze this smooth it is barely visible,

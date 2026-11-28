@@ -64,6 +64,22 @@
   --font-sans: "Outfit", system-ui, sans-serif;
 }
 
+/* Runner light. One set of knobs for how strongly each runner's colour lights
+   the room and their cards. The first values (haze 0.18, card glow 0.14, a
+   white hairline edge) were tuned on a desktop monitor and all but vanished
+   on the Pi's 6-bit panel, whose blacks are grey; these are about 2.5× that,
+   with a lit edge and a halo added where no text sits. Tune here, on the Pi. */
+:root {
+  --a-rgb: 255 145 71;     /* runner-a, Jeffrey */
+  --b-rgb: 122 167 255;    /* runner-b, Eugenia */
+  --haze: 0.42;            /* the room's light source, from the runner's corner */
+  --glow: 0.20;            /* inside the card, from its outer corner */
+  --dim: 0.55;             /* how much of the room's light a runner's card holds back,
+                              so captions in its lit corner keep their contrast */
+  --edge: 0.90;            /* the card's 2px edge at its outer corner, fading along it */
+  --halo: 0.45;            /* light spilling round the card, offset to its outer corner */
+}
+
 html, body, #root {
   height: 100%;
 }
@@ -89,18 +105,18 @@ body {
 }
 .room-both {
   background-image:
-    radial-gradient(560px 460px at 82px -36px, rgb(255 145 71 / 0.18), transparent 70%),
+    radial-gradient(600px 500px at 82px -36px, rgb(var(--a-rgb) / var(--haze)), transparent 70%),
     radial-gradient(320px 260px at 50% 50%, rgb(215 221 234 / 0.05), transparent 70%),
-    radial-gradient(640px 520px at 100% calc(100% + 48px), rgb(122 167 255 / 0.18), transparent 70%);
+    radial-gradient(680px 560px at 100% calc(100% + 48px), rgb(var(--b-rgb) / var(--haze)), transparent 70%);
 }
 .room-a {
   background-image:
-    radial-gradient(760px 600px at 82px -36px, rgb(255 145 71 / 0.18), transparent 70%),
+    radial-gradient(760px 600px at 82px -36px, rgb(var(--a-rgb) / var(--haze)), transparent 70%),
     radial-gradient(520px 420px at 100% 100%, rgb(215 221 234 / 0.06), transparent 70%);
 }
 .room-b {
   background-image:
-    radial-gradient(760px 600px at 100% calc(100% + 48px), rgb(122 167 255 / 0.18), transparent 70%),
+    radial-gradient(760px 600px at 100% calc(100% + 48px), rgb(var(--b-rgb) / var(--haze)), transparent 70%),
     radial-gradient(520px 420px at 0 0, rgb(215 221 234 / 0.06), transparent 70%);
 }
 .room-neutral {
@@ -123,7 +139,10 @@ body {
 /* ---------------------------------------------------------------------------
    Glass card. Fill, hairline edge, inset top highlight, drop shadow, and a
    corner glow in the slide's light colour (a = Jeffrey from the top-left,
-   b = Eugenia from the bottom-right, n = neutral).
+   b = Eugenia from the bottom-right, n = neutral). A runner's card also gets
+   a lit 2px edge (::after, brightest at the outer corner) and a halo in their
+   colour round the outside — both away from the text, so they can be strong
+   without costing the grey captions any contrast.
    --------------------------------------------------------------------------- */
 .glass {
   position: relative;
@@ -141,8 +160,34 @@ body {
   pointer-events: none;
 }
 .glass > * { position: relative; }
-.glass-a::before { background: radial-gradient(420px 300px at 0% 0%, rgb(255 145 71 / 0.14), transparent 70%); }
-.glass-b::before { background: radial-gradient(420px 300px at 100% 100%, rgb(122 167 255 / 0.14), transparent 70%); }
+.glass-a::before { background: radial-gradient(480px 340px at 0% 0%, rgb(var(--a-rgb) / var(--glow)), transparent 70%); }
+.glass-b::before { background: radial-gradient(480px 340px at 100% 100%, rgb(var(--b-rgb) / var(--glow)), transparent 70%); }
+/* Runner cards are smoked glass: the same 5% white fill over a partly opaque
+   ground, so the stronger room light shows round them, not behind the text. */
+.glass-a, .glass-b {
+  background: linear-gradient(var(--color-surface), var(--color-surface)), rgb(9 11 16 / var(--dim));
+}
+.glass-a {
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.14), -10px -10px 44px -6px rgb(var(--a-rgb) / var(--halo)), 0 24px 48px -12px rgb(0 0 0 / 0.55);
+}
+.glass-b {
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.14), 10px 10px 44px -6px rgb(var(--b-rgb) / var(--halo)), 0 24px 48px -12px rgb(0 0 0 / 0.55);
+}
+/* The lit edge: a 2px ring masked out of a gradient, so it doesn't change
+   the card's box (the widths inside are measured to the pixel). */
+.glass-a::after, .glass-b::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 2px;
+  pointer-events: none;
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+}
+.glass-a::after { background: linear-gradient(135deg, rgb(var(--a-rgb) / var(--edge)), rgb(var(--a-rgb) / 0.12) 70%); }
+.glass-b::after { background: linear-gradient(315deg, rgb(var(--b-rgb) / var(--edge)), rgb(var(--b-rgb) / 0.12) 70%); }
 .glass-n::before { background: radial-gradient(360px 260px at 0% 0%, rgb(215 221 234 / 0.10), transparent 70%); }
 
 /* ---------------------------------------------------------------------------
