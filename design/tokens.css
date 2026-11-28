@@ -35,8 +35,11 @@
   --runner-a-rgb:  255 145 71;
   --runner-b:      #7aa7ff;   /* Eugenia — lifted from #5c8dff so a lit bar clears 3:1 on its track */
   --runner-b-rgb:  122 167 255;
-  --runner-haze:   .18;       /* alpha of a runner's light source */
-  --runner-glow:   .14;       /* card corner glow in the runner's colour */
+  --runner-haze:   .42;       /* alpha of a runner's light source (was .18: invisible on the Pi) */
+  --runner-glow:   .20;       /* card corner glow in the runner's colour */
+  --runner-edge:   .90;       /* 2px lit card edge at its outer corner, fading to .12 */
+  --runner-halo:   .45;       /* light round the card, offset to its outer corner */
+  --runner-dim:    .55;       /* smoked-glass ground under a runner card, keeps captions readable */
   --mark-halo:     22px;      /* glow around lit runner marks */
 
   /* ---- Type (step 3 · Outfit, OFL) ---- */
