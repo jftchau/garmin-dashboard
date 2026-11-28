@@ -9,8 +9,8 @@
     margin:0; padding:32px 40px; width:1024px; box-sizing:border-box;
     background-color: var(--ground, #090b10);
     background-image:
-      radial-gradient(560px 460px at 82px -36px, var(--runner-a-haze, rgba(255,145,71,.18)), transparent 70%),
-      radial-gradient(640px 520px at 1024px 600px, var(--runner-b-haze, rgba(122,167,255,.18)), transparent 70%);
+      radial-gradient(560px 460px at 82px -36px, var(--runner-a-haze, rgba(255,131,66,.18)), transparent 70%),
+      radial-gradient(640px 520px at 1024px 600px, var(--runner-b-haze, rgba(0,202,174,.18)), transparent 70%);
     font-family: var(--font-display, Outfit, system-ui, sans-serif);
     color: var(--text-1, #f3f4f6);
   }
@@ -26,11 +26,11 @@
     display:flex; flex-direction:column; justify-content:space-between;
   }
   .glass::before { content:""; position:absolute; inset:0; pointer-events:none; }
-  .a::before { background:radial-gradient(420px 300px at 0% 0%, var(--runner-a-glow, rgba(255,145,71,.14)), transparent 70%); }
-  .b::before { background:radial-gradient(420px 300px at 100% 100%, var(--runner-b-glow, rgba(122,167,255,.14)), transparent 70%); }
+  .a::before { background:radial-gradient(420px 300px at 0% 0%, var(--runner-a-glow, rgba(255,131,66,.14)), transparent 70%); }
+  .b::before { background:radial-gradient(420px 300px at 100% 100%, var(--runner-b-glow, rgba(0,202,174,.14)), transparent 70%); }
   .glass > * { position:relative; }
-  .a { --c: var(--runner-a, #ff9147); --halo: var(--mark-halo-a, 0 0 22px rgba(255,145,71,.6)); }
-  .b { --c: var(--runner-b, #7aa7ff); --halo: var(--mark-halo-b, 0 0 22px rgba(122,167,255,.6)); }
+  .a { --c: var(--runner-a, #ff8342); --halo: var(--mark-halo-a, 0 0 22px rgba(255,131,66,.6)); }
+  .b { --c: var(--runner-b, #00caae); --halo: var(--mark-halo-b, 0 0 22px rgba(0,202,174,.6)); }
   .who { display:flex; align-items:center; gap:14px; }
   .dot { width:22px; height:22px; border-radius:50%; background:var(--c); box-shadow:var(--halo); }
   .label { font-size:52px; font-weight:700; line-height:1; letter-spacing:.08em; text-transform:uppercase; }

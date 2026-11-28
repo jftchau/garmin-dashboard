@@ -1,4 +1,4 @@
-import { RUNNER_COLORS, runnerName } from "../utils.js";
+import { RUNNER_COLORS, RUNNER_RGB, runnerName } from "../utils.js";
 
 // Building blocks for the v2 "dark glass" slides (design/README.md).
 //
@@ -42,7 +42,7 @@ export function RunnerHead({ users, i }) {
 }
 
 // A runner's halo colour, for dots and the lit end of a line.
-export const glowRgba = (i) => (i === 0 ? "rgb(255 145 71 / 0.6)" : "rgb(122 167 255 / 0.6)");
+export const glowRgba = (i) => `rgba(${RUNNER_RGB[i]}, 0.6)`;
 
 // Just the dot: the legend on a neutral card where both runners share a chart.
 export function RunnerDot({ i, size = 18 }) {
@@ -55,7 +55,7 @@ export function RunnerDot({ i, size = 18 }) {
 }
 
 // A number with its unit beside it, top-aligned. Numbers are always text-1,
-// whoever they belong to (orange text on glass is only ~5.6:1).
+// whoever they belong to (runner-coloured text on glass falls short of 7:1).
 //
 // A head-to-head card (396px inside) fits three digits plus "km" at stat-xl
 // (88.8 km leaves 7px). A value with `stepAt` or more digits steps down one

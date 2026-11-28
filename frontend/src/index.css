@@ -47,8 +47,8 @@
   --color-unlit: rgb(255 255 255 / 0.16);     /* every mark that isn't "now" */
 
   /* Identity */
-  --color-runner-a: #ff9147;     /* Jeffrey */
-  --color-runner-b: #7aa7ff;     /* Eugenia */
+  --color-runner-a: #ff8342;     /* Jeffrey, copper */
+  --color-runner-b: #00caae;     /* Eugenia, seafoam */
 
   /* Neutral data (cross-training): warm greys, told apart by lightness */
   --color-slate: #b5ad9f;
@@ -70,8 +70,8 @@
    on the Pi's 6-bit panel, whose blacks are grey; these are about 2.5× that,
    with a lit edge and a halo added where no text sits. Tune here, on the Pi. */
 :root {
-  --a-rgb: 255 145 71;     /* runner-a, Jeffrey */
-  --b-rgb: 122 167 255;    /* runner-b, Eugenia */
+  --a-rgb: 255 131 66;     /* runner-a, Jeffrey */
+  --b-rgb: 0 202 174;    /* runner-b, Eugenia */
   --haze: 0.42;            /* the room's light source, from the runner's corner */
   --glow: 0.20;            /* inside the card, from its outer corner */
   --dim: 0.55;             /* how much of the room's light a runner's card holds back,

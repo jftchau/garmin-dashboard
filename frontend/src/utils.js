@@ -78,11 +78,11 @@ export function axisDate(iso) {
 }
 
 // Head-to-head runner colors, indexed by position in the users array (Runner A
-// = Jeffrey, orange; Runner B = Eugenia, blue — design/tokens.json). Mirrors
+// = Jeffrey, copper; Runner B = Eugenia, seafoam — design/tokens.json). Mirrors
 // --color-runner-a/-b in index.css. RGB strings feed the rgba() ramps (calendar
 // heatmap, HR zones). Keep both in sync with the hexes.
 export const RUNNER_COLORS = ["var(--color-runner-a)", "var(--color-runner-b)"];
-export const RUNNER_RGB = ["255,145,71", "122,167,255"];
+export const RUNNER_RGB = ["255,131,66", "0,202,174"];
 
 // Neutral + alert channels as rgb strings, for the places that need to ramp
 // opacity in an inline style (a chart fill can't take a CSS var with an alpha).

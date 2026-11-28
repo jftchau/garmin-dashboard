@@ -141,7 +141,8 @@ colour-blindness simulation (severity 1.0):
 | --- | --- | --- | --- |
 | Marigold / olive (pre-v1) | 28 | **8** | **3** |
 | Orange `#ff7a2f` / cyan `#22d3ee` (v1) | 53 | 49 | 45 |
-| **Orange `#ff9147` / blue `#7aa7ff` (v2)** | **48** | **56** | **52** |
+| Orange `#ff9147` / blue `#7aa7ff` (v2) | 48 | 56 | 52 |
+| **Copper `#ff8342` / seafoam `#00caae` (v2b, 2026-11-28)** | **56** | **28** | **21** |
 
 (Version 1 of this page printed 118 / 124 / 124 for orange/cyan. Those were
 CIE76 figures mixed into a CIEDE2000 table; the corrected values are above.)
@@ -150,6 +151,10 @@ Runner hue against a white lit mark, worst colour-blind case: v1's cyan
 collapsed to 16, which is why v1 required dashed reference markers. v2's
 Jeffrey reaches 30 and Eugenia 27, above the 20 this kit asks for.
 
-A lit runner mark against its unlit track must clear 3:1: Jeffrey 4.82:1,
-Eugenia 3.32:1. The first blue tried (`#5c8dff`) reached only 2.67:1, so it was
+v2b (copper / seafoam) was chosen knowingly below the 40 line for colour-blind
+viewers; see the trade-off note in README.md. Eugenia's seafoam also drops to
+15–17 against a white lit mark under colour blindness.
+
+A lit runner mark against its unlit track must clear 3:1. v2 measured Jeffrey
+4.82:1, Eugenia 3.32:1; v2b estimates ~3.7:1 and ~4.3:1. The first blue tried (`#5c8dff`) reached only 2.67:1, so it was
 lifted to `#7aa7ff`.
