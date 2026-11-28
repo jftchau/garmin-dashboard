@@ -141,6 +141,11 @@ npm run build          # prod build -> dist/
   `PATCH /api/users/<id>`. **Don't** overwrite a set name from env on sync.
   The weekly goal (`users.goal_distance_km`, km per Monday–Sunday week) is set
   the same way; the goal slide hides until a runner has one.
+- **Personal records come from Garmin**, not from our own maths: each sync
+  copies Garmin's PR list (`client.get_personal_record()`, typeIds 1/3/4/5/6 →
+  1K/5K/10K/half/marathon) into `personal_records`, replacing what was there.
+  Garmin's are best efforts *within* any run, which whole-run matching can't
+  reproduce. A failed call leaves the stored PRs alone.
 - **DB migrations** run automatically in `db.py init_db()` → `_migrate()`
   (adds columns, rebuilds composite-PK tables). Safe to re-run.
 - **Two VO₂max numbers**: `activities.vo2max` = per-run (the "VO₂max · 30 days"

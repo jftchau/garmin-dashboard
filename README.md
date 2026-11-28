@@ -231,7 +231,7 @@ is read-only except `PATCH /api/users/<id>` and `POST /api/sync-now`.
 | GET | `/api/running-form?runs=30` | recent average cadence / stride / ground contact / vertical oscillation (max 200) |
 | GET | `/api/conditions?months=8` | per month: average + peak run temperature and **distance**; plus the hottest run (max 24) |
 | GET | `/api/calendar?days=365` | daily distances for the heatmap |
-| GET | `/api/personal-records` | 1K/5K/10K/Half/Marathon bests |
+| GET | `/api/personal-records` | 1K/5K/10K/Half/Marathon bests, as Garmin Connect records them |
 | GET | `/api/vo2max-trend` | `{current, current_date, trend[]}` |
 | GET | `/api/weekly-insights` | weekly intensity minutes + training load *(not used by the kiosk)* |
 | GET | `/api/race-predictions` | predicted race times (seconds) |

@@ -2,7 +2,7 @@
 fetch_garmin.py
 
 Logs into Garmin Connect, pulls activities (paginated), extracts the metrics the
-dashboard needs, upserts them into SQLite, and recalculates personal records
+dashboard needs, upserts them into SQLite, and copies Garmin's own personal records
 (1K, 5K, 10K, half marathon, marathon). Runs are stored in full; non-runs are
 stored as lightweight cross-training context (type/date/distance, no detail
 calls) and are excluded from every run-only stat and from PRs.
@@ -46,16 +46,9 @@ log = logging.getLogger("fetch_garmin")
 
 # Per-user Garmin credentials live in .env; see configured_users().
 
-# Personal-record distances we track, in meters, with a generous tolerance
-# band so a run logged as "5.02 km" still counts as a 5K effort.
-PR_DISTANCES = {
-    "1K": 1000,
-    "5K": 5000,
-    "10K": 10000,
-    "HALF": 21097,
-    "MARATHON": 42195,
-}
-PR_TOLERANCE = 0.03  # +/- 3%
+# Garmin's personal-record typeIds for the running distances we show. (2 is
+# 1 mile and 7 longest run; the rest are cycling, swimming and step records.)
+GARMIN_PR_TYPES = {1: "1K", 3: "5K", 4: "10K", 5: "HALF", 6: "MARATHON"}
 
 PAGE_SIZE = 50
 
@@ -535,50 +528,51 @@ def sync_daily_metrics(client, conn, user_id, days=3):
     log.info("Daily wellness synced for %d day(s)", days)
 
 
-def recalculate_personal_records(conn, user_id):
-    """
-    For each tracked distance, find the activity whose distance is within
-    tolerance and whose *time to cover that exact distance* is fastest.
-    Since we don't have GPS-distance-at-time splits for every run, we
-    approximate using whole-activity pace for runs that match the target
-    distance closely, which is accurate enough for typical race-distance runs.
-    """
-    # Running only — a 5 km bike ride or swim must never become a 5K run PR.
-    rows = conn.execute(
-        "SELECT id, distance, duration, pace, start_time FROM activities "
-        "WHERE user_id = ? AND distance IS NOT NULL AND COALESCE(activity_type, 'running') LIKE '%running%'",
-        (user_id,),
-    ).fetchall()
+def sync_personal_records(client, conn, user_id):
+    """Copy Garmin's own personal records into personal_records, so the
+    dashboard shows exactly what Garmin Connect does.
 
-    for name, target_m in PR_DISTANCES.items():
-        low, high = target_m * (1 - PR_TOLERANCE), target_m * (1 + PR_TOLERANCE)
-        candidates = [r for r in rows if r["distance"] and low <= r["distance"] <= high]
-        if not candidates:
+    Garmin's PRs are best efforts: the fastest 5 km *inside* any run, so a
+    fast 10K or a half also sets the 5K. (The old calculation here only
+    compared whole runs within 3% of each distance, which understated every
+    short PR and missed the 1K altogether.) Garmin's list replaces ours
+    outright: a distance it has no record for is removed, and a PR it no
+    longer has (an activity deleted in Connect) goes with it. If the call
+    fails, the stored records are left as they are.
+    """
+    try:
+        records = client.get_personal_record()
+    except Exception as e:
+        log.warning("could not fetch personal records: %s", e)
+        return
+    if not isinstance(records, list):
+        log.warning("unexpected personal-records response: %r", type(records))
+        return
+
+    best = {}
+    for r in records:
+        name = GARMIN_PR_TYPES.get(r.get("typeId"))
+        if not name or r.get("value") is None or r.get("status", "ACCEPTED") != "ACCEPTED":
             continue
+        if name not in best or r["value"] < best[name]["value"]:
+            best[name] = r
 
-        # Normalize duration to "time it would take at this run's pace to
-        # cover exactly target_m", so a 5.05km run is compared fairly
-        # against a 4.98km run.
-        def normalized_time(r):
-            pace_per_m = r["duration"] / r["distance"]
-            return pace_per_m * target_m
-
-        best = min(candidates, key=normalized_time)
-        best_time = normalized_time(best)
-
+    conn.execute("DELETE FROM personal_records WHERE user_id = ?", (user_id,))
+    for name, r in best.items():
+        act = conn.execute(
+            "SELECT id, start_time FROM activities WHERE user_id = ? AND garmin_id = ?",
+            (user_id, str(r.get("activityId"))),
+        ).fetchone()
+        # The activity's local start, in the same "YYYY-MM-DD HH:MM:SS" form
+        # as activities.start_time.
+        local = r.get("activityStartDateTimeLocalFormatted")
+        achieved = local.replace("T", " ")[:19] if local else (act["start_time"] if act else None)
         conn.execute(
-            """
-            INSERT INTO personal_records (user_id, distance_name, best_time, activity_id, achieved_at)
-            VALUES (?, ?, ?, ?, ?)
-            ON CONFLICT(user_id, distance_name) DO UPDATE SET
-                best_time = excluded.best_time,
-                activity_id = excluded.activity_id,
-                achieved_at = excluded.achieved_at
-            WHERE excluded.best_time < personal_records.best_time
-               OR personal_records.best_time IS NULL
-            """,
-            (user_id, name, best_time, best["id"], best["start_time"]),
+            "INSERT INTO personal_records (user_id, distance_name, best_time, activity_id, achieved_at) "
+            "VALUES (?, ?, ?, ?, ?)",
+            (user_id, name, float(r["value"]), act["id"] if act else None, achieved),
         )
+    log.info("Personal records synced from Garmin: %s", ", ".join(sorted(best)) or "none")
 
 
 def backfill_summary_metrics():
@@ -629,7 +623,7 @@ def sync_user(user, uid, full=False):
                 updated += 1
         conn.commit()
 
-        recalculate_personal_records(conn, uid)
+        sync_personal_records(client, conn, uid)
         conn.commit()
 
         # Daily fitness/wellness metrics + race predictions (what the watch
