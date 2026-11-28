@@ -16,7 +16,7 @@ Enhancements beyond the original plan (Tiers 1–3 + multi-user) are done. Phase
 | Activities | Only runs initially (gym/cycling/swim later expandable) | Runs only |
 | Metrics | distance, time, pace, HR (avg/max/zones), cadence, elevation, splits, training effect, VO2 max, weather, gear | Done + extended (power, running dynamics, calories, hydration, intensity minutes, temperature) |
 | Time focus | Primary: current week. Secondary: monthly/yearly, all-time, filters | This Week + History range filters |
-| Personal records | Auto-calc 1K, 5K, 10K, half, marathon | Done (±3% tolerance, pace-normalized) |
+| Personal records | 1K, 5K, 10K, half, marathon | Done — copied from Garmin's own PR list each sync (was: whole-run times ±3%, which understated short PRs) |
 | Live data | None — static between fetches | As planned |
 | Charts | Weekly mileage line, HR zone doughnut, calendar heatmap | Done + Insights charts (VO₂max, resting HR, HRV, sleep, intensity, load) |
 | Maps | Leaflet + OSM (no key) | Per-activity map in the detail modal |
