@@ -122,21 +122,31 @@ Where the light goes:
 | `text-2` | `#c9ccd4` | ≥ 7.3:1 | units, labels, captions |
 | `text-3` | `#8f95a3` | ≥ 4.5:1 | walk-closer status only |
 
-**Runners, two hues.** `runner-a` `#ff9147` is Jeffrey; `runner-b` `#7aa7ff` is
-Eugenia. Neither is ever used for anything else.
+**Runners, two hues.** `runner-a` copper `#ff8342` is Jeffrey; `runner-b`
+seafoam `#00caae` is Eugenia. Neither is ever used for anything else. Picked
+2026-11-28 from the accent-duo moodboard (Copper × Seafoam, Vivid shade),
+replacing orange `#ff9147` / blue `#7aa7ff`.
 
 | Check (CIEDE2000, Machado 2009 colour-blindness simulation) | Normal | Deuteranopia | Protanopia | Need |
 | --- | --- | --- | --- | --- |
-| Jeffrey vs Eugenia | 48 | 56 | 52 | ≥ 40 |
-| Runner vs a white lit mark, worst case | Jeffrey 30, Eugenia 27 | | | ≥ 20 |
+| Jeffrey vs Eugenia | 56 | **28** | **21** | ≥ 40 |
+| Jeffrey vs white lit mark | 34 | 31 | 35 | ≥ 20 |
+| Eugenia vs white lit mark | 29 | **17** | **15** | ≥ 20 |
+| Eugenia vs `cross` (slate) | 26 | **9** | **4** | ≥ 20 |
+| Jeffrey vs `alert` (ember) | 24 | **10** | 22 | ≥ 20 |
 
-| Lit mark against its unlit track | Contrast | Need |
+| Lit mark against its unlit track (estimated, not sampled) | Contrast | Need |
 | --- | --- | --- |
-| Jeffrey | 4.82:1 | ≥ 3:1 |
-| Eugenia | 3.32:1 | ≥ 3:1 |
+| Jeffrey | ~3.7:1 | ≥ 3:1 |
+| Eugenia | ~4.3:1 | ≥ 3:1 |
 
-Eugenia's blue was lifted from `#5c8dff` to `#7aa7ff` because the darker blue
-reached only 2.67:1 as a lit bar on its track.
+**Accepted trade-off.** In normal vision this pair is further apart than the
+old one (56 vs 48). Under red-green colour blindness it is not: copper and
+seafoam drift towards similar muted tones, and seafoam lands on the slate
+cross-training grey. So hue must never be the *only* thing telling runners or
+channels apart: runners keep fixed positions (A left/top-left, B right/
+bottom-right) and are always named; cross-training stays a ring or a
+different lightness, not just a different hue.
 
 **Marks.** `mark-unlit` (white at 16%) for every mark that is not "now": 1.67:1
 against the card, enough to see shape, quiet enough not to compete.

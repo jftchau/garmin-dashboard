@@ -30,11 +30,11 @@
   --mark-lit:      var(--text-1);              /* "now" on neutral slides */
   --mark-unlit:    rgb(255 255 255 / .16);     /* tracks, past bars */
 
-  /* ---- Runners (step 2 · ref 7 orange / blue) ---- */
-  --runner-a:      #ff9147;   /* Jeffrey */
-  --runner-a-rgb:  255 145 71;
-  --runner-b:      #7aa7ff;   /* Eugenia — lifted from #5c8dff so a lit bar clears 3:1 on its track */
-  --runner-b-rgb:  122 167 255;
+  /* ---- Runners (step 2b · copper / seafoam, 2026-11-28) ---- */
+  --runner-a:      #ff8342;   /* Jeffrey */
+  --runner-a-rgb:  255 131 66;
+  --runner-b:      #00caae;   /* Eugenia */
+  --runner-b-rgb:  0 202 174;
   --runner-haze:   .42;       /* alpha of a runner's light source (was .18: invisible on the Pi) */
   --runner-glow:   .20;       /* card corner glow in the runner's colour */
   --runner-edge:   .90;       /* 2px lit card edge at its outer corner, fading to .12 */

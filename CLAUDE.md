@@ -54,7 +54,7 @@ not a preference. It keeps getting broken by well-meaning feature additions, so:
   click on the Pi). Slides fetch both users with `useTwoUsers()`, or one with
   `useOneUser()` when a head-to-head would halve the graphic. Runner colors are
   `RUNNER_COLORS` / `RUNNER_RGB` + `runnerName()` in `utils.js` (Runner A =
-  Jeffrey, orange `#ff9147`; Runner B = Eugenia, blue `#7aa7ff`). Keep `RUNNER_RGB` in
+  Jeffrey, copper `#ff8342`; Runner B = Eugenia, seafoam `#00caae`). Keep `RUNNER_RGB` in
   sync with the hexes — the HR-zone shades ramp their own rgba() from it.
 - **The app auto-rotates** through the slides in `slides.jsx` every `ROTATE_MS`
   (=14s) in `App.jsx`; the header ⏸/▶ button or clicking the position bar pauses
@@ -64,8 +64,8 @@ not a preference. It keeps getting broken by well-meaning feature additions, so:
 - **The palette is four layers, and nothing may invent a fifth** (defined with
   the reasoning at the top of `index.css`). Before adding *any* color, place it
   in one of these:
-  1. **Identity — two hues.** `--color-runner-a` orange `#ff9147` = Runner A,
-     `--color-runner-b` blue `#7aa7ff` = Runner B. These two answer "whose data
+  1. **Identity — two hues.** `--color-runner-a` copper `#ff8342` = Runner A,
+     `--color-runner-b` seafoam `#00caae` = Runner B. These two answer "whose data
      is this" and are used for nothing else, ever. On v2 slides they live in
      light (room haze, card glow) and marks (bars, dots) only — numbers and
      names stay `--color-chalk`.

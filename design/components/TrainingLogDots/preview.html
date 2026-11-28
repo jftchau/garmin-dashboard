@@ -8,7 +8,7 @@
   body {
     margin:0; padding:32px 40px; width:1024px; box-sizing:border-box;
     background-color: var(--ground, #090b10);
-    background-image: radial-gradient(760px 600px at 82px -36px, var(--runner-a-haze, rgba(255,145,71,.18)), transparent 70%);
+    background-image: radial-gradient(760px 600px at 82px -36px, var(--runner-a-haze, rgba(255,131,66,.18)), transparent 70%);
     font-family: var(--font-display, Outfit, system-ui, sans-serif);
     color: var(--text-1, #f3f4f6);
   }
@@ -22,7 +22,7 @@
     display:grid; grid-template-columns:300px 1fr; gap:32px; align-items:center;
   }
   .glass::before { content:""; position:absolute; inset:0; pointer-events:none;
-    background:radial-gradient(420px 300px at 0% 0%, var(--runner-a-glow, rgba(255,145,71,.14)), transparent 70%); }
+    background:radial-gradient(420px 300px at 0% 0%, var(--runner-a-glow, rgba(255,131,66,.14)), transparent 70%); }
   .glass > * { position:relative; }
   .label { font-size:52px; font-weight:700; line-height:1; letter-spacing:.08em; text-transform:uppercase; margin-bottom:18px; }
   .value { font-size:208px; font-weight:600; line-height:.86; letter-spacing:-.045em; font-variant-numeric:tabular-nums; }
@@ -31,7 +31,7 @@
   .wd { font-size:24px; font-weight:500; color:var(--text-3,#8f95a3); display:flex; align-items:flex-end; justify-content:center; padding-bottom:8px; height:auto; }
   .cell { display:flex; align-items:center; justify-content:center; }
   .run  { border-radius:50%; background:var(--mark-unlit, rgba(255,255,255,.16)); }
-  .lit  { background:var(--runner-a,#ff9147); box-shadow:var(--mark-halo-a, 0 0 22px rgba(255,145,71,.6)); }
+  .lit  { background:var(--runner-a,#ff8342); box-shadow:var(--mark-halo-a, 0 0 22px rgba(255,131,66,.6)); }
   .xt   { width:22px; height:22px; border-radius:50%; border:3px solid var(--text-3,#8f95a3); box-sizing:border-box; }
   .rest { width:10px; height:10px; border-radius:50%; background:var(--mark-unlit, rgba(255,255,255,.16)); opacity:.5; }
   .legend { display:flex; gap:28px; margin-top:22px; font-size:24px; font-weight:500; color:var(--text-3,#8f95a3); align-items:center; justify-content:flex-end; }
